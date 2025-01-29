@@ -1,0 +1,86 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Esta clase proporciona métodos de extensión para configurar servicios de RabbitMQ en una aplicación .NET utilizando `IServiceCollection`. El propósito principal es simplificar la integración de RabbitMQ para la comunicación asíncrona basada en eventos, facilitando la configuración y el registro de los servicios necesarios.
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `CodeDesignPlus.Net.RabbitMQ`: Biblioteca que contiene las abstracciones de RabbitMQ.
+- `CodeDesignPlus.Net.Event`: Biblioteca para la gestion de eventos de dominio
+
+## Escenarios de uso
+---
+
+Este método de extensión es particularmente útil en aplicaciones que:
+
+*   Necesitan implementar comunicación asíncrona entre microservicios.
+*   Utilizan patrones de diseño de mensajería basados en eventos.
+*   Requieren desacoplar componentes para mejorar la escalabilidad y mantenibilidad.
+*   Quieren configurar RabbitMQ de manera centralizada a través de configuración.
+
+## Beneficios
+---
+
+-   **Configuración simplificada:** Reduce la cantidad de código boilerplate necesario para configurar RabbitMQ.
+-   **Centralización:** Permite definir la configuración de RabbitMQ en un solo lugar utilizando un archivo de configuración.
+-   **Facilidad de uso:** Proporciona una forma sencilla y consistente de registrar los servicios necesarios de RabbitMQ en el contenedor de inyección de dependencias.
+-   **Abstracción:** Oculta la complejidad de la inicialización y configuración de los componentes de RabbitMQ.
+-   **Integración con IOptions:** Utiliza `IOptions` para proporcionar una configuración fuertemente tipada y validada.
+
+## Ejemplo Práctico
+---
+
+En este ejemplo,  `AssemblyContainingDomainEvents` es el tipo del assembly donde residen los eventos del dominio, y configuration es la configuración de la app. La clase `ServiceCollectionExtensions` extiende la funcionalidad de `IServiceCollection` y provee de un método llamado `AddRabbitMQ`, el cual adiciona los servicios de RabbitMQ. 
+
+```csharp
+
+public void ConfigureServices(IServiceCollection services)
+{
+    // ...
+    services.AddRabbitMQ<AssemblyContainingDomainEvents>(Configuration);
+}
+```
+## Métodos de extensión
+---
+
+Los métodos de extensión proporcionados por la clase `ServiceCollectionExtensions` son los siguientes:
+
+### AddRabbitMQ
+**Type:** `public static IServiceCollection AddRabbitMQ<TAssembly>(this IServiceCollection services, IConfiguration configuration)`
+
+Este método agrega los servicios de RabbitMQ a la colección de servicios especificada.
+
+**Parámetros:**
+-   `services` (`IServiceCollection`): La colección de servicios a la que se agregarán los servicios de RabbitMQ.
+-   `configuration` (`IConfiguration`): La configuración de la aplicación, que se utiliza para obtener la configuración de RabbitMQ.
+
+**Tipo de retorno:**
+-   `IServiceCollection`: La misma colección de servicios (`services`), lo que permite encadenar llamadas de métodos de extensión adicionales.
+
+**Excepciones:**
+-   `ArgumentNullException`: Se lanza si `services` o `configuration` son `null`.
+-   `RabbitMQException`: Se lanza si la sección de configuración `RabbitMQOptions.Section` no existe en la configuración.
+
+## Conclusiones
+---
+
+- La extensión `AddRabbitMQ` simplifica la configuración de servicios de RabbitMQ en aplicaciones .NET, facilitando la implementación de comunicación asíncrona basada en eventos.
+- Permite definir la configuración de RabbitMQ en un archivo de configuración, lo que promueve la centralización y la gestión sencilla de la configuración.
+- El uso de `IOptions` proporciona una configuración fuertemente tipada y validada, reduciendo el riesgo de errores de configuración.
+- Es importante asegurarse de que la sección de configuración de RabbitMQ esté presente en la configuración de la aplicación.
+- Usar el assembly donde se ubican los eventos del dominio, ayuda al servicio de background a identificar todos los posibles manejadores de los eventos.
+
+## Referencias
+---
+
+-   [Documentación oficial de RabbitMQ](https://www.rabbitmq.com/documentation.html)
+-   [Documentación de Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection?view=dotnet-plat-ext-7.0)
+-   [Documentación de Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration?view=dotnet-plat-ext-7.0)
+-   [Documentación de Microsoft.Extensions.Options](https://learn.microsoft.com/dotnet/api/microsoft.extensions.options?view=dotnet-plat-ext-7.0)

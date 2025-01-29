@@ -1,0 +1,64 @@
+---
+title: RabbitMQ
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+El `RabbitMQContainer` es un componente de la librería **CodeDesignPlus.Net.xUnit** que proporciona un contenedor Docker para ejecutar RabbitMQ, un broker de mensajería. Este componente facilita la creación de pruebas unitarias que dependen de RabbitMQ, ofreciendo un entorno de pruebas aislado y reproducible.
+
+## ¿Cómo Funciona?
+---
+
+El `RabbitMQContainer` utiliza `Docker Compose` para definir y gestionar el contenedor RabbitMQ. Al inicializar una instancia de esta clase, se genera un archivo `docker-compose.yml` temporal con la configuración necesaria para ejecutar el contenedor. Luego, el contenedor se inicia y se detiene automáticamente al final de la ejecución de las pruebas.
+
+El proceso general de funcionamiento es el siguiente:
+1.  **Configuración del Contenedor:** El método `Build()` define la configuración específica del contenedor RabbitMQ, incluyendo la ruta al archivo `docker-compose.yml`, opciones de reinicio forzado, eliminación de contenedores huérfanos, parada al finalizar y un nombre de servicio alternativo generado dinámicamente para evitar conflictos.
+2.  **Creación del Contenedor:** Se crea una instancia de `DockerComposeCompositeService` usando la configuración definida.
+3.  **Inicio y Detención del Contenedor:** El contenedor se inicia cuando se crea una instancia de la clase `RabbitMQContainer` y se detiene automáticamente cuando la instancia se elimina, asegurando la limpieza del entorno.
+
+## Container
+---
+
+El `RabbitMQContainer` hereda de la clase `DockerCompose`, la cual proporciona la lógica base para interactuar con Docker Compose.  La clase utiliza la clase `DockerComposeCompositeService` de la librería `Testcontainers` para iniciar y detener contenedores docker. La configuración del contenedor se define en el método `Build()` que crea un archivo `docker-compose.yml` con los parámetros necesarios para la ejecución del contenedor RabbitMQ. El archivo `docker-compose.yml` se encuentra dentro del directorio `Containers/RabbitMQContainer`.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/RabbitMQContainer/RabbitMQContainer.cs"
+```
+
+La clase `RabbitMQCollectionFixture` se utiliza como un *fixture* de xUnit, que proporciona una forma de compartir el contenedor entre las pruebas de una colección.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/RabbitMQContainer/RabbitMQCollectionFixture.cs"
+```
+
+## Ejemplo de Uso
+---
+
+Este ejemplo demuestra cómo usar `RabbitMQContainer` para realizar pruebas de integración con RabbitMQ. La prueba verifica la conexión a una instancia de RabbitMQ usando la información de conexión proporcionada por el contenedor, y asegura que la conexión esté abierta. Este ejemplo ilustra cómo utilizar las credenciales del contenedor y la instancia de conexión para interectuar con RabbitMQ en un entorno de prueba.
+
+<Tabs>
+    <TabItem label="RabbitMQContainerTest">         
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/RabbitMQContainerTest.cs"
+    ```
+    </TabItem>
+    <TabItem label="RabbitMQCollectionDefinition">
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/Definitions/RabbitMQCollectionDefinition.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+
+## Conclusiones
+---
+
+- El `RabbitMQContainer` facilita la creación de pruebas unitarias que requieren una instancia de RabbitMQ.
+- Utiliza Docker Compose para la gestión del contenedor, proporcionando una forma sencilla de definir la configuración.
+- La clase `RabbitMQCollectionFixture` permite compartir un contenedor entre todas las pruebas de una misma colección.
+- El uso del `RabbitMQContainer` mejora la reproducibilidad y el aislamiento de las pruebas unitarias.
+- El contenedor RabbitMQ se inicia automaticamente al comienzo de cada prueba y se detiene una vez termina, esto permite un ambiente de pruebas limpio.
+
+## Referencias Adicionales
+---
+
+- [Documentación de Docker](https://docs.docker.com/)
+- [Documentación de Docker Compose](https://docs.docker.com/compose/)
+- [Documentación de RabbitMQ](https://www.rabbitmq.com/documentation.html)
+- [Documentación de xUnit](https://xunit.net/)

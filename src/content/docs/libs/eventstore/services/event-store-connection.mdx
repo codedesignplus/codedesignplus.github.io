@@ -1,0 +1,118 @@
+---
+title: IEventStoreConnection
+---
+
+import { Aside, LinkCard, Steps } from '@astrojs/starlight/components';
+
+`IEventStoreConnection` es una interfaz que define el contrato para conectar e interactuar con una instancia de EventStore. EventStore es una base de datos especializada en el almacenamiento de eventos, utilizada comúnmente en arquitecturas de Event Sourcing y CQRS.
+
+La interfaz se utiliza para abstraer la lógica de conexión y manejo de eventos con EventStore. Permite a los desarrolladores inicializar conexiones, manejar eventos de conexión y desconexión, y gestionar errores y autenticaciones fallidas de manera uniforme y desacoplada del cliente específico de EventStore.
+
+## Funcionalidades
+---
+
+1. Inicialización de la Conexión:
+
+    - `Task<ES.IEventStoreConnection> InitializeAsync(Server server)`: Inicializa la conexión a EventStore utilizando los detalles del servidor proporcionados. Este método es asíncrono y devuelve una instancia de `IEventStoreConnection` inicializada.
+
+2. Manejo de Eventos:
+
+    - **Connected**: Evento que se dispara cuando la conexión a EventStore se establece correctamente.
+    - **Disconnected**: Evento que se dispara cuando la conexión a EventStore se desconecta.
+    - **Reconnecting**: Evento que se dispara cuando la conexión a EventStore está intentando reconectarse.
+    - **Closed**: Evento que se dispara cuando la conexión a EventStore se cierra.
+    - **ErrorOccurred**: Evento que se dispara cuando ocurre un error en la conexión a EventStore.
+    - **AuthenticationFailed**: Evento que se dispara cuando la autenticación a EventStore falla.
+
+## Características
+---
+    - **Asincronía**: La inicialización de la conexión es asíncrona, lo que permite una mejor gestión de recursos y evita bloqueos en el hilo principal.
+    - **Manejo de Eventos**: Proporciona eventos para manejar diferentes estados de la conexión, lo que permite a los desarrolladores reaccionar adecuadamente a cambios en el estado de la conexión.
+    - **Abstracción**: Al ser una interfaz, permite la implementación de diferentes estrategias de conexión y facilita la prueba unitaria mediante el uso de mocks.
+
+## Implementación
+---
+
+La interfaz `IEventStoreConnection` se implementa en la clase `EventStoreConnection`, que proporciona la lógica para inicializar y gestionar la conexión a EventStore. La clase `EventStoreConnection` se encuentra en el espacio de nombres `CodeDesignPlus.Net.EventStore.Services`.
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore/src/CodeDesignPlus.Net.EventStore/Services/EventStoreConnection.cs"
+```
+
+## Ejemplo
+---
+
+Una vez que se ha implementado la interfaz `IEventStoreConnection`, se puede utilizar para inicializar una conexión a EventStore y manejar eventos de conexión y desconexión.
+
+<Steps>
+
+1. Agregar las propiedades de configuración al archivo `appsettings.json`:
+
+    ```json
+    {
+        "EventStore": {
+            "Servers": {
+                "Core": {
+                    "ConnectionString": "tcp://localhost:1113?tls=false",
+                    "User": "admin",
+                    "Password": "12345678"
+                }
+            }
+        }
+    }
+    ```
+
+2. Registrar la interfaz `IEventStoreConnection` en el contenedor de dependencias:
+
+    ```csharp
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton<IEventStoreConnection, EventStoreConnection>();
+            services.AddLogging();
+        }
+    }
+
+    ```
+
+3. Inicializar la conexión a EventStore en una clase de servicio:
+
+    ```csharp
+    public class EventStoreService
+    {
+        private readonly IEventStoreConnection eventStoreConnection;
+        private readonly EventStoreOptions eventStoreOptions;
+
+        public EventStoreService(IEventStoreConnection eventStoreConnection, IOptions<EventStoreOptions> options)
+        {
+            this.eventStoreConnection = eventStoreConnection;
+            this.eventStoreOptions = options.Value;
+        }
+
+        public async Task SaveEventAsync<TEvent>(TEvent @event)
+        {
+            var connection = await eventStoreConnection.InitializeAsync(eventStoreOptions.Servers["Core"]);
+
+            var eventData = new ES.EventData(
+                Guid.NewGuid(),
+                "eventType",
+                true,
+                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event)),
+                null);
+
+            await connection.AppendToStreamAsync("streamName", ES.ExpectedVersion.Any, eventData);
+        }
+    }
+    ```
+
+    <Aside>
+        <p>En este ejemplo, se inicializa la conexión a EventStore utilizando los detalles del servidor `Core` definidos en la configuración. Es importante que se llame `Core` por el servicio `IEventStoreFactory`.</p>
+    </Aside>
+
+</Steps>
+
+
+## Conclusiones
+---
+
+La interfaz `IEventStoreConnection` es esencial para cualquier aplicación que utilice EventStore, proporcionando una manera estructurada y eficiente de manejar conexiones y eventos relacionados. Su implementación permite una gestión robusta de la conexión, asegurando que la aplicación pueda reaccionar adecuadamente a cualquier cambio en el estado de la conexión.

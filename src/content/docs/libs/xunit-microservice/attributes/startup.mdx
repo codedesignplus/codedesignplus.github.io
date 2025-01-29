@@ -1,0 +1,73 @@
+---
+title: Startup
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `StartupAttribute` es un atributo personalizado diseñado para facilitar la creación de pruebas unitarias que validen el proceso de inicialización de servicios de inicio (startup services) en tu aplicación. Este atributo automatiza la creación de instancias de servicios de inicio y la ejecución de su método de inicialización, lo que permite probar si la configuración de servicios se realiza correctamente y sin errores.
+
+## ¿Cómo Funciona?
+---
+
+El `StartupAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IStartupServices`, que es un marcador típico para servicios de inicialización.
+2. **Crear instancias:** Para cada servicio de inicio encontrado, se crea una instancia utilizando su constructor predeterminado.
+3. **Ejecutar la inicialización:** Se ejecuta el método `Initialize` del servicio de inicio, simulando el proceso de configuración de servicios.
+4. **Proveer datos:** Suministra la instancia del servicio de inicio y cualquier excepción que se produzca durante su inicialización a la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+
+Este método es el núcleo del `StartupAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Servicios de Inicio:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+  - Implementan la interfaz `IStartupServices`.
+  - No son una interfaz o clase abstracta.
+- **Crear Instancias y Ejecutar Inicialización:** Para cada servicio de inicio encontrado:
+    - Crea una instancia del servicio de inicio utilizando `Activator.CreateInstance`.
+    - Crea una instancia de `ServiceCollection` y `ConfigurationBuilder` para simular el entorno de inicialización.
+    - Ejecuta el método `Initialize` del servicio de inicio, capturando cualquier excepción que se produzca durante la inicialización.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - La instancia del servicio de inicio (`IStartupServices`).
+    - La excepción que se produjo durante la inicialización (o `null` si no hubo excepción).
+
+## Implementación
+---
+
+El `StartupAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar los servicios de inicio.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/StartupAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `StartupAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/StartupTest.cs"
+```
+
+En este ejemplo:
+
+- `[Startup<Startup>]` crea instancias de todos los servicios de inicio en el ensamblado donde se define `Startup` que implementan `IStartupServices`.
+- El método de prueba recibe la instancia del servicio de inicio y cualquier excepción que se haya producido durante su inicialización.
+- La prueba verifica que la inicialización del servicio de inicio se realice sin excepciones.
+
+## Conclusiones
+---
+
+El `StartupAttribute` simplifica la validación del proceso de inicialización de servicios de inicio en pruebas unitarias. Al automatizar la creación de instancias y la ejecución del método de inicialización, este atributo permite a los desarrolladores asegurar que sus servicios se configuran correctamente y están listos para su uso en la aplicación.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [ASP.NET Core - Inicialización de la Aplicación](https://learn.microsoft.com/es-es/aspnet/core/fundamentals/startup?view=aspnetcore-8.0)

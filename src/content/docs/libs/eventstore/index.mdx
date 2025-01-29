@@ -1,0 +1,240 @@
+---
+title: Overview
+---
+
+import { Tabs, TabItem, Aside, Steps, LinkCard, FileTree } from '@astrojs/starlight/components';
+
+El Event Sourcing es un patrón de diseño en el que los cambios en el estado de una aplicación se almacenan como una secuencia de eventos. En lugar de almacenar solo el estado actual de los datos, cada cambio se registra como un evento que describe la modificación. Esto permite reconstruir el estado actual reproduciendo todos los eventos en orden. Event Sourcing es especialmente útil en sistemas financieros, aplicaciones de auditoría, sistemas de control de versiones, aplicaciones de comercio electrónico y sistemas distribuidos.
+
+La biblioteca `CodeDesignPlus.Net.EventStore` proporciona una solución completa y eficiente para la implementación de event sourcing en aplicaciones .NET utilizando EventStore. La biblioteca incluye servicios, opciones de configuración y métodos de extensión para facilitar la integración con EventStore y garantizar una gestión robusta y escalable de eventos.
+
+## Propósito y alcance
+---
+
+El objetivo de la biblioteca `CodeDesignPlus.Net.EventStore` es proporcionar una solución completa y eficiente para la implementación de event sourcing en aplicaciones .NET implementando los servicios definidos en en la biblioteca `CodeDesignPlus.Net.Event.Sourcing` y asi facilitar la integración con EventStore.
+
+## Principales características
+---
+
+- **Servicios:** Incluye servicios esenciales para la gestión de eventos, flujos de eventos y conexiones a EventStore.
+- **Opciones de Configuración:** Proporciona opciones de configuración para personalizar la configuración de EventStore.
+- **Métodos de Extensión:** Ofrece métodos de extensión útiles para interactuar con EventStore de manera eficiente.
+
+## Casos de uso típicos
+---
+
+- Sistemas de Auditoría: Donde es necesario mantener un historial completo de cambios.
+- Sistemas Financieros: Para rastrear transacciones y cambios en el estado.
+- Aplicaciones de Comercio Electrónico: Para mantener un historial de pedidos y cambios en el inventario.
+- Sistemas de Control de Versiones: Para rastrear cambios en los datos y mantener un historial de versiones.
+- Gestión de eventos de dominio: Para capturar, almacenar y gestionar eventos de dominio en aplicaciones .NET.
+
+## Componentes principales
+---
+
+- `EventStoreConnection`: Clase que implementa la interfaz `IEventStoreConnection` y se encarga de conectar e interactuar con una instancia de EventStore.
+- `EventStoreFactory`: Clase que implementa la interfaz `IEventStoreFactory` y se encarga de gestionar y recuperar conexiones a instancias de EventStore.
+- `EventStoreService`: Clase que implementa la interfaz `CodeDesignPlus.Net.Event.Sourcing.Abstractions.IEventSourcingService.cs` que proporciona métodos para gestionar eventos de manera eficiente independientemente del proveedor de almacenamiento de eventos.
+- `EventStoreOptions`: Clase que define las opciones de configuración para EventStore, incluyendo detalles del servidor, autenticación y configuración de la conexión.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.EventStore
+        - Exceptions
+             - EventStoreException.cs   
+        - Extensions
+            - ServiceCollectionExtensions.cs   
+        - Serializer
+            - EventStoreContratResolver.cs
+        - Services
+            - EventStoreConnection.cs
+            - EventStoreFactory.cs
+            - EventStoreService.cs
+    - CodeDesignPlus.Net.EventStore.Abstractions
+        - EventStoreFactoryConst.cs
+        - IEventStoreConnection.cs
+        - IEventStoreFactory.cs
+        - IEventStoreService.cs
+        - Server.cs    
+        - Options
+            - EventStoreOptions.cs
+</FileTree>
+
+## Primeros pasos
+---
+
+En esta sección, aprenderás a configurar y utilizar la biblioteca `CodeDesignPlus.Net.EventStore` en tus aplicaciones .NET. A continuación, se describen los pasos necesarios para integrar EventStore en tu aplicación y comenzar a gestionar eventos de manera eficiente.
+
+### Requisitos previos
+
+- .NET Core 8 o superior.
+- Conocimientos básicos de Event Sourcing y CQRS.
+- Inyección de dependencias en aplicaciones .NET.
+
+### Instalación
+
+Para instalar la biblioteca `CodeDesignPlus.Net.EventStore`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestran los comandos para instalar la biblioteca utilizando NuGet y la CLI de .NET.
+
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.EventStore
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.EventStore
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.EventStore" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+### Configuración básica
+
+<Steps>
+1. Asignar las opciones de configuración en el `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
+    ```
+
+2. Registra los servicios en el contenedor de dependencias de tu aplicación: 
+
+    ```csharp
+    // ...
+    servicesCollection.AddEventStore(configuration);
+    ```
+</Steps>
+
+## Ejemplo rápido
+---
+
+El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs) hace uso de la biblioteca `CodeDesignPlus.Net.EventStore` para gestionar eventos de manera eficiente. 
+
+```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs"
+```
+
+<Steps>
+1. Configuración de EventStore en el `appsettings.json`:
+
+    El archivo `appsettings.json` contiene la configuración de EventStore, incluyendo los detalles del servidor, la autenticación y la configuración de la conexión.
+
+    ```json url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
+    ```
+2. Creación de los eventos de dominio:
+
+    Las clases `NameUpdatedDomainEvent`, `OrderCreatedDomainEvent` y `ProductAddedDomainEvent` representan eventos de dominio que se utilizan para gestionar eventos en la aplicación.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/NameUpdatedDomainEvent.cs"
+    ```
+
+    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/OrderCreatedDomainEvent.cs"
+    ```
+
+    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/ProductAddedDomainEvent.cs" 
+    ```
+
+3. Creación del OrderAggregate 
+
+    La clase `OrderAggregate` representa un agregado de eventos que se utiliza para gestionar eventos de pedidos.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Aggregates/OrderAggregate.cs"
+    ```
+
+4. Registrar Servicios
+
+    Se registran los servicios de EventStore en el contenedor de dependencias de la aplicación.
+
+    ```csharp
+    var servicesCollection = new ServiceCollection();
+    servicesCollection.AddLogging();
+    servicesCollection.AddSingleton(configuration);
+
+    servicesCollection.AddEventStore(configuration);
+    ```
+5. Uso del servicio `IEventSourcingService`
+
+    Se obtiene una instancia del servicio IEventSourcingService del proveedor de servicios.
+
+    ```csharp
+    var eventSourcing = serviceProvider.GetRequiredService<IEventSourcingService>();
+    ```
+
+6. Creación y manipulación del `OrderAggregate`
+
+    Se crea una instancia de `OrderAggregate` y se manipula utilizando el servicio `IEventSourcingService`.
+
+    ```csharp
+    var orderAggregate = OrderAggregate.Create(Guid.NewGuid(), "Order 1", Guid.NewGuid());
+    orderAggregate.UpdateName("Order 1 Updated");
+    orderAggregate.AddProduct("Product 1");
+    orderAggregate.AddProduct("Product 2");
+    orderAggregate.AddProduct("Product 3");
+    orderAggregate.AddProduct("Product 4");
+    orderAggregate.AddProduct("Product 5");
+
+    foreach (var @event in orderAggregate.GetAndClearEvents())
+    {
+        await eventSourcing.AppendEventAsync("Order", @event);
+    }
+    ```
+</Steps>
+
+## Métodos de extensión
+---
+
+La biblioteca `CodeDesignPlus.Net.EventStore` proporciona una serie de métodos de extensión útiles para simplificar la implementación de EventStore en aplicaciones .NET. Estos métodos permiten a los desarrolladores interactuar con EventStore de manera eficiente, realizar operaciones comunes y gestionar eventos de forma sencilla.
+
+### ServiceCollection
+
+ServiceCollection es una clase que proporciona métodos de extensión para registrar servicios en el contenedor de dependencias.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/eventstore/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+La biblioteca `CodeDesignPlus.Net.EventStore` proporciona opciones de configuración para EventStore a través de la clase `EventStoreOptions`. Estas opciones permiten a los desarrolladores personalizar la configuración de EventStore, incluidos los detalles del servidor, la autenticación y la configuración de la conexión.
+
+<LinkCard title="Explora la Clase EventStoreOptions" href="/libs/eventstore/options" />
+
+## Servicios
+---
+
+La biblioteca `CodeDesignPlus.Net.EventStore` proporciona varios servicios esenciales para la implementación de event sourcing. Estos servicios se encuentran en la carpeta `CodeDesignPlus.Net.EventStore.Abstractions`.
+
+### IEventStoreService
+
+Este servicio hereda de `IEventSourcingService` y proporciona métodos adicionales específicos de EventStore para gestionar eventos de manera eficiente.
+
+<LinkCard title="Explora la Interfaz IEventStoreService" href="/libs/eventstore/services/event-store-service" />
+
+### IEventStoreFactory
+
+Este servicio define un contrato para gestionar y recuperar conexiones a instancias de EventStore de manera eficiente.
+
+<LinkCard title="Explora la Interfaz IEventStoreFactory" href="/libs/eventstore/services/event-store-factory" />
+
+### IEventStoreConnection
+
+Este servicio define un contrato para conectar e interactuar con una instancia de EventStore.
+
+<LinkCard title="Explora la Interfaz IEventStoreConnection" href="/libs/eventstore/services/event-store-connection" />
+
+## Conclusiones
+---
+
+La biblioteca `CodeDesignPlus.Net.EventStore` proporciona una solución completa y eficiente para la implementación de event sourcing en aplicaciones .NET utilizando EventStore. La biblioteca incluye servicios, opciones de configuración y métodos de extensión para facilitar la integración con EventStore y garantizar una gestión robusta y escalable de eventos.
+
+## Recursos adicionales
+---
+
+- [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.EventStore)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.Sample)
+- [Documentación oficial de EventStore](https://developers.eventstore.com/clients/grpc/getting-started.html)
+- [Documentación oficial de Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+- [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.EventStore/)

@@ -1,0 +1,75 @@
+---
+title: Domain Event
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `DomainEventAttribute` es un atributo personalizado diseñado para simplificar la creación de pruebas unitarias que validen el comportamiento de los eventos de dominio en tu aplicación. Este atributo automatiza la generación de instancias de eventos de dominio, ya sea utilizando el constructor o un método estático `Create`, lo que facilita la escritura de pruebas exhaustivas y reduce la repetición de código.
+
+## ¿Cómo Funciona?
+---
+
+El `DomainEventAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IDomainEvent`, que es un marcador típico para eventos de dominio.
+2. **Crear instancias:** Para cada evento de dominio encontrado, crea una instancia utilizando el constructor o el método estático `Create` (si existe).
+3. **Proveer datos:** Suministra el tipo del evento de dominio, la instancia del evento y un diccionario de los valores utilizados para crear la instancia a la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+Este método es el núcleo del `DomainEventAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Eventos de Dominio:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+  - Implementan la interfaz `IDomainEvent`.
+  - No son una interfaz o clase abstracta.
+- **Crear Instancias:** Para cada evento de dominio encontrado:
+  - **Método `Create`:** Si el parámetro `useCreateMethod` es `true`, se busca un método estático llamado `Create` en la clase del evento de dominio. Si no se encuentra, se lanza una excepción.
+  - **Constructor:** Si el parámetro `useCreateMethod` es `false` o no se encuentra el método `Create`, se utiliza el constructor por defecto del evento de dominio.
+  - Genera un diccionario de valores predeterminados para los parámetros del constructor usando el método `GetParameterValues()`.
+  - Crea una instancia del evento de dominio utilizando el método `Invoke` correspondiente (constructor o método `Create`) y los valores de los parámetros.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` del evento de dominio.
+    - La instancia del evento de dominio.
+    - Un diccionario con los `ParameterInfo` y los valores utilizados en la creación del evento.
+
+## Implementación
+---
+
+El `DomainEventAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit.  Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar los eventos de dominio y un parámetro booleano `useCreateMethod` que indica si debe utilizarse el método `Create` o el constructor para crear la instancia del evento.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/DomainEventAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `DomainEventAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/DomainEventTest.cs"
+```
+
+En este ejemplo:
+
+-   `[DomainEvent<Errors>(false)]` crea instancias de todos los eventos de dominio en el ensamblado donde se define `Errors` utilizando el constructor.
+-   `[DomainEvent<Errors>(true)]` crea instancias de todos los eventos de dominio en el ensamblado donde se define `Errors` utilizando el método estático `Create`, si existe.
+-  Los métodos de prueba reciben el `Type` del evento de dominio, la `instancia` del evento de dominio y un `diccionario` con los valores de los parámetros utilizados en la creación del mismo, lo que permite realizar aserciones sobre el objeto creado.
+- La prueba verifica que los valores de las propiedades del evento de dominio coincidan con los valores esperados.
+- En el caso del metodo create verifica que se asigne un valor a la propiedad `AggregateId` que no es el valor por defecto.
+
+## Conclusiones
+---
+
+El `DomainEventAttribute` es una herramienta muy útil para simplificar la creación y validación de eventos de dominio en pruebas unitarias. Al automatizar la creación de instancias y la provisión de datos de prueba, este atributo permite a los desarrolladores garantizar la calidad de su lógica de negocio relacionada con los eventos de dominio.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [Domain-Driven Design - Domain Events](https://martinfowler.com/eaaDev/DomainEvent.html)

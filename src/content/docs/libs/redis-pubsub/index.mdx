@@ -1,0 +1,261 @@
+---
+title: Overview 
+---
+
+import { FileTree, Tabs, TabItem, LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+Redis es una base de datos en memoria de código abierto que se utiliza comúnmente como caché, cola de mensajes y sistema de almacenamiento de datos. Redis incluye un sistema de publicación/suscripción (Pub/Sub) incorporado, que permite a las aplicaciones enviar y recibir mensajes en tiempo real de forma eficiente.
+
+El modelo Pub/Sub de Redis es ampliamente utilizado para sistemas distribuidos y arquitecturas orientadas a eventos, proporcionando una forma sencilla y rápida de comunicación entre componentes desacoplados.
+
+## Propósito y alcance
+---
+
+El objetivo de la librería `CodeDesignPlus.Net.Redis.PubSub` es proporcionar una implementación sencilla y eficiente del modelo Pub/Sub de Redis en aplicaciones .NET, partiendo de la definición del servicio `IMessage` de `CodeDesignPlus.Net.PubSub`. Esta biblioteca proporciona un conjunto completo de herramientas y servicios para capturar, almacenar y reproducir eventos, facilitando la construcción de sistemas robustos y escalables basados en eventos.
+
+## Principales características
+---
+
+- Modelo Publicador/Suscriptor: Redis soporta un modelo nativo de Pub/Sub para mensajería en tiempo real.
+- Simplicidad: La implementación es sencilla y no requiere configuraciones adicionales.
+- Eficiencia: Las operaciones de publicación y suscripción son rápidas gracias a la naturaleza en memoria de Redis.
+- Compatibilidad: Puede integrarse fácilmente con diversas plataformas y lenguajes de programación.
+- Escalabilidad: Compatible con clústeres de Redis para manejar grandes volúmenes de mensajes.
+
+## Casos de uso típicos
+---
+
+- Notificaciones en tiempo real: Sistemas de alerta, actualizaciones de estado, y mensajes instantáneos.
+- Eventos distribuidos: Sincronización de datos y activación de eventos entre múltiples servicios.
+- Colas de trabajo: Distribución de tareas en sistemas con alta concurrencia.
+- Streaming de datos: Envío continuo de datos para sistemas analíticos o aplicaciones multimedia.
+
+## Componentes principales
+---
+
+- `RedisPubSubService`: Servicio de publicación y suscripción de mensajes que implementa la interfaz `IMessage` de `CodeDesignPlus.Net.PubSub`.
+- `RedisPubSubOptions`: Opciones de configuración para la conexión y el comportamiento del servicio.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.Redis.PubSub
+        - Exceptions
+            - RedisPubSubException.cs   
+        - Extensions
+            - ServiceCollectionExtensions.cs   
+        - Services
+            - RedisPubSubService.cs
+    - CodeDesignPlus.Net.Redis.PubSub.Abstractions
+        - IRedisPubSubService.cs
+        - Options
+            - RedisPubSubOptions.cs
+</FileTree>
+
+
+## Primeros pasos
+---
+
+En esta sección, se describen los pasos necesarios para comenzar a trabajar con la librería `CodeDesignPlus.Net.Redis.PubSub` en aplicaciones .NET.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimientos básicos de patrones de diseño y sistemas distribuidos.
+- Conocimientos sobre la arquitectura orientada a eventos (Event-Driven).
+- Inyección de dependencias en aplicaciones .NET.
+
+### Instalación
+
+Para instalar la biblioteca `CodeDesignPlus.Net.Redis.PubSub`, agrega el paquete NuGet a tu proyecto:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Redis.PubSub
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Redis.PubSub
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Redis.PubSub" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+
+### Configuración básica
+
+<Steps>
+1. Asignar las opciones de configuración en el `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Producer.Sample/appsettings.json"
+    ```
+
+2. Registra los servicios el contenedor de dependencias de tu aplicación: 
+
+    ```csharp
+    // ...
+    services.AddRedisPubSub(configuration);
+    ```
+</Steps>
+
+
+## Ejemplo rápido
+---
+
+El proyecto de ejemplo [`CodeDesignPlus.Net.Redis.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.PubSub.Sample) contiene dos ejemplos, uno para productores y otro para consumidores, que ilustran cómo utilizar `CodeDesignPlus.Net.Redis.PubSub` en una aplicación .NET Core.
+
+<Tabs>
+
+<TabItem label="Productor">
+
+El proyecto de ejemplo `CodeDesignPlus.Net.Redis.PubSub.Producer.Sample` contiene un ejemplo de cómo publicar mensajes en Redis Pub/Sub.
+
+```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Producer.Sample/Program.cs"
+```
+
+<Steps>
+1. Configuración de Redis en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Producer.Sample/appsettings.json"
+    ```
+
+2. Definir la entidad de usuario:
+
+    Hemos creado la entidad `UserEntity`, la cual estará vinculada al mensaje que se publicará en Redis. Esto proporcionará al consumidor el contexto necesario sobre la entidad que ha experimentado una modificación.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Producer.Sample/UserEntity.cs"
+    ```
+
+3. Creamos los eventos de dominio:
+
+    Hemos creado el evento de dominio `UserCreatedDomainEvent`, el cual se publicará en Redis cuando se cree un nuevo usuario.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Producer.Sample/UserCreatedDomainEvent.cs"
+    ```
+
+4. Registraremos los servicios necesarios en el contenedor de dependencias.
+
+    ```csharp
+    builder.Services.AddRedisPubSub(builder.Configuration);
+    ```
+
+5. Obtenemos la instancia de `IPubSub`:
+
+    ```csharp
+    var producer = serviceProvider.GetRequiredService<IPubSub>();
+    ```
+
+6. Creamos y publicamos el evento `UserCreatedDomainEvent`:
+
+    ```csharp
+    var userCreatedDomainEvent = new UserCreatedDomainEvent(Guid.NewGuid(), "John Doe", "john.doe@codedesignplus.com");
+
+    await producer.PublishAsync(userCreatedDomainEvent, CancellationToken.None);
+    ```
+</Steps>
+
+
+</TabItem>
+
+<TabItem label="Consumidor">
+
+El proyecto de ejemplo `CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample` contiene un ejemplo de cómo suscribirse a mensajes en Apache Kafka.
+
+```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample/Program.cs"
+```
+
+<Steps>
+1. Configuración de Redis en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample/appsettings.json"
+    ```
+
+2. Definir la entidad de usuario:
+
+    Hemos creado la entidad `UserEntity`, que almacenará la información del evento y contendrá solo los datos necesarios para proporcionar el contexto requerido por el consumidor (proyección).
+
+    ```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample/UserEntity.cs"
+    ```
+
+3. Creamos los eventos de dominio:
+
+    Hemos creado el evento de dominio `UserCreatedDomainEvent`, que representa la estructura del evento de dominio a ser consumido.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample/UserCreatedEvent.cs"
+    ```
+
+4. Creamos el event handler:
+
+    Hemos creado el event handler `UserCreatedDomainEventHandler`, el cual se encargará de procesar el evento de dominio `UserCreatedDomainEvent` cuando se publique en Redis.
+
+    El event handler es registrado en el contenedor de dependencias automaticamente por la librería `CodeDesignPlus.Net.PubSub`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Redis.PubSub.Sample/src/CodeDesignPlus.Net.Redis.PubSub.Consumer.Sample/UserCreatedEventHandler.cs"
+    ```
+
+5. Registraremos los servicios necesarios en el contenedor de dependencias.
+
+    ```csharp
+    builder.Services.AddKafka(builder.Configuration);
+    ```
+    <Aside>
+    Cuando el host se ejecuta, iniciará un proceso en segundo plano que escuchará los mensajes publicados en Redis y los procesará utilizando los event handlers registrados en el contenedor de dependencias. 
+    </Aside>
+
+</Steps>
+
+</TabItem>
+
+</Tabs>
+
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Redis.PubSub` proporciona un conjunto de métodos de extensión para facilitar la configuración y el uso de los servicios en aplicaciones .NET.
+
+### ServiceCollectionExtensions
+---
+
+`ServiceCollectionExtensions` contiene los métodos de extensión para registrar los servicios necesarios en el contenedor de dependencias.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/redis-pubsub/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+La librería `CodeDesignPlus.Net.Redis.PubSub` utiliza las opciones de configuración para personalizar el comportamiento del servicio de publicación y suscripción.
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/redis-pubsub/options" />
+
+## Servicios
+---
+
+La librería `CodeDesignPlus.Net.Redis.PubSub` proporciona una serie de servicios para facilitar la producción y el consumo de mensajes en Redis.
+
+### RedisPubSubService
+
+Redis Pub/Sub Service es un servicio de publicación y suscripción de mensajes que implementa la interfaz `IMessage` de `CodeDesignPlus.Net.PubSub`.
+
+<LinkCard title="Explora el servicio RedisPubSubService" href="/libs/redis-pubsub/services/redis-pubsub" />
+
+## Conclusiones
+---
+
+En esta guía, hemos explorado la librería `CodeDesignPlus.Net.Redis.PubSub`, que proporciona una implementación sencilla y eficiente del modelo Pub/Sub de Redis en aplicaciones .NET. Hemos revisado los conceptos básicos, los componentes principales, los casos de uso típicos y los pasos necesarios para comenzar a trabajar con la librería. Además, hemos analizado un ejemplo práctico que ilustra cómo publicar y consumir mensajes en Redis utilizando `CodeDesignPlus.Net.Redis.PubSub`.
+
+## Recursos adicionales
+---
+
+- [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.Redis.PubSub)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.PubSub.Sample)
+- [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven)
+- [Pub/Sub Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
+- [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.Redis.PubSub)
+
+

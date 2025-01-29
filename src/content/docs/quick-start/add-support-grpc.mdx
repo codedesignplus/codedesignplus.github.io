@@ -1,0 +1,122 @@
+---
+title: Soporte para gRPC
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, exploraremos cómo añadir soporte gRPC a un microservicio existente, utilizando el generador `codedesignplus:microservice`. Veremos cómo configurar gRPC y cómo exponer los servicios de tu microservicio para ser consumidos por otros servicios a través de este protocolo. Tomaremos el microservicio de **Clientes** creado en el [artículo anterior](/quick-start/create-microservice) como ejemplo.
+
+## ¿Por qué gRPC?
+
+gRPC es un framework moderno de alto rendimiento para RPC (Remote Procedure Call), desarrollado por Google. Utiliza Protocol Buffers (protobuf) como lenguaje de definición de interfaz y soporta varios lenguajes de programación. gRPC ofrece ventajas significativas sobre REST, especialmente en microservicios, gracias a su:
+
+-   **Eficiencia:** Serialización binaria con protobuf que reduce el tamaño de los mensajes y el tiempo de procesamiento.
+-   **Rendimiento:** Permite comunicación bidireccional y streams, ideal para escenarios de baja latencia.
+-   **Tipado Fuerte:** Los archivos `.proto` aseguran una comunicación consistente entre cliente y servidor.
+-   **Generación Automática de Código:** Facilita la creación de clientes y servidores en varios lenguajes.
+
+## Prerrequisitos
+
+Para seguir este tutorial, necesitarás:
+
+1. Tener creado el microservicio **Clients** siguiendo el [tutorial anterior](/quick-start/create-microservice).
+
+## ¿Qué Aprenderás?
+
+1. Cómo agregar soporte gRPC a un microservicio existente utilizando el generador `codedesignplus:microservice`.
+2. Cómo definir servicios gRPC utilizando archivos `.proto`.
+3. Cómo configurar un servidor gRPC en tu microservicio.
+4. Cómo implementar los servicios gRPC en el código de tu microservicio.
+
+## Añadiendo Soporte gRPC
+
+El generador `codedesignplus:microservice` facilita la incorporación de gRPC a tu microservicio.  Usaremos el generador con la opción `grpc`.
+
+<Steps>
+
+1. Abre tu terminal y navega al directorio raíz de tu microservicio de **Clientes** y ejecuta el siguiente comando:
+
+    ```bash
+    yo codedesignplus:microservice grpc 
+    ```
+
+    <Image src="/images/quick-start/create-microservice-grpc/generator/output-1.png" alt="gRPC Output" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Después de la ejecución del comando, deberás ver una nueva estructura de archivos con los componentes de gRPC.
+
+    <Image src="/images/quick-start/create-microservice-grpc/generator/vscode.png" alt="gRPC VSCode" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+
+<Aside>
+- Para más información sobre los parámetros del comando, puedes consultar la [documentación del generador](/generators/microservice/commands/grpc).
+- Ejecute el comando `dotnet build` en la raíz del proyecto para asegurarse de que el microservicio se compila correctamente.
+</Aside>
+
+## Modificando el Servicio gRPC
+
+Ahora que hemos añadido gRPC a nuestro microservicio, vamos a personalizar el servicio gRPC.
+
+### Archivo .proto
+
+El archivo `clients.proto` define los servicios y mensajes gRPC para nuestro microservicio. El generador habrá creado un archivo base. 
+
+Para este ejemplo, vamos a definir un servicio bidireccional para consultar el cliente por su id.
+
+<Image src="/images/quick-start/create-microservice-grpc/proto.png" alt="gRPC Proto" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside type="tip">
+El canal de comunicación entre el cliente y el servidor es bidireccional, lo que significa que el cliente puede enviar mensajes al servidor y viceversa. Esto es útil para escenarios en los que se requiere una comunicación continua, disminuyendo la latencia y mejorando la eficiencia.
+</Aside>
+
+<Aside>
+- Para más información sobre la sintaxis del archivo `.proto`, puedes consultar la [documentación oficial de Protocol Buffers](https://protobuf.dev/programming-guides/proto3/).
+- El namespace generado para las clases gRPC es generado usando la siguiente estructura: `[Organization].Net.Microservice.[Name-Microservice].Grpc`.
+- .Net utiliza el paquete `Grpc.Tools` para generar el código a partir del archivo `.proto`, por lo que es necesario compilar el proyecto para que se generen las clases.
+</Aside>
+
+### Implementación del Servicio gRPC
+
+El generador ha creado una clase base `ClientService`. Ahora, debemos implementar cada uno de los métodos definidos en el archivo `.proto`. 
+
+
+Para este ejemplo, implementamos el método `GetClient` que recibe un mensaje `GetClientRequest` y lo convierte a la query `GetClientByIdQuery` para ser procesado por el `handler`.
+
+<Image src="/images/quick-start/create-microservice-grpc/get_client_by_id_grpc.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+- El `ClientService` hereda de `Client.ClientBase`, que proporciona la funcionalidad base para los servicios gRPC, así como el manejo de los errores.
+- Es necesario mapear la información de los mensajes gRPC a los comandos y queries existentes.
+- Los `handlers` son los encargados de la lógica de negocio.
+</Aside>
+
+### Configuración de Mapster
+
+Para mapear la respuesta del `handler` al mensaje gRPC, necesitamos configurar Mapster.
+
+<Image src="/images/quick-start/create-microservice-grpc/mapster.png" alt="gRPC Mapster" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Configuración del Servidor gRPC
+
+El generador también actualizó el archivo `Program.cs` para registrar el servicio gRPC.  Generalmente, no necesitarás modificar esto, pero es importante conocer dónde se configura el servidor gRPC.
+
+```csharp
+app.MapGrpcService<ClientService>().RequireAuthorization();
+```
+
+## Compilación
+
+Para asegurarnos de que nuestro microservicio con gRPC se compila correctamente, ejecutaremos el comando `dotnet build` en la raíz del proyecto. El resultado de la compilación se mostrará en la consola y se generará una carpeta `bin` con los archivos binarios necesarios para ejecutar el microservicio.
+
+<Image src="/images/quick-start/create-microservice-grpc/build.png" alt="gRPC Build" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo agregar soporte gRPC a un microservicio existente utilizando el generador `codedesignplus:microservice`. Hemos visto cómo definir un archivo `.proto`, cómo implementar los servicios gRPC, y cómo configurar el servidor gRPC en nuestro microservicio. Ahora, tu microservicio de **Clientes** puede ser consumido a través de gRPC, además de REST.
+
+Esto te proporcionará una base sólida para construir microservicios eficientes y escalables, utilizando la combinación de REST y gRPC según tus necesidades.
+
+---
+
+Espero que este borrador sea de utilidad. ¡Avísame si tienes alguna otra solicitud o quieres hacer ajustes!

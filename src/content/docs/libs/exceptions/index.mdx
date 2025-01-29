@@ -1,0 +1,153 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps } from '@astrojs/starlight/components';
+
+`CodeDesignPlus.Net.Exceptions` es una librería diseñada para proporcionar un marco integral para el manejo de excepciones en aplicaciones .NET Core. Esta librería simplifica el proceso de definir, lanzar y gestionar excepciones personalizadas, permitiendo a los desarrolladores construir mecanismos de manejo de errores robustos y mantenibles.
+
+**Características Principales**
+
+- **Consolidación de Excepciones Transversales**: Facilita la gestión centralizada de excepciones comunes en toda la suite de CodeDesignPlus.Net.SDK, promoviendo la consistencia y reutilización del código.
+- **Soporte para Arquitectura Hexagonal**: Proporciona excepciones específicas para las diferentes capas del patrón de arquitectura hexagonal, incluyendo capas de aplicación, dominio e infraestructura.
+- **Modelos de Errores Estandarizados**: Ofrece modelos de errores uniformes para estandarizar las respuestas al cliente, integrándose fácilmente con middleware para REST y interceptores para gRPC.
+- **Métodos de Extensión para Clause Guards**: Incluye métodos de extensión para manejar excepciones en las capas de aplicación, dominio e infraestructura, asegurando el cumplimiento del patrón de clause guard y mejorando la robustez del código.
+
+## Excepciones
+---
+
+Las excepciones en `CodeDesignPlus.Net.Exceptions` son clases que representan errores que se pueden producir en una aplicación. Estas excepciones se utilizan para manejar errores de forma estructurada y consistente, mejorando la robustez y mantenibilidad del código.
+
+### CodeDesignPlusException
+
+La clase `CodeDesignPlusException` es la excepción base para las clausulas de guardia en las capas de aplicación, dominio e infraestructura. Esta clase se utiliza para manejar errores de forma estructurada y consistente, mejorando la robustez y mantenibilidad del código.
+
+<LinkCard title="Explora la Clase CodeDesignPlusException" href="/libs/exceptions/codedesignplusexception" />
+
+## Clausulas de Guardia
+---
+
+Las clausulas de guardia son métodos de extensión que permiten manejar excepciones en las capas de aplicación, dominio e infraestructura. Estos métodos de extensión se encuentran en la clase `Guard` y se utilizan para validar argumentos, lanzar excepciones y mejorar la robustez del código.
+
+### Guard
+
+La clase `Guard` contiene métodos de extensión base para las clausulas de guardia en las capas de aplicación, dominio e infraestructura.
+
+### DomainGuard
+
+La clase `DomainGuard` contiene métodos de extensión para las clausulas de guardia en la capa de dominio.
+
+<LinkCard title="Explora la Clase DomainGuard" href="/libs/exceptions/guards/domain-guard" />
+
+### ApplicationGuard
+
+La clase `ApplicationGuard` contiene métodos de extensión para las clausulas de guardia en la capa de aplicación.
+
+<LinkCard title="Explora la Clase ApplicationGuard" href="/libs/exceptions/guards/application-guard" />
+
+### InfrastructureGuard
+
+La clase `InfrastructureGuard` contiene métodos de extensión para las clausulas de guardia en la capa de infraestructura.
+
+<LinkCard title="Explora la Clase InfrastructureGuard" href="/libs/exceptions/guards/infrastructure-guard" />
+
+## Métodos de extensión
+---
+
+Los métodos de extensión en `CodeDesignPlus.Net.Exceptions` proporcionan funcionalidades adicionales para manipular excepciones y cláusulas de guardia. Estos métodos de extensión se utilizan para mejorar la robustez y mantenibilidad del código..
+
+### GuardExtensions
+
+La clase `GuardExtensions` proporciona métodos de extensión para manipulación de cadenas relacionados con cláusulas de guardia.
+
+<LinkCard title="Explora la Clase GuardExtensions" href="/libs/exceptions/extensions/guard-extension" />
+
+## Modelos de Errores
+---
+
+Los modelos de errores en `CodeDesignPlus.Net.Exceptions` son clases que representan los errores que se pueden producir en una aplicación. Estos modelos de errores se utilizan para estandarizar las respuestas al cliente y mejorar la consistencia en la gestión de errores.
+
+<LinkCard title="Explora los Modelos de Errores" href="/libs/exceptions/models" />
+
+### ErrorResponse
+
+El modelo `ErrorResponse` representa un error que se puede producir en una aplicación. Este modelo se utiliza para estandarizar las respuestas al cliente y mejorar la consistencia en la gestión de errores.
+
+### ErrorDetail
+
+El modelo `ErrorDetail` representa un detalle de error que se puede producir en una aplicación. Este modelo se utiliza para estandarizar las respuestas al cliente y mejorar la consistencia en la gestión de errores.
+
+## Ejemplos de Uso
+---
+
+Este código muestra cómo usar la biblioteca `CodeDesignPlus.Net.Exceptions` para realizar validaciones utilizando cláusulas de guardia específicas para cada capa de la arquitectura hexagonal (Domain, Application, Infrastructure). Si una validación falla, se lanza una excepción del tipo CodeDesignPlusException.
+
+```csharp url="examples/CodeDesignPlus.Net.Exceptions.Sample/CodeDesignPlus.Net.Exceptions.Sample/Program.cs"
+```
+
+<Steps>
+1. Declaración de variables y configuración inicial
+
+    Se define una variable user con un valor inicial de null. Esta variable será validada en los diferentes ejemplos.
+    ```csharp
+    string? user = null;
+    ```
+
+2. Uso de la cláusula DomainGuard
+
+    - Se llama a `DomainGuard.IsNullOrEmpty(user, ErrorDomain.UserIsRequired)` para validar si user es null o está vacía.
+    - Si la condición es verdadera, se lanza una excepción CodeDesignPlusException con un mensaje y un código de error específicos para la capa Domain.
+    - En el bloque catch, se capturan y se imprimen las propiedades de la excepción: Message, Code, y Layer.
+
+    ```csharp
+
+    try
+    {
+        DomainGuard.IsNullOrEmpty(user, ErrorDomain.UserIsRequired);
+    }
+    catch (CodeDesignPlusException ex)
+    {
+        Console.WriteLine(ex.Message); // Mensaje descriptivo del error
+        Console.WriteLine(ex.Code);   // Código de error asociado
+        Console.WriteLine(ex.Layer);  // Capa donde ocurrió el error (Domain)
+    }
+    ```
+
+3. Uso de la cláusula `ApplicationGuard`
+
+    - Similar al paso anterior, pero usando la cláusula de guardia `ApplicationGuard`.
+    - Valida la misma condición (user es null o está vacía) pero con un código de error y mensaje específico para la capa Application.
+    - Los detalles del error se imprimen en el bloque catch.
+
+    ```csharp
+    try
+    {
+        ApplicationGuard.IsNullOrEmpty(user, ErrorApplication.UserIsRequired);
+    }
+    catch (CodeDesignPlusException ex)
+    {
+        Console.WriteLine(ex.Message); // Mensaje descriptivo del error
+        Console.WriteLine(ex.Code);   // Código de error asociado
+        Console.WriteLine(ex.Layer);  // Capa donde ocurrió el error (Application)
+    }
+    ```
+
+3. Uso de la cláusula `InfrastructureGuard`
+
+    - De nuevo, se valida si user es null o está vacía, pero esta vez con la cláusula de guardia `InfrastructureGuard`.
+    - La excepción generada utiliza un código y mensaje específico para la capa Infrastructure.
+    - Los detalles del error se imprimen en el bloque catch.
+
+    ```csharp
+    try
+    {
+        InfrastructureGuard.IsNullOrEmpty(user, ErrorInfrastructure.UserIsRequired);
+    }
+    catch (CodeDesignPlusException ex)
+    {
+        Console.WriteLine(ex.Message); // Mensaje descriptivo del error
+        Console.WriteLine(ex.Code);   // Código de error asociado
+        Console.WriteLine(ex.Layer);  // Capa donde ocurrió el error (Infrastructure)
+    }
+    ```
+</Steps>

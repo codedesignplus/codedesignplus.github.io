@@ -1,0 +1,64 @@
+---
+title: Redis
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+El `RedisContainer` es un componente de la librería **CodeDesignPlus.Net.xUnit** que proporciona un contenedor Docker para ejecutar Redis, un almacén de datos en memoria. Este componente facilita la creación de pruebas unitarias que dependen de Redis, ofreciendo un entorno de pruebas aislado y reproducible. Además, el componente permite probar diferentes configuraciones, incluyendo el uso de certificados y la configuración en modo cluster.
+
+## ¿Cómo Funciona?
+---
+
+El `RedisContainer` utiliza `Docker Compose` para definir y gestionar el contenedor Redis. Al inicializar una instancia de esta clase, se genera un archivo `docker-compose.yml` temporal con la configuración necesaria para ejecutar el contenedor. Luego, el contenedor se inicia y se detiene automáticamente al final de la ejecución de las pruebas.
+
+El proceso general de funcionamiento es el siguiente:
+1.  **Configuración del Contenedor:** El método `Build()` define la configuración específica del contenedor Redis, incluyendo la ruta al archivo `docker-compose.yml`, opciones de reinicio forzado, eliminación de contenedores huérfanos, parada al finalizar y un nombre de servicio alternativo generado dinámicamente para evitar conflictos.
+2.  **Creación del Contenedor:** Se crea una instancia de `DockerComposeCompositeService` usando la configuración definida.
+3.  **Inicio y Detención del Contenedor:** El contenedor se inicia cuando se crea una instancia de la clase `RedisContainer` y se detiene automáticamente cuando la instancia se elimina, asegurando la limpieza del entorno.
+4.  **Inicialización de Servicios Redis:** La clase inicializa dos servicios `RedisService`:
+    *   `RedisServer`: Configurado con un certificado y una contraseña PFX.
+    *   `RedisServerWithoutPfxPassword`: Configurado con un certificado pero sin contraseña PFX.
+5.  **Generación de Opciones de Configuración:** La clase proporciona métodos para crear opciones de configuración para el servicio `RedisService`, facilitando la personalización de las pruebas.
+
+## Container
+---
+
+El `RedisContainer` hereda de la clase `DockerCompose`, la cual proporciona la lógica base para interactuar con Docker Compose. La clase utiliza la clase `DockerComposeCompositeService` de la librería `Testcontainers` para iniciar y detener contenedores docker. La configuración del contenedor se define en el método `Build()` que crea un archivo `docker-compose.yml` con los parámetros necesarios para la ejecución del contenedor Redis. El archivo `docker-compose.yml` se encuentra dentro del directorio `Containers/RedisContainer`.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/RedisContainer/RedisContainer.cs"
+```
+
+La clase `RedisContainer` utiliza la clase `RedisService` para realizar las operaciones de conexión con redis, y configurar las opciones para dicha conexión, se tiene la opción de configurar con certificado y sin certificado.
+
+<LinkCard title="Explora la clase RedisService" href="/libs/redis/services/redis-service" />
+
+<Aside >
+La clase `RedisContainer` no define colecciones (fixtures), ya que se proporciona la instancia del contenedor y la configuracion del servicio directamente.
+</Aside>
+
+## Ejemplo de Uso
+---
+
+Este ejemplo ilustra cómo usar `RedisContainer` para realizar pruebas de integración con Redis. La prueba verifica la conexión a una instancia de Redis utilizando el servicio `RedisServer` proporcionado por el contenedor y asegura que la conexión esté activa. Este ejemplo muestra el uso de la clase `RedisService` y su propiedad `IsConnected` para validar una conexión exitosa a Redis en un contexto de prueba.
+
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/RedisContainerTest.cs"
+```
+
+## Conclusiones
+---
+
+-   El `RedisContainer` facilita la creación de pruebas unitarias que requieren una instancia de Redis.
+-   Utiliza Docker Compose para la gestión del contenedor, proporcionando una forma sencilla de definir la configuración.
+-   Proporciona servicios `RedisService` con diferentes configuraciones de certificados para la conexión.
+-   El uso del `RedisContainer` mejora la reproducibilidad y el aislamiento de las pruebas unitarias.
+-  El contenedor Redis se inicia automaticamente al comienzo de cada prueba y se detiene una vez termina, esto permite un ambiente de pruebas limpio.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de Docker](https://docs.docker.com/)
+-   [Documentación de Docker Compose](https://docs.docker.com/compose/)
+-   [Documentación de Redis](https://redis.io/documentation/)
+-   [Documentación de Redis en .NET](https://stackexchange.github.io/StackExchange.Redis/)
+-   [Documentación de xUnit](https://xunit.net/)

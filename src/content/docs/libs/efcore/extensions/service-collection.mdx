@@ -1,0 +1,91 @@
+---
+title: Service Collection
+---
+
+La clase `ServiceCollectionExtensions` proporciona un conjunto de métodos de extensión que facilitan la configuración e integración de `CodeDesignPlus.Net.EFCore` en proyectos .NET. Estas extensiones permiten agregar configuraciones de EFCore y registrar repositorios de forma automática, promoviendo una mayor organización y reduciendo el código repetitivo.
+
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+
+
+## Escenarios de Uso
+---
+
+Este conjunto de métodos de extensión es particularmente útil en aplicaciones que:
+
+- Utilizan EFCore como su ORM principal.
+- Necesitan centralizar y validar la configuración de opciones relacionadas con EFCore.
+- Desean registrar automáticamente repositorios en el contenedor de dependencias.
+
+## Beneficios
+---
+
+- Centraliza la configuración de EFCore en el archivo `appsettings.json`.
+- Simplifica el registro de servicios y repositorios en el contenedor de dependencias.
+- Reduce la posibilidad de errores al validar automáticamente las opciones configuradas.
+
+
+## Ejemplo Práctico
+---
+
+En este ejemplo, utilizaremos las extensiones `AddEFCore` para configurar EFCore y registrar automaticamente los repositorios en el contenedor de dependencias de una aplicación ASP.NET Core. Primero, definiremos las opciones de configuración en el archivo `appsettings.json`:
+
+```json
+{
+  "EFCore": {
+    "Enable": true,
+    "RegisterRepositories": true
+  }
+}
+```
+
+Luego, en el método `ConfigureServices` de la clase `Startup`, utilizaremos las extensiones `AddEFCore` para configurar EFCore y registrar los repositorios en el contenedor de dependencias:
+
+```csharp
+public class Startup
+{
+    public void ConfigureServices(IServiceCollection services)
+    {
+        serviceCollection.AddDbContext<OrderContext>(options =>
+        {
+            options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), x =>
+            {
+                x.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+            });
+        });
+
+        serviceCollection.AddEFCore<MyDbContext>(configuration);
+    }
+}
+```
+
+## Métodos de extensión
+---
+`ServiceCollectionExtensions` proporciona una serie de métodos de extensión que facilitan la adición de servicios a la colección de servicios en una aplicación. Estos métodos permiten una configuración más modular y organizada del contenedor de dependencias. A continuación se detallan algunos de los métodos principales:
+
+### AddEFCore
+**Type:** `public static IServiceCollection AddEFCore<TDbContext>(this IServiceCollection services, IConfiguration configuration) where TDbContext : DbContext`
+
+El método `AddEFCore` permite agregar configuraciones específicas de EFCore al contenedor de dependencias. Este método simplifica la configuración de EFCore y permite centralizar la configuración en el archivo `appsettings.json`. De igual forma, permite registrar automáticamente los repositorios en el contenedor de dependencias cuando la opción `RegisterRepositories` está habilitada.
+
+- **Parámetros**
+    - services: La instancia de `IServiceCollection` donde se agregarán los servicios.
+    - configuration: La configuración a la que se enlazarán las opciones.
+
+- **Tipo de Retorno**
+    - Devuelve la instancia de `IServiceCollection` para permitir llamadas encadenadas.
+
+- **Excepciones**
+    - ArgumentNullException: Lanzada si services o configuration es nulo.
+    - EFCoreException: Lanzada si la sección de configuración requerida no existe.
+
+
+## Conclusiones
+---
+
+Las extensiones de `ServiceCollectionExtensions` simplifican la configuración de EFCore y la integración de repositorios en aplicaciones ASP.NET Core. Al centralizar la configuración y el registro de servicios, estas extensiones promueven una mayor organización y facilitan la inyección de dependencias en tu aplicación. Utiliza estas extensiones para mejorar la modularidad y la eficiencia de tu proyecto ASP.NET Core.

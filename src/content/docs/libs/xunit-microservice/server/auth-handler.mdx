@@ -1,0 +1,70 @@
+---
+title: Auth Handler
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `AuthHandler` es un handler de autenticación personalizado diseñado para simular la autenticación de usuarios en pruebas unitarias y de integración. Este componente permite a los desarrolladores probar la lógica de sus aplicaciones que depende de la autenticación sin necesidad de configurar un proveedor de autenticación real.
+
+## ¿Cómo Funciona?
+---
+
+El `AuthHandler` implementa un esquema de autenticación de prueba que siempre crea un usuario autenticado con un conjunto predefinido de claims. Esto permite que las pruebas se ejecuten en un contexto de usuario autenticado, simulando así el comportamiento en un entorno real.
+
+## Métodos
+---
+
+### HandleAuthenticateAsync
+
+Este método es el corazón del `AuthHandler`. Se encarga de realizar las siguientes acciones:
+
+-   **Creación de Claims:** Crea un conjunto de `Claim` con información básica del usuario, como su identificador, nombre, correo electrónico, etc. Estos claims simulan un usuario autenticado.
+-   **Creación de Identidad:**  Crea una nueva instancia de `ClaimsIdentity` usando los claims generados y un tipo de autenticación ("TestAuthType").
+-   **Creación del Principal:**  Crea una instancia de `ClaimsPrincipal` utilizando la identidad creada.
+-   **Creación del Ticket de Autenticación:** Crea una instancia de `AuthenticationTicket` usando el principal y el esquema de autenticación ("TestAuthType").
+-   **Retorno del Resultado:**  Retorna un resultado exitoso de autenticación (AuthenticateResult.Success) con el ticket de autenticación.
+
+## Implementación
+---
+
+El `AuthHandler` se implementa como una clase que hereda de `AuthenticationHandler<AuthenticationSchemeOptions>` de ASP.NET Core. Recibe como parámetros el `IOptionsMonitor<AuthenticationSchemeOptions>`, el `ILoggerFactory` y el `UrlEncoder`. 
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/Authentication/AuthHandler.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El `AuthHandler` se utiliza registrándolo como un esquema de autenticación en la configuración de servicios de la aplicación de prueba. El siguiente ejemplo muestra cómo registrarlo en el método `ConfigureServices` de la clase `Server<TProgram>`:
+
+```csharp
+    /// <summary>
+    /// Configures the services for the application.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    public virtual void ConfigureServices(IServiceCollection services)
+    {
+        services.AddAuthentication("TestAuth")
+                .AddScheme<AuthenticationSchemeOptions, AuthHandler>("TestAuth", options => { });
+
+        services.AddSingleton(this.LoggerProvider);
+        services.AddSingleton<ILoggerFactory, InMemoryLoggerFactory>();
+    }
+```
+En este ejemplo:
+- Se registra el `AuthHandler` con el esquema de autenticación "TestAuth".
+- Se indica que cuando la aplicación utilice este esquema de autenticación, debe usar `AuthHandler` para gestionar la autenticación.
+- Ademas se registran los servicios de logging en memoria.
+
+Una vez configurado el `AuthHandler`, cualquier prueba que necesite un usuario autenticado puede utilizar este esquema sin necesidad de configurar un proveedor de autenticación real.
+
+## Conclusiones
+---
+
+El `AuthHandler` es una herramienta indispensable para las pruebas unitarias y de integración que requieren un entorno de usuario autenticado. Al simular la autenticación de manera sencilla y controlada, este componente permite a los desarrolladores probar el comportamiento de sus aplicaciones que depende de la autenticación sin necesidad de configurar una infraestructura de autenticación compleja.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de ASP.NET Core Authentication](https://learn.microsoft.com/es-es/aspnet/core/security/authentication/)
+-   [Claims-based identity in ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/security/authorization/claims)

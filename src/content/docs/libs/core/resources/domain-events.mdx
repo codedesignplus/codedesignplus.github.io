@@ -1,0 +1,72 @@
+---
+title: Domain Events
+---
+
+En este artículo, exploraremos el concepto de **Eventos de Dominio** en el contexto del Domain-Driven Design (DDD). Aprenderás sobre su propósito, cómo se estructuran y cómo se utilizan en la librería `CodeDesignPlus.Net.Core`. También proporcionaremos ejemplos prácticos de implementación para ayudarte a entender su funcionalidad.
+
+## ¿Qué es un Evento de Dominio?
+---
+
+Un **Evento de Dominio** es una notificación que indica que algo significativo ha ocurrido en el dominio de una aplicación. Estos eventos son utilizados para representar cambios importantes en el estado del modelo de dominio, y sirven como una forma de comunicar esas modificaciones a otros componentes del sistema.
+
+### Importancia de los Eventos de Dominio
+
+1. **Desacoplamiento:** Los eventos de dominio ayudan a desacoplar diferentes partes de la aplicación. Al emitir eventos, las clases que los generan no necesitan saber quién los escucha, lo que permite una mayor flexibilidad y escalabilidad.
+
+2. **Auditoría y Trazabilidad:** Los eventos de dominio facilitan el seguimiento de cambios en el sistema, permitiendo la auditoría de acciones importantes y el rastreo de su origen.
+
+3. **Reactividad:** Los eventos permiten que otros componentes del sistema reaccionen ante cambios, lo que es esencial en sistemas que requieren un alto grado de interactividad.
+
+4. **Integración:** En arquitecturas distribuidas, los eventos de dominio pueden ser utilizados para integrar diferentes sistemas, permitiendo que se comuniquen a través de eventos en lugar de llamadas directas.
+
+## Abstracciones
+---
+
+La librería `CodeDesignPlus.Net.Core` proporciona las siguientes abstracciones para trabajar con eventos de dominio:
+
+### IDomainEvent
+
+Esta interfaz define las propiedades básicas que debe tener un evento de dominio:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IDomainEvent.cs"
+```
+
+### DomainEvent
+
+La clase base para todos los eventos de dominio, que implementa la interfaz `IDomainEvent` y proporciona funcionalidades adicionales:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/DomainEvent.cs"
+```
+
+## Ejemplo Práctico
+---
+
+A continuación, veremos ejemplos concretos de eventos de dominio específicos para un agregado de pedidos (`OrderAggregate`).
+
+### OrderCreatedDomainEvent
+
+Este evento se emite cuando se crea un nuevo pedido:
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DomainEvents/OrderCreatedDomainEvent.cs"
+```
+
+### OrderUpdatedDomainEvent
+
+Este evento se emite cuando se actualiza un pedido:
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DomainEvents/OrderUpdatedDomainEvent.cs"
+```
+
+### OrderDeletedDomainEvent
+
+Este evento se emite cuando se elimina un pedido:
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DomainEvents/OrderDeletedDomainEvent.cs"
+```
+
+## Conclusiones
+---
+
+Los eventos de dominio son un componente esencial del Domain-Driven Design, ya que permiten la comunicación de cambios significativos en el modelo de dominio de una manera desacoplada y eficiente. En este artículo, hemos explorado las interfaces y clases que facilitan el uso de eventos de dominio en la librería `CodeDesignPlus.Net.Core`, junto con ejemplos concretos que ilustran su implementación.
+
+Al comprender y aplicar los eventos de dominio, podrás construir aplicaciones más robustas y flexibles que respondan adecuadamente a los cambios en el sistema. Si deseas aprender más sobre la gestión de eventos de dominio o su integración con otros patrones de diseño, no dudes en contactarnos. ¡Estamos aquí para ayudarte!

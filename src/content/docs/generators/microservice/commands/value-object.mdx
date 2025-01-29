@@ -1,0 +1,143 @@
+---
+title: "Creación de Value Object"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice valueObject`
+
+Este comando se utiliza para crear uno o más Value Objects dentro de un microservicio existente. En el contexto de Domain-Driven Design (DDD), los Value Objects son objetos inmutables que se definen por sus atributos y no tienen identidad propia. Este comando facilita la generación de la estructura básica para definir Value Objects en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Value Object (Objeto de Valor):** En DDD, un Value Object es un objeto que se define por sus atributos y no tiene identidad propia. Dos Value Objects se consideran iguales si todos sus atributos son iguales.
+*   **Inmutabilidad:** Los Value Objects son inmutables, lo que significa que una vez creados, sus valores no pueden cambiar.
+*   **Sin Identidad:** A diferencia de las entidades, los Value Objects no tienen una identidad única.
+*   **DDD:** Domain-Driven Design es un enfoque de desarrollo de software que modela el software alrededor del dominio del negocio. Los Value Objects son un concepto central en DDD.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice valueObject` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice valueObject \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --valueObjects "<value_object_names>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice valueObject `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --valueObjects "<value_object_names>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se crearán los Value Objects.
+
+### `--valueObjects`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una lista de nombres de Value Objects separados por comas que se crearán.
+
+## Ejemplos de Uso
+
+Este ejemplo crea tres Value Objects, `Address`, `EmailAddress` y `PhoneNumber`, en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice valueObject \
+        --organization "Acme" \
+        --microservice "User" \
+        --valueObjects "Address,EmailAddress,PhoneNumber"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice valueObject `
+        --organization "Acme" `
+        --microservice "User" `
+        --valueObjects "Address,EmailAddress,PhoneNumber"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generarán las estructuras base para los Value Objects `Address`, `EmailAddress` y `PhoneNumber` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/value-object/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para los nuevos Value Objects:
+
+<Image src="/images/generators/microservices/value-object/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para uno o más Value Objects en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para los Value Objects.
+
+    <Image src="/images/generators/microservices/value-object/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se crearán los Value Objects, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/value-object/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--valueObjects`
+**Flag:** `--valueObjects "Address,EmailAddress,PhoneNumber"`
+
+1.  Este parámetro define los nombres de los Value Objects que se crearán, generando los archivos correspondientes en la capa de dominio.
+
+    <Image src="/images/generators/microservices/value-object/1-valueobjects-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   Utiliza nombres descriptivos para tus Value Objects, reflejando su rol en el dominio.
+*   Los Value Objects son inmutables, por lo que deben definirse con sus propiedades y no deben modificarse una vez creados.
+*   Los Value Objects son parte de las entidades o agregados.
+*  Los objetos de valor deben ser comparados por sus valores y no por su identidad.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD](https://martinfowler.com/bliki/DomainDrivenDesign.html)
+*   [Value Objects en DDD](https://martinfowler.com/bliki/ValueObject.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice valueObject` facilita la creación de nuevos Value Objects en tu microservicio, asegurando que la estructura y los patrones DDD se apliquen correctamente. Utiliza este comando para modelar tu dominio de manera coherente y mantenible.

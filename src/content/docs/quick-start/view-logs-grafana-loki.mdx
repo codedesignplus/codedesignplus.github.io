@@ -1,0 +1,88 @@
+---
+title: Visualizando Logs de Microservicios en Grafana
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo visualizar los logs generados por los microservicios de CodeDesignPlus utilizando Grafana. Explicaremos el flujo de datos desde los microservicios, a través de OpenTelemetry y Loki, hasta la visualización final en Grafana. Esto nos permitirá monitorear y analizar el comportamiento de nuestros microservicios de forma eficiente.
+
+## ¿Por qué Visualizar Logs en Grafana?
+
+La visualización de logs es fundamental para el monitoreo y la observabilidad de los microservicios. Permite:
+
+- **Detectar errores y problemas:** Identificar fallos en el código, errores de configuración o problemas en la infraestructura.
+- **Analizar el comportamiento:** Entender cómo interactúan los microservicios y cómo responden a diferentes cargas de trabajo.
+- **Depurar problemas:** Investigar el origen de problemas y diagnosticar errores.
+- **Monitorear la salud:**  Tener una visión clara del estado y el rendimiento de los microservicios en tiempo real.
+
+Grafana, con su capacidad para crear dashboards y visualizar datos de diferentes fuentes, es una excelente herramienta para analizar los logs de nuestros microservicios.
+
+## ¿Qué Aprenderás?
+
+1. Cómo se exportan los logs de los microservicios mediante gRPC a OpenTelemetry.
+2. Cómo OpenTelemetry direcciona los logs a Loki.
+3. Cómo visualizar los logs de los microservicios en Grafana.
+4. Cómo realizar consultas en Loki para filtrar y analizar logs específicos.
+
+## Arquitectura de Monitoreo de Logs
+
+El flujo de logs en nuestro entorno de microservicios sigue esta arquitectura:
+
+1.  **Microservicios:** Los microservicios, construidos con el framework de CodeDesignPlus, generan logs que son enviados a través de gRPC al OpenTelemetry Collector.
+2.  **OpenTelemetry Collector:** Recibe los logs de los microservicios y los direcciona a Loki. El OpenTelemetry Collector implementa el protocolo [OTLP](https://opentelemetry.io/docs/specs/otlp/) (OpenTelemetry Protocol).
+3.  **Loki:** Recibe y almacena los logs del OpenTelemetry Collector de forma eficiente.
+4.  **Grafana:** Consulta los logs almacenados en Loki y los visualiza en dashboards.
+
+<Image src="/images/quick-start/dev-environment/dev-environment.svg" alt="Entorno de Desarrollo" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Configuración
+
+CodeDesignPlus ya incluye la configuración necesaria para el monitoreo de logs. La librería `CodeDesignPlus.Net.Logger` se encarga de exportar los logs de los microservicios a OpenTelemetry, que a su vez los envía a Loki. 
+
+```csharp url="packages/CodeDesignPlus.Net.Logger/src/CodeDesignPlus.Net.Logger/Extensions/ServiceCollectionExtension.cs"
+```
+
+
+## Pasos para la Visualización de Logs en Grafana
+
+<Steps>
+
+1. **Asegúrate de que los Microservicios estén en Ejecución:** Verifica que los microservicios, OpenTelemetry Collector, Loki y Grafana estén en ejecución. El microservicio puede ser ejecutado de forma local o en un contenedor Docker.
+
+    <Image src="/images/quick-start/grafana-logs/running_services.png" alt="Running Services" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. **Accede a Grafana:** Abre un navegador y ve a la URL [`http://localhost:3000`](http://localhost:3000) (o la dirección donde se está ejecutando Grafana).
+
+    <Image src="/images/quick-start/grafana-logs/grafana_home.png" alt="Grafana Home" width="1600" height="900" decoding="async" loading="lazy" />
+  
+3.  **Explora los Logs:** En la barra de navegación de Grafana, haz clic en `Explore` (icono de la brújula) y selecciona la fuente de datos de Loki. Esto te llevará al editor de consultas de Loki, donde puedes escribir queries para filtrar y analizar los logs.
+
+    <Image src="/images/quick-start/grafana-logs/explore_logs.png" alt="Grafana Explore" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. **Realiza Consultas en Loki:** En el editor de consultas, puedes escribir [queries de LogQL](https://grafana.com/docs/loki/latest/query/) para filtrar y analizar los logs. Algunos ejemplos incluyen:
+
+    - Para ver logs de un microservicio específico (por ejemplo, `ms-clients`):  `{service_name="ms-clients"}`.
+    - Para filtrar logs por nivel (por ejemplo, `Error`):  `{level="Error"}`.
+    - Para ver logs que contengan una palabra clave específica (por ejemplo, "excepción"):  `{message=~"excepción"}`.
+
+    <Image src="/images/quick-start/grafana-logs/loki_query.png" alt="Grafana Loki Query" width="1600" height="900" decoding="async" loading="lazy" />
+
+ 6. **Visualiza los Logs:** Una vez que tienes la consulta configurada, puedes visualizar los logs en la parte inferior de la pantalla. Grafana muestra los logs en un formato de texto y proporciona herramientas para filtrar, organizar y analizar los datos.
+
+    <Image src="/images/quick-start/grafana-logs/loki_response.png" alt="Grafana Loki Logs" width="1600" height="900" decoding="async" loading="lazy" />
+
+7.  **Crea Dashboards:** Para un monitoreo continuo, puedes crear paneles en Grafana que muestren los logs de forma permanente. Crea un nuevo dashboard y añade un panel con la fuente de datos de Loki y las queries que necesites.
+
+    <Image src="/images/quick-start/grafana-logs/loki_dashboard.png" alt="Grafana Loki Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+    <Aside>
+    Para obtener más información sobre cómo crear dashboards en Grafana, consulta la [documentación oficial](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/create-dashboard/).
+    </Aside>
+</Steps>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo visualizar los logs de los microservicios de CodeDesignPlus utilizando Grafana. Hemos comprendido el flujo de datos desde los microservicios, a través de OpenTelemetry y Loki, hasta la visualización final en Grafana. Ahora, puedes utilizar Grafana para monitorear y analizar los logs de tus microservicios, lo que te permitirá detectar problemas, diagnosticar errores y optimizar el rendimiento.
+
+Esta configuración proporciona una base sólida para la observabilidad de tus microservicios y facilita la gestión de la salud de tu sistema.

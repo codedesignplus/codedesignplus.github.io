@@ -1,0 +1,145 @@
+---
+title: Despliegue
+---
+
+Esta sección describe cómo desplegar el arquetipo utilizando Docker, GitHub Actions, Azure Kubernetes Service (AKS) y Azure Container Registry (ACR).
+
+## Docker
+
+Docker se utiliza para empaquetar la aplicación en contenedores, lo que facilita la portabilidad y el despliegue en diferentes entornos.
+
+### Descripción del Dockerfile
+
+El arquetipo incluye un `Dockerfile` en la carpeta `src/entrypoints/CodeDesignPlus.Net.Microservice.Rest`. Este archivo define los pasos necesarios para construir la imagen Docker de la aplicación.
+
+```dockerfile
+# Stage 1: Build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
+WORKDIR /app
+
+# Copy csproj and restore dependencies
+COPY *.csproj ./
+RUN dotnet restore
+
+# Copy the rest of the application
+COPY . .
+
+# Publish the application
+RUN dotnet publish -c Release -o out
+
+# Stage 2: Runtime
+FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/out ./
+
+# Entrypoint
+ENTRYPOINT ["dotnet", "CodeDesignPlus.Net.Microservice.Rest.dll"]
+```
+
+Este Dockerfile realiza los siguientes pasos:
+
+1.  **Stage 1: `build`**:
+    *   Utiliza la imagen base de .NET SDK para compilar la aplicación.
+    *   Copia los archivos `csproj` y restaura las dependencias.
+    *   Copia el resto del código fuente.
+    *   Publica la aplicación en la carpeta `out`.
+2.  **Stage 2: `runtime`**:
+    *   Utiliza la imagen base de ASP.NET Core Runtime para ejecutar la aplicación.
+    *   Copia los archivos desde la etapa `build`.
+    *   Define el comando de inicio de la aplicación.
+
+### Manera de Construir la Imagen
+
+1.  **Navega a la carpeta del proyecto:**
+    ```bash
+    cd src/entrypoints/CodeDesignPlus.Net.Microservice.Rest
+    ```
+2.  **Construye la imagen Docker:**
+    ```bash
+    docker build -t <nombre-imagen>:<etiqueta> .
+    ```
+    Reemplaza `<nombre-imagen>` con el nombre que quieres dar a tu imagen (por ejemplo, `codedesignplus-rest-api`) y `<etiqueta>` con una etiqueta (por ejemplo, `latest` o `v1.0.0`).
+
+## Despliegue con Docker Compose
+
+Para facilitar el despliegue local, el arquetipo incluye un archivo `docker-compose.yaml` en la carpeta `resources`. Este archivo te permite ejecutar los microservicios y sus dependencias en contenedores de forma sencilla. (Esta sección ya la vimos en el apartado anterior).
+
+## Despliegue con GitHub Actions, AKS y ACR
+
+Para el despliegue en un entorno de producción, utilizaremos GitHub Actions para la integración continua, AKS para la orquestación de contenedores y ACR para el almacenamiento de imágenes.
+
+### GitHub Actions
+
+GitHub Actions se utilizará para crear un pipeline de CI/CD. Los principales pasos son:
+
+1.  **Configuración del Workflow:**
+    *   Crea un nuevo workflow en `.github/workflows` (ej: `deploy-aks.yml`).
+    *   Este workflow se activará cuando haya un push a la rama `main`.
+
+2.  **Pasos del Workflow:**
+    *   **Checkout**: Obtener el código fuente del repositorio.
+    *   **Login en Azure:** Iniciar sesión en Azure.
+    *  **Construir la imagen Docker:** Construir la imagen Docker y etiquetarla con la versión de la app.
+        ```yaml
+          - name: Build Docker image
+            run: |
+             cd src/entrypoints/CodeDesignPlus.Net.Microservice.Rest
+             docker build -t ${{env.ACR_LOGIN_SERVER}}/${{env.IMAGE_NAME}}:${{github.run_number}} .
+        ```
+    *   **Login en ACR**: Autenticarse en el Azure Container Registry.
+        ```yaml
+           - name: Log in to ACR
+              uses: azure/docker-login@v1
+              with:
+                  registry: ${{env.ACR_LOGIN_SERVER}}
+        ```
+    *   **Push a ACR**: Enviar la imagen Docker a Azure Container Registry.
+         ```yaml
+           - name: Push image to ACR
+              run: |
+                docker push  ${{env.ACR_LOGIN_SERVER}}/${{env.IMAGE_NAME}}:${{github.run_number}}
+        ```
+     * **Deploy a AKS**: Desplegar los cambios a Azure Kubernetes Service.
+         ```yaml
+          - name: Deploy to AKS
+            uses: Azure/k8s-deploy@v1.4
+            with:
+                namespace: default
+                manifests: |
+                     ./manifests/deployment.yaml
+                     ./manifests/service.yaml
+                images: ${{env.ACR_LOGIN_SERVER}}/${{env.IMAGE_NAME}}:${{github.run_number}}
+                kubeconfig: ${{secrets.KUBE_CONFIG}}
+        ```
+
+### Azure Kubernetes Service (AKS)
+
+AKS es un servicio gestionado de Kubernetes que facilita la orquestación de contenedores.
+
+1.  **Creación del Cluster AKS:**
+    *   Crea un clúster AKS en Azure.
+2.  **Configuración del Despliegue:**
+    *   Crea los manifests de kubernetes para el despliegue.
+    *  Definir los secrets y configurar los namespaces.
+3.  **Despliegue de la Aplicación:**
+    *  El workflow de Github Actions se encargará de desplegar la nueva versión de la aplicacion al cluster de AKS.
+
+### Azure Container Registry (ACR)
+
+ACR es un servicio de registro de contenedores gestionado en Azure, donde se almacenan las imágenes Docker.
+
+1.  **Creación del ACR:**
+    *   Crea un registro de contenedores en Azure (ACR).
+2.  **Configuración del ACR en el Workflow:**
+   *  Asegurarse de que los secretos `ACR_LOGIN_SERVER`, `KUBE_CONFIG` y `AZURE_CREDENTIALS` (si usas service principle) estén configurados en el repositorio.
+   *  Estos secretos se usarán para realizar el login en ACR y desplegar la aplicación en AKS.
+
+**Flujo de Despliegue:**
+
+1.  Se realiza un commit en la rama `main`.
+2.  GitHub Actions ejecuta el workflow `deploy-aks.yml`.
+3.  El workflow construye la imagen Docker y la envía a ACR.
+4.  El workflow despliega la imagen en AKS.
+5.  La aplicación está disponible en el clúster AKS.
+
+Con este enfoque, puedes automatizar el proceso de despliegue, garantizar la consistencia y reducir los errores.

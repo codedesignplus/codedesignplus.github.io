@@ -1,0 +1,114 @@
+---
+title: Error Middleware
+---
+
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `ExceptionMiddleware` es un middleware de ASP.NET Core diseñado para interceptar y manejar excepciones que ocurren durante el procesamiento de una solicitud HTTP en una API REST. Su objetivo principal es proporcionar respuestas de error consistentes y formateadas en formato JSON, mejorando así la experiencia del cliente y facilitando la depuración y el manejo de errores.
+
+```csharp url="packages/CodeDesignPlus.Net.Microservice.Commons/src/CodeDesignPlus.Net.Microservice.Commons/EntryPoints/Rest/Middlewares/ExceptionMiddlware.cs"
+```
+
+## ¿Cómo Funciona?
+
+El `ExceptionMiddleware` se inserta en el pipeline de procesamiento de solicitudes HTTP de ASP.NET Core. Captura cualquier excepción que no sea manejada por los controladores de la API. Cuando una excepción ocurre, el middleware intercepta el flujo de ejecución, analiza el tipo de excepción y genera una respuesta HTTP con información detallada sobre el error. La respuesta se formatea en JSON, siguiendo una estructura común definida por la clase `ErrorResponse`.
+
+El middleware maneja los siguientes tipos de excepciones de forma específica:
+
+- **`ValidationException` (FluentValidation):** Extrae los errores de validación del objeto de excepción y los incluye en la respuesta JSON, proporcionando detalles sobre cada campo que falló en la validación. La respuesta se envía con un código de estado HTTP 400 (Bad Request).
+- **`CodeDesignPlusException`:** Utiliza la información específica de este tipo de excepción (código, mensaje y capa de origen) para generar una respuesta JSON detallada, incluyendo el código de error personalizado. La respuesta se envía con un código de estado HTTP 400 (Bad Request).
+- **`Exception` (genérica):** Maneja cualquier otra excepción no capturada. Genera una respuesta JSON con un código de error genérico y un mensaje de error, indicando que ha ocurrido un error interno del servidor. La respuesta se envía con un código de estado HTTP 500 (Internal Server Error).
+
+El middleware utiliza el `JsonSerializer` de `CodeDesignPlus.Net.Serializers` para serializar la respuesta en formato JSON. Además, el TraceIdentifier del contexto HTTP se incluye en la respuesta para facilitar el rastreo de errores.
+
+## Métodos
+---
+
+El `ExceptionMiddleware` implementa los siguientes métodos y funciones principales:
+
+### InvokeAsync
+**Type:** `public async Task InvokeAsync(HttpContext context)`
+
+Método principal del middleware que se ejecuta para cada solicitud HTTP. Envuelve el resto del pipeline de procesamiento de solicitudes (delegado `next`) en un bloque try-catch. En caso de que se produzca alguna excepción, delega el manejo a los métodos correspondientes (`HandleExceptionsAsync`).
+
+### HandleExceptionsAsync (CodeDesignPlusException)
+**Type:** `private static Task HandleExceptionsAsync(HttpContext context, CodeDesignPlusException exception)`
+
+Maneja excepciones de tipo `CodeDesignPlusException`.  Establece el tipo de contenido de la respuesta como "application/json", el código de estado HTTP como 400 (Bad Request) y construye un objeto `ErrorResponse` a partir de la información de la excepción. Serializa la respuesta en formato JSON y la envía al cliente.
+
+### HandleExceptionsAsync (ValidationException)
+**Type:** `private static Task HandleExceptionsAsync(HttpContext context, ValidationException exception)`
+
+Maneja excepciones de tipo `ValidationException` (de FluentValidation). Establece el tipo de contenido de la respuesta como "application/json", el código de estado HTTP como 400 (Bad Request) y construye un objeto `ErrorResponse` a partir de los errores de validación. Serializa la respuesta en formato JSON y la envía al cliente.
+
+### HandleExceptionsAsync (Exception)
+**Type:** `private static Task HandleExceptionsAsync(HttpContext context, Exception exception)`
+
+Maneja excepciones de tipo genérico (`Exception`). Establece el tipo de contenido de la respuesta como "application/json", el código de estado HTTP como 500 (Internal Server Error) y construye un objeto `ErrorResponse` con un código de error genérico y un mensaje de error. Serializa la respuesta en formato JSON y la envía al cliente.
+
+
+## Ejemplo de Uso
+---
+
+Imagina que tienes un controlador de API que recibe un objeto de tipo `CreateUserRequest` y que dicho objeto debe ser validado usando `FluentValidation`.
+
+```csharp
+// Ejemplo de un validador
+using FluentValidation;
+
+public class CreateUserRequestValidator : AbstractValidator<CreateUserRequest>
+{
+    public CreateUserRequestValidator()
+    {
+       RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required.");
+       RuleFor(x => x.Email).EmailAddress().WithMessage("Email is not valid.");
+    }
+}
+```
+
+```csharp
+// Ejemplo de un controlador
+using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using System.Net;
+
+[ApiController]
+[Route("[controller]")]
+public class UsersController : ControllerBase
+{
+    private readonly IValidator<CreateUserRequest> _validator;
+    public UsersController(IValidator<CreateUserRequest> validator){
+        _validator = validator;
+    }
+
+    [HttpPost]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    public IActionResult CreateUser([FromBody]CreateUserRequest request)
+    {
+        // Validamos el request
+        var validationResult = _validator.Validate(request);
+
+        if(!validationResult.IsValid){
+            throw new ValidationException(validationResult.Errors);
+        }
+
+        // Lógica de negocio ...
+         return Ok();
+    }
+}
+```
+Si el `CreateUserRequest` es invalido, el `ExceptionMiddleware` capturara la excepcion de tipo `ValidationException` y retornara una respuesta con el estado `BadRequest` junto con el detalle de los errores de validación en formato JSON.
+
+## Conclusiones
+---
+
+El `ExceptionMiddleware` es un componente esencial para construir APIs REST robustas y fáciles de usar. Centraliza el manejo de excepciones, garantiza respuestas consistentes y detalladas para los clientes y simplifica la depuración de errores. Al interceptar y manejar excepciones de validación, excepciones personalizadas y excepciones generales, el middleware contribuye significativamente a la estabilidad y la calidad de la API.
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de ASP.NET Core Middleware](https://docs.microsoft.com/aspnet/core/fundamentals/middleware)
+- [Documentación oficial de FluentValidation](https://fluentvalidation.net/)
+- [Documentación de CodeDesignPlus.Net.Exceptions](https://github.com/CodeDesignPlus/CodeDesignPlus.Net.Exceptions)

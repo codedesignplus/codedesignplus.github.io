@@ -1,0 +1,113 @@
+---
+title: IEventStoreFactory
+---
+
+import { Aside, LinkCard, Steps } from '@astrojs/starlight/components';
+
+
+`IEventStoreFactory` es una interfaz que define un contrato para gestionar y recuperar conexiones a instancias de EventStore. Esta interfaz permite la creación, almacenamiento en caché y gestión eficiente de conexiones a EventStore.
+
+Se utiliza para abstraer la lógica de creación y gestión de conexiones a EventStore. Proporciona métodos para crear nuevas conexiones, recuperar conexiones existentes y eliminar conexiones cuando ya no son necesarias.
+
+## Funcionalidades
+---
+1. **Creación de Conexiones**:
+   - `Task<ES.IEventStoreConnection> CreateAsync(string key, CancellationToken cancellationToken = default)`: Crea o recupera una conexión existente a EventStore basada en la clave proporcionada. Este método es asíncrono y devuelve una instancia de `IEventStoreConnection` inicializada.
+
+2. **Eliminación de Conexiones**:
+   - `bool RemoveConnection(string key)`: Intenta eliminar la conexión con la clave especificada. Devuelve `true` si la conexión se eliminó correctamente; de lo contrario, devuelve `false`.
+
+3. **Obtención de Credenciales**:
+   - `(string, string) GetCredentials(string key)`: Obtiene las credenciales (nombre de usuario y contraseña) para la clave de conexión especificada. Lanza una excepción si la clave es nula o vacía, o si la clave no se encuentra en la configuración.
+
+## Beneficios del Patrón Factory
+---
+El patrón Factory proporciona varios beneficios al implementar `IEventStoreFactory`:
+
+1. **Desacoplamiento**: Separa la lógica de creación de objetos de su uso, permitiendo que las clases dependientes no necesiten conocer los detalles de la creación de instancias.
+2. **Reutilización de Conexiones**: Permite la reutilización de conexiones existentes, mejorando la eficiencia y reduciendo la sobrecarga de recursos.
+3. **Gestión Centralizada**: Centraliza la lógica de creación y gestión de conexiones, facilitando el mantenimiento y la actualización del código.
+4. **Facilidad de Pruebas**: Facilita la creación de pruebas unitarias mediante el uso de mocks y stubs, ya que las dependencias pueden ser inyectadas y controladas fácilmente.
+
+## Dependencias
+---
+`IEventStoreFactory` depende de `IEventStoreConnection` para inicializar y gestionar las conexiones a EventStore. La interfaz `IEventStoreConnection` define el contrato para conectar e interactuar con una instancia de EventStore, mientras que `IEventStoreFactory` gestiona la creación y el ciclo de vida de estas conexiones.
+
+## Implementación
+---
+
+La interfaz `IEventStoreFactory` se implementa en la clase `EventStoreFactory`, que proporciona la lógica para gestionar y recuperar conexiones a instancias de EventStore. La clase `EventStoreFactory` se encuentra en el espacio de nombres `CodeDesignPlus.Net.EventStore.Services`.
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore/src/CodeDesignPlus.Net.EventStore/Services/EventStoreFactory.cs"
+```
+
+## Ejemplo
+---
+
+Una vez que se ha implementado la interfaz `IEventStoreFactory`, se puede utilizar para crear y gestionar conexiones a EventStore en una aplicación .NET.
+
+<Steps>
+
+1. Agregar las propiedades de configuración al archivo `appsettings.json`:
+
+    ```json
+    {
+        "EventStore": {
+            "Servers": {
+                "Core": {
+                    "ConnectionString": "tcp://localhost:1113?tls=false",
+                    "User": "admin",
+                    "Password": "12345678"
+                }
+            }
+        }
+    }
+    ```
+
+2. Registrar la interfaz `IEventStoreFactory` en el contenedor de dependencias:
+
+    ```csharp
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton<IEventStoreConnection, EventStoreConnection>();
+            services.AddSingleton<IEventStoreFactory, EventStoreFactory>();
+            services.AddLogging();
+        }
+    }
+    ```
+
+3. Utilizar la fábrica para crear y gestionar conexiones a EventStore en la aplicación.
+
+   ```csharp
+   public class EventStoreService
+    {
+        private readonly IEventStoreFactory eventStoreFactory;
+
+        public EventStoreService(IEventStoreFactory eventStoreFactory)
+        {
+            this.eventStoreFactory = eventStoreFactory;
+        }
+
+        public async Task SaveEventAsync<TEvent>(TEvent @event, string key)
+        {
+            var connection = await eventStoreFactory.CreateAsync(key);
+
+            var eventData = new ES.EventData(
+                Guid.NewGuid(),
+                "eventType",
+                true,
+                Encoding.UTF8.GetBytes(JsonSerializer.Serialize(@event)),
+                null);
+
+            await connection.AppendToStreamAsync("streamName", ES.ExpectedVersion.Any, eventData);
+        }
+    }
+    ```
+</Steps>
+
+
+## Conclusiones
+---
+La interfaz `IEventStoreFactory` es esencial para cualquier aplicación que utilice EventStore, proporcionando una manera estructurada y eficiente de gestionar conexiones. Implementar el patrón Factory trae beneficios significativos, como el desacoplamiento, la reutilización de conexiones, la gestión centralizada y la facilidad de pruebas. Además, la relación con `IEventStoreConnection` asegura que las conexiones se inicialicen y gestionen de manera robusta, proporcionando una capa de abstracción que facilita el uso y la prueba de la conexión en aplicaciones que utilizan EventStore.

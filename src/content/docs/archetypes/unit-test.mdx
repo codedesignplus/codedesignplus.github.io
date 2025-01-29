@@ -1,0 +1,359 @@
+---
+title: Pruebas (Tests)
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En esta sección, exploraremos la estructura de pruebas del arquetipo, detallando las pruebas unitarias, de integración y de carga, su ubicación, convenciones, cómo se ejecutan y las buenas prácticas a seguir para asegurar la calidad del código.
+
+<Image src="/images/archetype/type_test.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## ¿Por qué son importantes las pruebas?
+---
+
+Las pruebas son una parte fundamental del ciclo de vida del desarrollo de software. Su objetivo principal es asegurar la calidad del código, detectar errores de forma temprana y garantizar que el software se comporta como se espera. Al invertir en pruebas, se reduce el riesgo de introducir bugs en producción, se facilita la refactorización del código y se proporciona documentación ejecutable.
+
+## Tipos de pruebas
+---
+
+En este arquetipo, se utilizan tres tipos principales de pruebas:
+
+*   **Pruebas Unitarias:** Verifican el funcionamiento correcto de las unidades individuales de código (clases, métodos, funciones) de forma aislada.
+*   **Pruebas de Integración:** Validan la interacción entre diferentes componentes y capas del arquetipo, así como con servicios externos.
+*   **Pruebas de Carga:** Evalúan el rendimiento del arquetipo bajo condiciones de carga variables, simulando el comportamiento de múltiples usuarios concurrentes.
+
+## Objetivos de las pruebas
+---
+
+*   **Pruebas Unitarias:**
+    *   Asegurar que cada unidad de código cumpla con la lógica de negocio definida.
+    *   Detectar errores en el código de forma temprana.
+    *   Documentar el comportamiento de cada unidad de código.
+    *   Facilitar la refactorización.
+*   **Pruebas de Integración:**
+    *   Verificar la correcta interacción entre los diferentes componentes del arquetipo.
+    *   Validar la comunicación entre capas y sistemas (aplicación, dominio, infraestructura).
+    *   Asegurar que el arquetipo funciona correctamente en un entorno similar a producción.
+*   **Pruebas de Carga:**
+    *   Evaluar el rendimiento del arquetipo bajo diferentes condiciones de carga.
+    *   Identificar cuellos de botella y optimizar el rendimiento.
+    *   Garantizar la escalabilidad y la estabilidad del arquetipo.
+
+## Pruebas Unitarias (Unit Tests)
+---
+
+### ¿Qué son las pruebas unitarias?
+
+Las pruebas unitarias son pruebas que se enfocan en validar el correcto funcionamiento de cada componente individual de un sistema, tales como clases, métodos o funciones. El objetivo es verificar que cada parte del código realice su tarea correctamente de forma aislada del resto del sistema.
+
+### Objetivos
+
+*   Verificar que la lógica de negocio de cada unidad de código se cumple correctamente.
+*   Detectar errores de programación en las etapas tempranas del desarrollo.
+*   Facilitar la refactorización del código con la confianza de que los cambios no introducirán errores.
+*   Servir como documentación ejecutable de cómo debe comportarse cada unidad de código.
+
+### Ubicación de las pruebas
+
+*   **Ruta de la carpeta:** `tests/unit`
+*   **Patrón de la estructura:** La estructura dentro de `tests/unit` refleja la estructura de la carpeta `src`, lo que facilita la ubicación de las pruebas correspondientes a cada componente.
+    <FileTree>
+    - tests
+        - unit
+            - CodeDesignPlus.Net.Microservice.Application.Test
+            - CodeDesignPlus.Net.Microservice.Domain.Test
+            - CodeDesignPlus.Net.Microservice.Infrastructure.Test
+            - CodeDesignPlus.Net.Microservice.Rest.Test
+            - CodeDesignPlus.Net.Microservice.Default.Test
+            - CodeDesignPlus.Net.Microservice.gRpc.Test
+            - CodeDesignPlus.Net.Microservice.AsyncWorker.Test
+    </FileTree>
+*   **Ejemplo de una ruta:** 
+    <FileTree>
+    - src
+        - domain
+            - CodeDesignPlus.Net.Microservice.Application
+                - Order
+                    - Commands
+                        - AddProductToOrder
+                            - AddProductToOrderCommandHandler.cs
+    - tests
+        - unit
+            - CodeDesignPlus.Net.Microservice.Application.Test
+                - Order
+                    - Commands
+                        - AddProductToOrder
+                            - AddProductToOrderCommandHandlerTest.cs
+    </FileTree>
+
+### Convenciones de Nombres
+
+Las pruebas unitarias siguen una convención de nombres para facilitar su identificación y organización. A continuación, se presentan las convenciones de nombres recomendadas para las clases y métodos de prueba:
+
+**Clases de prueba:** 
+
+Las clases de prueba deben seguir el patrón `[NombreClase]Test`. 
+
+Por ejemplo: 
+    - `AddProductToOrderCommandHandlerTest`.
+    - `MapsterConfigTest`.
+
+**Métodos de prueba:**
+
+Los métodos de prueba deben seguir el patrón `[MetodoAProbar]_[Escenario]_[ResultadoEsperado]`.
+
+Por ejemplo: 
+    - `Handle_OrderNotFound_ThrowApplicationException`.
+    - `Map_OrderToOrderDto_ReturnOrderDto`.
+
+### Estructura de una prueba unitaria (AAA)
+
+Cada prueba unitaria debe seguir la estructura **AAA (Arrange, Act, Assert):**
+
+1.  **Arrange (Preparar):** Se configuran los objetos necesarios para la prueba, como mocks, stubs, y datos de entrada. También se crean instancias de la clase que se va a probar y se definen los valores esperados.
+2.  **Act (Ejecutar):** Se ejecuta la acción a probar (método o función), y se capturan excepciones si es necesario.
+3.  **Assert (Verificar):** Se verifica que el resultado de la acción sea el esperado, utilizando las herramientas de aserción del framework de pruebas (xUnit en este caso). Además, se pueden verificar las interacciones con mocks, si corresponde.
+
+### Casos de Prueba
+
+- **Casos de Éxito:** Comprobar el comportamiento esperado cuando la unidad de código recibe datos válidos y se encuentra en condiciones normales.
+- **Casos de Error:** Comprobar el comportamiento cuando la unidad de código recibe datos inválidos o cuando las dependencias fallan, como la simulación de una excepción.
+- **Casos Límite:** Comprobar el comportamiento en valores que se encuentren en los bordes de los rangos permitidos (ej: cantidad máxima o mínima de un producto).
+- **Casos de Borde:** Comprobar el comportamiento en valores fuera de los rangos esperados (ej: datos nulos, cadenas vacías o caracteres especiales).
+
+### Uso de Mocks y Stubs
+
+**¿Por qué usar mocks?:** 
+
+Los mocks se utilizan para simular dependencias externas (repositorios, servicios, etc.) y para poder controlar su comportamiento durante las pruebas unitarias. Esto permite aislar la unidad de código que se está probando y verificar que interactúa con sus dependencias de la manera esperada.
+
+**Herramientas recomendadas:**
+
+- `Moq` es la librería utilizada en este proyecto para crear mocks.
+
+**Cómo verificar interacciones con mocks:** 
+
+Se utilizan los métodos de `Moq` para verificar el número de llamadas a métodos de los mocks, así como los valores de los argumentos utilizados en esas llamadas.
+
+### Herramientas Utilizadas
+
+*   **xUnit:** Framework de pruebas para la ejecución y organización de las pruebas unitarias.
+*   **Moq:** Librería para la creación de mocks y la simulación de dependencias.
+*   **FluentAssertions:** Librería que facilita las aserciones, haciéndolas más claras y expresivas.
+*   **Mapster:** Librería para el mapeo de objetos.
+
+### Buenas Prácticas
+
+*   **Aislamiento de dependencias:** Usar mocks y stubs para aislar la unidad de código que se está probando, asegurando que las pruebas se centren en la lógica de la unidad en cuestión.
+*   **Cobertura de código:** Asegurar que las pruebas unitarias cubran la mayor cantidad posible de código, incluyendo todos los casos de uso, las excepciones y los flujos alternativos.
+*   **Pruebas rápidas y repetibles:** Las pruebas unitarias deben ser rápidas y fáciles de ejecutar, para poder obtener feedback de forma rápida en cada cambio del código.
+
+### Normativas
+
+*   **Estándares de código:** Seguir los estándares de código del proyecto, como la forma de nombrar variables y la estructura de las clases.
+*   **Guías de estilo:** Seguir una guía de estilo (ej: C# coding conventions), para mantener la homogeneidad en el código de las pruebas.
+
+### Ejemplos
+
+```csharp
+[Fact]
+public async Task Handle_OrderNotFound_ThrowApplicationException()
+{
+    // Arrange
+    var orderRepository = new Mock<IOrderRepository>();
+    var pubSub = new Mock<IPubSub>();
+    var command = new AddProductToOrderCommand(Guid.NewGuid(), Guid.NewGuid(), "Product 1", "Description Product 1", 100, 1);
+    orderRepository.Setup(x => x.FindAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync(default(OrderAggregate));
+    var handler = new AddProductToOrderCommandHandler(orderRepository.Object, user, pubSub.Object);
+
+    // Act
+    var exception = await Assert.ThrowsAsync<CodeDesignPlusException>(() => handler.Handle(command, CancellationToken.None));
+
+    // Assert
+    orderRepository.Verify(x => x.FindAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+    orderRepository.Verify(x => x.AddProductToOrderAsync(It.IsAny<AddProductToOrderParams>(), It.IsAny<CancellationToken>()), Times.Never);
+    pubSub.Verify(x => x.PublishAsync(It.IsAny<IReadOnlyList<IDomainEvent>>(), It.IsAny<CancellationToken>()), Times.Never);
+    Assert.Equal(Errors.OrderNotFound.GetCode(), exception.Code);
+    Assert.Equal(Errors.OrderNotFound.GetMessage(), exception.Message);
+}
+```
+
+## Pruebas de Integración (Integration Tests)
+---
+
+### ¿Qué son las pruebas de integración?
+
+Las pruebas de integración tienen como objetivo validar la correcta interacción entre los diferentes componentes de un sistema. Se enfocan en verificar que las diferentes unidades de código (aplicación, dominio, infraestructura) funcionan correctamente cuando se integran entre sí, así como con los servicios externos (bases de datos, API).
+
+### Objetivos
+
+- Verificar la correcta interacción entre las diferentes capas del arquetipo.
+- Validar la comunicación entre los diferentes componentes y servicios externos.
+- Asegurar que el arquetipo funciona correctamente en un entorno similar al de producción.
+- Detectar problemas que pueden no ser evidentes en las pruebas unitarias.
+
+### Ubicación de las pruebas
+
+- **Ruta de la carpeta:** `tests/integration`
+- **Patrón de la estructura:** La estructura refleja los entrypoints del arquetipo, con carpetas para cada entrypoint y sus pruebas.
+
+    <FileTree>
+    - tests
+        - integration
+            - CodeDesignPlus.Net.Microservice.Rest.Test
+            - CodeDesignPlus.Net.Microservice.gRpc.Test
+            - CodeDesignPlus.Net.Microservice.AsyncWorker.Test
+    </FileTree>
+- **Ejemplo de una ruta:** 
+
+    <FileTree>
+    - src
+        - rest
+            - CodeDesignPlus.Net.Microservice.Rest
+                - Controllers
+                    - OrderController.cs
+    - tests
+        - integration
+            - CodeDesignPlus.Net.Microservice.Rest.Test
+                - Controllers
+                    - OrderControllerTest.cs
+    </FileTree>
+
+### Convenciones de Nombres
+
+Las pruebas de integración siguen una convención de nombres para facilitar su identificación y organización. A continuación, se presentan las convenciones de nombres recomendadas para las clases y métodos de prueba:
+
+**Clases de prueba:** 
+
+Deben seguir el patrón `[NombreClase]Test`. 
+
+Por ejemplo: 
+    - `OrderControllerTest`.
+    - `OrdersServiceTest`
+
+**Métodos de prueba:**
+
+Los métodos de prueba deben seguir el patrón `[MetodoAProbar]_[Escenario]_[ResultadoEsperado]` o `[MetodoAProbar]_[ResultadoEsperado]`.
+
+Por ejemplo: 
+    - `GetOrders_ReturnOk`.
+    - `CreateOrder_ReturnNoContent`.
+
+### Uso de `Server<Program>`
+
+Las clases `Server<TProgram>` y `ServerBase<TProgram>` proporcionan un entorno de prueba integral para aplicaciones ASP.NET Core, especialmente microservicios. Estas clases simplifican la creación, configuración y gestión de un servidor web para pruebas unitarias y de integración, ofreciendo una base sólida para validar el comportamiento de tus aplicaciones de manera eficiente y confiable.
+
+<LinkCard title="Explora la clase Server<T>" href="/libs/xunit-microservice/server/server" />
+
+### Estructura de una prueba de integración
+
+Cada prueba de integración sigue una estructura similar a las pruebas unitarias (AAA), pero con un enfoque diferente:
+
+*   **Arrange (Preparar):** Se configuran los objetos y dependencias necesarias para la prueba, incluyendo la creación de datos en memoria y la configuración del entorno de pruebas.
+*   **Act (Ejecutar):** Se envía una solicitud HTTP al endpoint del API que se quiere probar.
+*   **Assert (Verificar):** Se verifica que la respuesta del API sea la esperada, incluyendo el código de estado y los datos devueltos.
+
+### Casos de Prueba
+
+*   **Casos de éxito:** Verificar que las solicitudes HTTP sean procesadas correctamente y que las respuestas sean válidas.
+*   **Casos de error:** Verificar que los errores son gestionados correctamente y que se devuelven los códigos de estado adecuados.
+
+### Herramientas Utilizadas
+
+*   **[xUnit](https://xunit.net/):** Framework de pruebas para la ejecución y organización de las pruebas de integración.
+-   **[CodeDesignPlus.Net.xUnit.Microservice](/libs/xunit-microservice):** Librería que proporciona clases y métodos de ayuda para la creación de pruebas de integración en microservicios.
+
+### Buenas Prácticas
+
+*   **Prueba de la interacción entre módulos y servicios:** Asegurar que la comunicación entre diferentes componentes y servicios externos funcione correctamente.
+*   **Prueba de flujos completos:** Probar los flujos de negocio completos del arquetipo, verificando que cada parte del flujo funciona correctamente.
+
+### Normativas
+
+*   **Estándares de código:** Seguir los estándares de código del proyecto, como la forma de nombrar variables y la estructura de las clases.
+*   **Guías de estilo:** Seguir una guía de estilo para mantener la homogeneidad en el código de las pruebas.
+
+### Ejemplos
+
+```csharp
+[Fact]
+public async Task GetOrders_ReturnOk()
+{
+    // Arrange
+    var tenant = Guid.NewGuid();
+    var order = await this.CreateOrderAsync(tenant);
+
+    // Act
+    var response = await this.RequestAsync("http://localhost/api/Orders", tenant, null, HttpMethod.Get);
+
+    // Assert
+    Assert.NotNull(response);
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+    var json = await response.Content.ReadAsStringAsync();
+    var orders = Newtonsoft.Json.JsonConvert.DeserializeObject<IEnumerable<OrderDto>>(json);
+
+    Assert.NotNull(orders);
+    Assert.NotEmpty(orders);
+    Assert.Contains(orders, x => x.Id == order.Id);
+}
+```
+
+## Pruebas de Carga (Load Tests)
+---
+
+### ¿Qué son las pruebas de carga?
+
+Las pruebas de carga se utilizan para evaluar el rendimiento y la estabilidad del arquetipo bajo diferentes condiciones de carga, simulando el comportamiento de un gran número de usuarios concurrentes. Estas pruebas permiten identificar posibles cuellos de botella, optimizar el rendimiento y garantizar la escalabilidad del arquetipo.
+
+### Objetivos
+
+- Evaluar el rendimiento del arquetipo bajo diferentes condiciones de carga.
+- Identificar posibles cuellos de botella y puntos de fallo.
+- Optimizar el rendimiento y la escalabilidad del arquetipo.
+- Garantizar que el arquetipo cumple con los requisitos de rendimiento.
+
+### Ubicación de las pruebas
+
+- **Ruta de la carpeta:** `tests/load`
+- **Patrón de la estructura:** La estructura refleja los diferentes métodos de carga utilizados, como REST, gRPC, y AsyncWorker.
+
+    <FileTree>
+    - tests
+        - load
+            - load-rest.js
+            - load-gRpc.js
+            - load-async-worker.js
+    </FileTree>
+
+- **Ejemplo de una ruta:** 
+
+    <FileTree>
+    - tests
+        - load
+            - load-rest.js
+    </FileTree>
+
+### Herramientas Utilizadas
+
+- Las pruebas de carga se realizan utilizando el framework Javascript k6.
+
+### Buenas Prácticas
+
+- **Simulación de carga realista:** Utilizar patrones de carga que se asemejen al comportamiento real de los usuarios del arquetipo.
+- **Monitorización del rendimiento:** Utilizar herramientas para monitorizar el rendimiento del arquetipo durante las pruebas, incluyendo métricas como el tiempo de respuesta, el uso de CPU y memoria.
+- **Identificación de cuellos de botella:** Analizar los resultados de las pruebas para identificar posibles puntos de fallo o cuellos de botella en el sistema.
+
+### Ejemplos
+
+En la carpeta `tests/load` se incluyen scripts de ejemplo, como `load-rest.js`, que muestran cómo realizar pruebas de carga utilizando k6. Los scripts realizan un número determinado de peticiones, a los diferentes endpoints de la API, con diferentes configuraciones para simular la carga del sistema.
+
+```javascript repository="Archetype" url="tests/load/load-rest.js"
+
+```
+
+## Conclusiones
+---
+
+En este documento se ha proporcionado una visión general de la estructura de pruebas del arquetipo, incluyendo las pruebas unitarias, de integración y de carga. Siguiendo las convenciones, las buenas prácticas y las normativas descritas en este documento, se garantiza la calidad del código, se facilita la detección temprana de errores y se mejora la mantenibilidad del arquetipo. La ejecución regular de las pruebas es fundamental para asegurar que el software funcione correctamente y cumpla con los requisitos de negocio.

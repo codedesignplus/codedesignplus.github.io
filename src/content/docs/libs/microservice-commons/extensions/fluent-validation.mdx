@@ -1,0 +1,92 @@
+---
+title: Fluent Validation
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `FluentExtensions` proporciona un método de extensión para la interfaz `IServiceCollection` que simplifica la configuración e integración de FluentValidation en aplicaciones .NET. Su propósito principal es automatizar el registro de todos los validadores FluentValidation definidos en las asambleas del dominio de la aplicación, reduciendo la cantidad de código boilerplate necesario para configurarlo manualmente.
+
+## Dependencias y Requisitos Previos
+---
+
+- `FluentValidation`: Necesario para definir validadores y utilizar la funcionalidad proporcionada por esta librería.
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection` que se extiende y para registrar los validadores en el contenedor de inyección de dependencias.
+
+## Escenarios de uso
+---
+
+Este método de extensión es particularmente útil en aplicaciones que:
+
+- Utilizan FluentValidation para la validación de datos.
+- Siguen una arquitectura de microservicios o modular, donde múltiples proyectos pueden tener validadores.
+- Desean una manera sencilla y automática de registrar todos los validadores en el contenedor de inyección de dependencias.
+- Quieren reducir la cantidad de código necesario para configurar FluentValidation manualmente.
+
+## Beneficios
+---
+
+- **Simplificación:** Reduce la necesidad de registrar manualmente cada validador en el contenedor de inyección de dependencias.
+- **Centralización:** Configura todos los validadores de la aplicación con una sola línea de código.
+- **Descubrimiento automático:** Descubre los validadores de forma automática sin necesidad de configuración adicional.
+- **Mantenimiento:** Facilita la adición de nuevos validadores ya que no requiere cambios adicionales en la configuración.
+
+## Ejemplo Práctico
+---
+Para usar este método de extensión, simplemente debes llamarlo sobre tu `IServiceCollection` en el método `ConfigureServices` de tu clase `Startup.cs` o `Program.cs` de un proyecto ASP.NET Core o similar.
+
+```csharp
+// En tu archivo Program.cs
+using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+// Agrega los validadores de FluentValidation al contenedor de DI
+builder.Services.AddFluentValidation();
+
+var app = builder.Build();
+```
+
+## Métodos de extensión
+---
+
+La clase `FluentExtensions` proporciona un método de extensión llamado `AddFluentValidation` que simplifica la configuración de FluentValidation en aplicaciones .NET.
+
+### AddFluentValidation
+**Type:** `public static IServiceCollection AddFluentValidation(this IServiceCollection services)`
+
+Este método de extensión busca en todas las asambleas del dominio actual un tipo que herede de `AbstractValidator<>`. Si encuentra al menos uno,  registra todos los validadores definidos en su asamblea en el contenedor de inyección de dependencias de ASP.NET Core.
+
+```csharp 
+public static IServiceCollection AddFluentValidation(this IServiceCollection services)
+```
+
+- **Parámetros:**
+    - `services`: La instancia de `IServiceCollection` a la cual se agregarán los validadores.
+- **Tipo de retorno:**
+   -  `IServiceCollection`: La misma instancia de `IServiceCollection` para permitir el encadenamiento de llamadas a métodos.
+- **Excepciones:**
+   - `ArgumentNullException`: Se lanza si no se encuentra ningún validador en las asambleas del dominio actual.
+   
+- **Ejemplo de Código:**
+    ```csharp
+    // Dentro de ConfigureServices en Startup.cs
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllers();
+        // Agrega FluentValidation al contenedor de inyección de dependencias.
+        services.AddFluentValidation();
+    }
+    ```
+
+## Conclusiones
+---
+
+El método de extensión `AddFluentValidation` simplifica significativamente la configuración de FluentValidation en aplicaciones .NET. Al automatizar el registro de los validadores, reduce el código repetitivo y mejora la legibilidad y el mantenimiento del proyecto. Se recomienda usar este método en todas las aplicaciones que utilizan FluentValidation para garantizar una configuración consistente y sencilla.
+
+## Referencias
+---
+
+- [Documentación oficial de FluentValidation](https://fluentvalidation.net/)
+- [Documentación oficial de Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection)

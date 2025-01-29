@@ -1,0 +1,59 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. La clase `LoggerOptions` proporciona las opciones de configuración para el sistema de logging, permitiendo personalizar el comportamiento de la librería.
+
+## LoggerOptions
+---
+
+La clase `LoggerOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir el comportamiento y la configuración del sistema de logging, como si el logging está habilitado, el endpoint de OpenTelemetry, etc.
+
+```csharp url="packages/CodeDesignPlus.Net.Logger/src/CodeDesignPlus.Net.Logger/Options/LoggerOptions.cs"
+```
+
+### Propiedades
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción: Indica si el logging está habilitado. Cuando es `true`, los logs se envían al endpoint de OpenTelemetry configurado.
+    - Valor Predeterminado: `false` (por defecto al inicializar la clase, si no se establece lo contrario).
+
+- **OTelEndpoint**
+    - Tipo: `string`
+    - Descripción: La URL del endpoint de OpenTelemetry al que se enviarán los logs.
+    - Valor Predeterminado: `null` (por defecto al inicializar la clase, si no se establece lo contrario).
+    - Validación: Debe ser una URL válida si el logging está habilitado (`Enable` es `true`). Se valida utilizando el atributo `[Url]`.
+
+### Validación
+
+La clase `LoggerOptions` implementa `IValidatableObject` para realizar validaciones adicionales al inicializar las opciones. En particular, se asegura de que `OTelEndpoint` sea una URL válida cuando `Enable` es `true`.
+
+```csharp
+public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+{
+    var results = new List<ValidationResult>();
+
+    if (Enable)
+        Validator.TryValidateProperty(OTelEndpoint, new ValidationContext(this) { MemberName = nameof(OTelEndpoint) }, results);
+
+    return results;
+}
+```
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones de logging:
+
+```json url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/appsettings.json"
+```
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Atributo Url](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.urlattribute?view=net-8.0)

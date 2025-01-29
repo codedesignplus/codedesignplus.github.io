@@ -1,0 +1,213 @@
+---
+title: Arquitectura General del Arquetipo
+---
+
+import { Image } from 'astro:assets';
+
+Esta sección describe la arquitectura general de este arquetipo, proporcionando una visión de alto nivel de cómo se organiza y cómo interactúan sus componentes.
+
+## Diagrama de Arquitectura
+
+<Image src="/images/archetype/diagrama_arquitectura.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+El diagrama de arquitectura muestra la estructura de un microservicio construido con el arquetipo `CodeDesignPlus.Net.Sdk`, que prioriza la claridad y el mantenimiento. Aquí están los componentes clave:
+
+- **Puntos de entrada**: Servicios gRPC, REST y Async Worker que actúan como una fachada y reciben las solicitudes.
+
+- **Capa de infraestructura**: Gestiona la comunicación con sistemas externos y la persistencia de datos. No implementa la lógica del negocio, sino que actúa como intermediario.
+
+- **Capa de aplicación**: Implementa los casos de uso y coordina los componentes del dominio, aplicando las reglas del negocio.
+
+- **Capa de dominio**: Contiene la lógica central del microservicio, encapsulada en entidades, agregados y objetos de valor.
+
+Este diseño unidireccional, desde los puntos de entrada e infraestructura hasta la aplicación y el dominio, asegura que las capas internas no dependan de las externas, mejorando la mantenibilidad y la escalabilidad. 
+
+## Capas del Arquetipo
+
+El arquetipo está organizado en varias capas, cada una con responsabilidades específicas:
+
+### Dominio
+
+La capa de **Dominio** es el corazón del sistema, donde reside la lógica de negocio principal. Esta capa modela los conceptos y las reglas del negocio en un lenguaje que es fácilmente entendible por todos los involucrados. El Dominio se basa en los principios de Diseño Guiado por el Dominio (DDD), utilizando entidades, agregados, eventos de dominio, objetos de valor y reglas de negocio para definir el modelo del negocio. 
+
+<Image src="/images/archetype/layer_domain.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+-   **Agregados (Aggregates)**: Son clústeres de entidades y objetos de valor que son tratados como una única unidad transaccional. Los agregados aseguran la consistencia y las reglas del negocio.
+        -   `OrderAggregate`: Es el agregado raíz, que representa una orden completa, incluyendo su estado, cliente, productos y otros detalles.
+-   **Entidades (Entities)**: Son objetos con una identidad única y persistente a lo largo del tiempo.
+        -   `ProductEntity`: Representa un producto individual dentro de una orden. Tiene una identidad propia y se distingue por su `Id`.
+-  **Objetos de Valor (Value Objects)**: Son objetos inmutables que describen características de las entidades. Su identidad se basa en sus valores.
+        -   `ClientValueObject`: Representa la información de un cliente.
+        -   `AddressValueObject`: Representa una dirección de envío.
+-   **Eventos de Dominio (Domain Events)**: Representan eventos significativos que ocurren dentro del dominio. Permiten la comunicación asíncrona entre diferentes partes del sistema.
+        -   Ejemplos: `OrderCreatedDomainEvent`, `OrderCancelledDomainEvent`, `ProductAddedToOrderDomainEvent`, etc.
+-   **Repositorios (Repositories)**: Abstracciones para acceder a los agregados desde la infraestructura. Definen las operaciones para persistir y obtener los agregados.
+        -   `IOrderRepository`: Define las operaciones para gestionar el agregado `OrderAggregate`.
+
+### Aplicación
+La capa de **Aplicación** actúa como el orquestrador del sistema, coordinando las interacciones entre los componentes del dominio para llevar a cabo los casos de uso de la aplicación. Esta capa implementa la lógica de los flujos de trabajo y las transacciones del sistema, pero no contiene la lógica de negocio central, que reside en el dominio. La capa de aplicación se comunica con la capa de dominio a través de interfaces y también se encarga de la validación de entrada y salida de datos.
+
+
+<Image src="/images/archetype/layer_application.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+-   **Casos de Uso (Use Cases)**: Representan las acciones que se pueden realizar en el sistema. Los casos de uso definen cómo los usuarios interactúan con el dominio para lograr objetivos de negocio.
+-   **Comandos (Commands)**: Representan acciones que cambian el estado del sistema. Se utilizan para realizar operaciones como crear, actualizar o eliminar datos.
+        -   Ejemplos: `CreateOrderCommand`, `AddProductToOrderCommand`, `CancelOrderCommand`, etc.
+-   **Handlers de Comandos (Command Handlers)**: Implementan la lógica para ejecutar los comandos. Orquestan las interacciones con el dominio y la infraestructura.
+         -   Ejemplos: `CreateOrderCommandHandler`, `AddProductToOrderCommandHandler`, `CancelOrderCommandHandler`, etc.
+-   **Consultas (Queries)**: Representan acciones que recuperan el estado del sistema sin modificarlo. Se utilizan para leer datos.
+         -   Ejemplos: `FindOrderByIdQuery`, `GetAllOrdersQuery`.
+-   **Handlers de Consultas (Query Handlers)**: Implementan la lógica para ejecutar las consultas. Interactúan con el dominio y la infraestructura para obtener los datos.
+         -  Ejemplos: `FindOrderByIdQueryHandler`, `GetAllOrdersQueryHandler`.
+-  **DTOs (Data Transfer Objects)**: Objetos de transferencia de datos utilizados para enviar y recibir información entre la capa de aplicación y las capas externas.
+        -  Ejemplos: `OrderDto`, `ClientDto`, `AddressDto`, etc.
+-   **Validadores (Validators)**: Implementan la lógica de validación de entrada de los comandos.
+        -  Ejemplos: `Validator` de cada comando.
+
+**Flujo de Trabajo Típico**
+
+<Image src="/images/archetype/layer_application_flow.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+1.  Un punto de entrada (API REST, gRPC, worker) recibe una solicitud.
+2.  La solicitud se convierte en un comando o consulta.
+3.  El handler correspondiente recibe el comando o consulta.
+4.  El handler interactúa con el dominio (a través de los repositorios) para llevar a cabo la acción.
+5.  Si es necesario, se actualiza el estado de los agregados del dominio y se publican los eventos de dominio.
+6.  El handler devuelve un DTO con la información necesaria.
+7.  El punto de entrada responde con el DTO.
+
+
+### Infraestructura
+
+La capa de **Infraestructura** se encarga de proveer los servicios y componentes técnicos necesarios para soportar las funcionalidades de la aplicación. Esta capa es responsable de la interacción con el mundo exterior, incluyendo la persistencia de datos, la comunicación con otros sistemas y el manejo de servicios técnicos. A diferencia de las capas de Dominio y Aplicación, la Infraestructura no contiene lógica de negocio, sino que se enfoca en la implementación de las abstracciones definidas por las capas superiores.
+
+<Image src="/images/archetype/layer_infrastructure_flow.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+    -   **Repositorios (Repository Implementation)**: Implementaciones concretas de los repositorios definidos en la capa de dominio. Estos repositorios son responsables de la persistencia y recuperación de los agregados del dominio.
+        -   `OrderRepository`: Implementa el `IOrderRepository` para acceder y persistir el agregado `OrderAggregate` en una base de datos MongoDB.
+    -   **Acceso a Datos (Data Access)**: Se encarga de la interacción con el sistema de almacenamiento de datos (ej: base de datos). Esta capa implementa la lógica necesaria para transformar los datos del dominio a un formato que pueda ser persistido y viceversa.
+    -   **Comunicaciones Externas:** Implementa las interfaces necesarias para la comunicación con otros sistemas (ej: APIs REST, gRPC, colas de mensajes).
+    -  **Servicios Técnicos**: Implementa servicios técnicos como logging, manejo de excepciones, etc.
+    
+
+**Responsabilidades Principales:**
+    -  Implementar las abstracciones (interfaces) definidas en el dominio y la aplicación.
+    -  Gestionar la persistencia de datos de forma desacoplada de la lógica de negocio.
+    -  Interactuar con servicios y sistemas externos.
+    -  Proveer servicios de soporte a la aplicación.
+
+### Entrypoints
+
+La capa de **Entrypoints** define las interfaces a través de las cuales el sistema es accesible desde el exterior. Son los puntos de entrada y comunicación que permiten a otros sistemas y clientes interactuar con las funcionalidades del microservicio. Esta capa se encarga de recibir las solicitudes, traducirlas a comandos o consultas comprensibles para la capa de aplicación, y retornar las respuestas en el formato adecuado. La capa de Entrypoints no contiene lógica de negocio y su objetivo es actuar como una fachada del sistema.
+
+<Image src="/images/archetype/layer_entrypoints_flow.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+-   **REST API**: Un conjunto de interfaces basadas en HTTP para exponer los recursos del sistema a través de operaciones CRUD (Crear, Leer, Actualizar, Eliminar). Se utilizan para la comunicación síncrona con clientes que utilizan HTTP.
+    -   Ejemplo: `OrderController` en `CodeDesignPlus.Net.Microservice.Rest`.
+-   **gRPC API**: Un conjunto de interfaces basadas en gRPC (un framework RPC de alto rendimiento) para exponer los recursos del sistema a través de llamadas remotas. Se utilizan para la comunicación síncrona con clientes que utilizan gRPC.
+        -   Ejemplo: `OrdersService` en `CodeDesignPlus.Net.Microservice.gRpc`.
+-   **Async Worker**: Un proceso asíncrono que consume eventos o mensajes desde una cola o bus de mensajes, permitiendo que el sistema procese tareas en segundo plano sin bloquear la ejecución principal. Se utilizan para la comunicación asíncrona.
+    -  Ejemplo: Consumers en `CodeDesignPlus.Net.Microservice.AsyncWorker`.
+-   **Mapeo de Datos:** Los entrypoints realizan el mapeo entre las solicitudes (por ejemplo, JSON en REST) y los comandos o consultas (objetos de la aplicación). También se encargan de formatear las respuestas (DTOs) para los clientes.
+
+**Responsabilidades Principales**:
+    -   Recibir solicitudes desde el exterior.
+    -   Traducir las solicitudes a comandos o consultas que puedan ser procesados por la capa de aplicación.
+    -   Validar las entradas (en algunos casos).
+    -   Retornar las respuestas en el formato adecuado.
+    -   Actuar como una fachada del sistema, ocultando la complejidad interna.
+
+**Ejemplo de Flujo de Trabajo (REST API)**:
+    1.  Un cliente HTTP envía una solicitud (ej: POST para crear una orden) a un endpoint de la API REST.
+    2.  El `OrderController` recibe la solicitud.
+    3.  El controller transforma la solicitud (JSON) en un comando (`CreateOrderCommand`).
+    4.  El controller envía el comando al mediador (capa de aplicación).
+    5.  El mediador procesa el comando y retorna una respuesta.
+    6.  El controller recibe el DTO de la respuesta (ej: `OrderDto`).
+    7.  El controller retorna la respuesta al cliente HTTP.
+
+### Tests
+
+La capa de **Tests** contiene todas las pruebas automatizadas que validan el correcto funcionamiento del sistema. Las pruebas son esenciales para garantizar la calidad del código, identificar errores tempranamente y facilitar la refactorización y el mantenimiento a largo plazo. Este arquetipo está diseñado para ser probado en diferentes niveles, desde pruebas unitarias hasta pruebas de carga, asegurando que todos los componentes funcionen correctamente y que el sistema sea robusto y confiable.
+
+#### Tipos de Pruebas
+
+<Image src="/images/archetype/type_test.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+##### Pruebas Unitarias (Unit Tests)
+
+Validan el funcionamiento individual de cada clase o método de la aplicación. Estas pruebas se enfocan en la lógica específica de una unidad de código, sin depender de componentes externos (bases de datos, APIs).
+
+-   **Beneficios**:
+    -   Identificación temprana de errores en la lógica del código.
+    -   Facilitan la refactorización segura del código.
+    -   Documentan el comportamiento esperado de cada unidad.
+    -   Aceleran el desarrollo y reducen el tiempo de depuración.
+-   **Ejemplo**:
+    -  Pruebas para `CreateOrderCommandHandler`, `OrderAggregate`, etc.
+
+##### Pruebas de Integración (Integration Tests)
+
+Validan la interacción entre diferentes componentes o módulos del sistema. Estas pruebas verifican que los diferentes componentes trabajen en conjunto correctamente, incluyendo la integración con bases de datos y servicios externos.
+- **Beneficios**:
+    -   Garantizan que la integración de diferentes módulos funcione correctamente.
+    -   Identifican problemas en la comunicación entre componentes.
+    -   Aseguran que las dependencias externas se comporten como se espera.
+- **Ejemplo:**
+    -  Pruebas de `OrderController`,  `OrdersService` (gRPC) o consumers (AsyncWorker)
+
+##### Pruebas de Carga (Load Tests)
+
+Simulan altas cargas de trabajo para validar el rendimiento y la escalabilidad del sistema. Estas pruebas aseguran que el sistema pueda soportar un número elevado de usuarios y peticiones concurrentes sin degradar el rendimiento.
+-   **Beneficios**:
+    -  Identifican cuellos de botella en el rendimiento.
+    -  Aseguran que el sistema pueda escalar para soportar altas cargas de trabajo.
+    -  Verifican el comportamiento del sistema bajo estrés.
+-   **Ejemplo**:
+    -  Pruebas de `load-rest.js`
+
+#### Beneficios de las Pruebas Automatizadas a Largo Plazo
+
+- **Reducción de Errores:** Detectar errores en fases tempranas del desarrollo disminuye significativamente la probabilidad de bugs en producción.
+- **Refactorización Segura:** Las pruebas proporcionan una red de seguridad, permitiendo refactorizar el código sin introducir nuevos errores.
+- **Mantenibilidad:** Un código bien probado es más fácil de mantener y adaptar a nuevos requerimientos.
+- **Confianza en el Código:** Las pruebas aumentan la confianza en el correcto funcionamiento del código, permitiendo despliegues más frecuentes y seguros.
+- **Documentación Viva:** Las pruebas unitarias sirven como una forma de documentación viva del comportamiento esperado del código.
+
+## Patrones de Diseño Clave
+
+Este arquetipo utiliza varios patrones de diseño para asegurar la calidad, mantenibilidad y escalabilidad del código:
+
+<Image src="/images/archetype/patterns.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Ports and Adapters
+Este patrón, también conocido como arquitectura hexagonal, se basa en la idea de que el núcleo de la aplicación (la lógica de negocio) debe ser independiente de los detalles técnicos de la infraestructura. Las puertos (interfaces) definen cómo se interactúa con el sistema y los adaptadores implementan esas interfaces para interactuar con la infraestructura. El arquetipo está diseñado para que las capas de dominio y aplicación sean independientes de la infraestructura, lo que facilita el testeo y la sustitución de componentes.
+
+<Image src="/images/archetype/Ports_Adapters.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### CQRS
+Este patrón separa las operaciones de consulta (queries) de las operaciones que modifican el estado (commands). En este arquetipo, los comandos se utilizan para realizar acciones que cambian el estado de los datos (por ejemplo, crear un pedido o añadir un producto), mientras que las queries se utilizan para leer datos (por ejemplo, obtener un pedido por ID). Esto permite optimizar cada tipo de operación por separado, mejorar el rendimiento y la escalabilidad.
+
+Este enfoque arquitectónico, junto con los patrones utilizados, permite un desarrollo más eficiente, flexible y fácil de mantener. Cada capa tiene una responsabilidad clara y se comunica con las demás de forma desacoplada.
+
+<Image src="/images/archetype/CQRS.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### DDD (Domain-Driven Design)
+
+El uso de DDD (Domain-Driven Design) permite un enfoque centrado en el dominio, asegurando que la arquitectura del software refleje fielmente el modelo de negocio. Los conceptos de agregados, entidades y objetos de valor, son fundamentales en esta capa.
+
+<Image src="/images/archetype/DDD.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Mediator Pattern
+
+Este patrón se usa para desacoplar el envío de acciones (commands) y las consultas (queries) a través de un intermediario (handlers). Esto simplifica la lógica y reduce las dependencias directas entre los componentes.
+
+### Repository Pattern
+
+El patrón de repositorios se utiliza para abstraer el acceso a datos, desacoplando la lógica de negocio de la implementación de la persistencia. Esto permite cambiar la base de datos o el mecanismo de persistencia sin modificar el código de la capa de dominio.
+
+Este enfoque arquitectónico permite un desarrollo más eficiente, flexible y fácil de mantener. Cada capa tiene una responsabilidad clara y se comunica con las demás de forma desacoplada.
+
+### Clause Guard
+
+Este patrón se utiliza para validar las precondiciones de un método o función antes de ejecutar la lógica principal. Si las precondiciones no se cumplen, se lanza una excepción o se devuelve un resultado de error. Esto ayuda a mantener la consistencia y la integridad de los datos.

@@ -1,0 +1,146 @@
+---
+title: Domain Event Resolver
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+El servicio `DomainEventResolverService` se encarga de resolver tipos de eventos de dominio basados en nombres de eventos y atributos asociados. Este servicio simplifica la identificación de tipos de eventos, garantizando que los eventos sean manejados de manera eficiente y consistente en la aplicación.
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IDomainEventResolverService.cs" 
+```
+
+## Métodos
+---
+
+El servicio `DomainEventResolverService` proporciona una serie de métodos para resolver y gestionar eventos de dominio. A continuación, se detallan los métodos principales y su funcionalidad:
+
+### GetDomainEventType
+**Type:** `public Type GetDomainEventType(string eventName)`
+
+Obtiene el tipo de evento de dominio basado en el nombre del evento. Si el nombre no se encuentra en el diccionario interno, lanza una excepción. Es útil para traducir nombres de eventos en sus tipos correspondientes para su manejo.
+
+### GetDomainEventType
+**Type:** `public Type GetDomainEventType<TDomainEvent>() where TDomainEvent : IDomainEvent;`
+
+Devuelve el tipo de evento de dominio basado en un parámetro genérico. Utiliza el método `GetKeyEvent<TDomainEvent>()` para resolver la clave asociada al tipo.
+
+### GetKeyDomainEvent
+**Type:** `public string GetKeyDomainEvent<TDomainEvent>() where TDomainEvent : IDomainEvent;`
+
+Obtiene la clave del evento de dominio basado en un tipo genérico. Esto permite a los desarrolladores identificar la clave asociada a un evento particular para propósitos de registro o análisis.
+
+### GetKeyDomainEvent
+**Type:** `public string GetKeyDomainEvent(Type type);`
+
+Obtiene la clave del evento de dominio basado en un tipo específico. Este método es una alternativa cuando el tipo no está disponible como un parámetro genérico.
+
+## ¿Cómo Funciona?
+
+Cuando se publica un evento en estos sistemas, el entorno de ejecución en C# necesita saber qué clase utilizar para serializar el evento en formato JSON. Aquí es donde el **Domain Event Resolver** entra en acción. Este servicio se encarga de escanear todos los eventos de dominio que tienen el atributo `EventKeyAttribute`, almacenando en un diccionario la relación entre el nombre del evento y su tipo correspondiente.
+
+Esto permite que otras librerías del SDK, como `CodeDesignPlus.Net.Redis.PubSub`, `CodeDesignPlus.Net.Redis.Kafka` o `CodeDesignPlus.Net.Redis.RabbitMQ`, utilicen este servicio para identificar la clase correcta que deben instanciar y con la que deben serializar los eventos.
+
+## Atributo EventKeyAttribute
+---
+
+El atributo `EventKeyAttribute` es fundamental para la correcta identificación y gestión de los eventos de dominio en el sistema. Este atributo proporciona metadatos sobre el evento, incluyendo la entidad asociada, la versión y el nombre del evento. A continuación, se detalla su estructura y uso.
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/Attributes/EventKeyAttribute.cs" 
+```
+
+Este atributo puede ser aplicado a cualquier clase o elemento que represente un evento de dominio. Permite que el servicio `DomainEventResolverService` pueda escanear y registrar eventos de manera eficiente, asegurando que la serialización y deserialización de eventos sean coherentes y fáciles de manejar.
+
+### Ejemplo de Uso
+
+A continuación, se presenta un ejemplo de cómo aplicar el `EventKeyAttribute` a un evento de dominio:
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DomainEvents/OrderCreatedDomainEvent.cs" 
+```
+
+## Implementación
+---
+
+El servicio `DomainEventResolverService` es la clase que implementa `IDomainEventResolverService`. Es parte fundamental de la arquitectura de eventos de dominio en `CodeDesignPlus.Net.Core`. A continuación, se muestra su implementación detallada:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core/Services/DomainEventResolverService.cs" 
+```
+
+El estándar de nomenclatura del evento sigue una convención estructurada que combina varios elementos para garantizar una identificación única y coherente de los eventos de dominio. Este formato es `"{coreOptions.Business}.{coreOptions.AppName}.{attribute.Version}.{attribute.Entity}.{attribute.Event}".ToLower();`, donde cada componente tiene un propósito específico:
+
+- `coreOptions.Business`: representa el contexto de negocio al que pertenece el evento.
+- `coreOptions.AppName`: indica la aplicación que genera el evento.
+- `attribute.Version`: especifica la versión del evento para gestionar cambios en el tiempo.
+- `attribute.Entity`: se refiere a la entidad involucrada en el evento.
+- `attribute.Event`: denota el tipo de evento en sí.
+
+Al concatenar estos elementos y convertir el resultado a minúsculas, se asegura que los nombres de los eventos sean consistentes y fácilmente legibles, lo que facilita la suscripción y publicación en sistemas de mensajería.
+
+
+### Ejemplo de Uso
+
+Imaginemos que estamos desarrollando un sistema de comercio electrónico y queremos manejar eventos de creación de pedidos. Cuando un pedido es creado, se publica un evento `OrderCreatedDomainEvent`.
+
+<Steps>
+
+1. Definir el Evento de Dominio
+    Primero, definimos nuestro evento de dominio utilizando el atributo `EventKeyAttribute`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DomainEvents/OrderCreatedDomainEvent.cs"
+    ```
+
+2. Publicar el Evento
+    Cuando un nuevo pedido es creado, publicamos el evento:
+
+    ```csharp
+    using CodeDesignPlus.Net.Core.Abstractions;
+    using CodeDesignPlus.Net.Core.Abstractions.Attributes;
+    using CodeDesignPlus.Net.Core.Services;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+
+    // Servicio de manejo de eventos
+    public class EventPublisher
+    {
+        private readonly IDomainEventResolverService _domainEventResolverService;
+
+        public EventPublisher(IDomainEventResolverService domainEventResolverService)
+        {
+            _domainEventResolverService = domainEventResolverService;
+        }
+
+        public void Publish<TDomainEvent>(TDomainEvent domainEvent) where TDomainEvent : IDomainEvent
+        {
+            var eventName = _domainEventResolverService.GetKeyDomainEvent(domainEvent.GetType());
+            // Aquí se podría agregar lógica para publicar el evento a un sistema de mensajería como RabbitMQ o Kafka
+            Console.WriteLine($"Event Published: {eventName}");
+        }
+    }
+
+    // Escenario de uso
+    var configuration = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json")
+        .Build();
+
+    var serviceCollection = new ServiceCollection();
+    serviceCollection.AddSingleton(configuration);
+    serviceCollection.AddCore(configuration);
+
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var domainEventResolverService = serviceProvider.GetRequiredService<IDomainEventResolverService>();
+    var eventPublisher = new EventPublisher(domainEventResolverService);
+
+    // Crear y publicar un evento
+    var orderCreatedEvent = new OrderCreatedDomainEvent(Guid.NewGuid());
+    eventPublisher.Publish(orderCreatedEvent);
+
+    // Obtener el tipo del evento usando el resolver
+    var eventType = domainEventResolverService.GetDomainEventType("businessName.appName.v1.order.created");
+    Console.WriteLine($"Event Type Resolved: {eventType.FullName}");
+
+    ```
+</Steps>
+
+## Conlusión
+---
+
+El Domain Event Resolver simplifica la gestión de eventos en arquitecturas basadas en microservicios al proporcionar una forma coherente y eficiente de resolver y serializar eventos de dominio. Al escanear automáticamente los eventos y almacenar sus relaciones, permite que las aplicaciones se centren en la lógica de negocio, en lugar de lidiar con las complejidades de la serialización y la instanciación de clases.

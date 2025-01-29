@@ -1,0 +1,71 @@
+---
+title: Command
+---
+
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `CommandAttribute` es un atributo personalizado diseñado para simplificar la creación de pruebas unitarias que validen el comportamiento de los comandos en tu aplicación. Este atributo facilita la generación automática de instancias de comandos, lo que permite a los desarrolladores probar la creación de comandos de manera consistente y eficiente.
+
+## ¿Cómo Funciona?
+
+El `CommandAttribute` funciona como un proveedor de datos para las pruebas unitarias usando xUnit. Cuando se aplica a un método de prueba, este atributo se encarga de:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IRequest`, que es un marcador típico para comandos en arquitecturas CQRS.
+2. **Crear instancias:** Para cada comando encontrado, se crea una instancia utilizando su constructor y valores predeterminados para sus parámetros.
+3. **Proveer datos:** Suministra la instancia del comando junto con su tipo y los valores de los parámetros utilizados en su creación como datos para la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+Este método es el corazón del `CommandAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Comandos:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que implementan la interfaz `IRequest`.
+- **Crear Instancias:** Para cada comando encontrado:
+  - Obtiene el constructor del comando.
+  - Obtiene los parámetros del constructor.
+  - Genera un diccionario de valores predeterminados para los parámetros del constructor usando el método `GetParameterValues()`.
+  - Crea una instancia del comando utilizando `Activator.CreateInstance` y los valores de los parámetros.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` del comando.
+    - La instancia del comando.
+    - Un diccionario con los `ParameterInfo` y los valores utilizados en la creación del comando.
+
+## Implementación
+---
+
+El `CommandAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar los comandos.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/CommandAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `CommandAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/CommandsTests.cs"
+```
+
+En este ejemplo:
+
+- `[Command<Startup>]` crea instancias de todos los comandos en el ensamblado donde se define `Startup`, que implementan `IRequest`.
+- El método de prueba recibe el `Type` del comando, la `instancia` del comando, y un `diccionario` con los valores de los parámetros utilizados en la creación del mismo, lo que permite realizar aserciones sobre el objeto creado.
+- La prueba verifica que las propiedades del comando pueden ser obtenidas y que su valor es el esperado.
+
+## Conclusiones
+---
+
+El `CommandAttribute` es una herramienta muy útil para simplificar la creación y validación de comandos en pruebas unitarias. Al automatizar la creación de instancias de comando y proporcionar los datos necesarios para las pruebas, este atributo ayuda a los desarrolladores a garantizar que su lógica de manejo de comandos se comporta según lo esperado.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [Patrón CQRS](https://martinfowler.com/bliki/CQRS.html)

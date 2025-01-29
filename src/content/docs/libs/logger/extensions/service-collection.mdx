@@ -1,0 +1,121 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Esta extensión proporciona métodos para configurar e integrar un sistema de logging robusto y flexible en aplicaciones .NET, utilizando Serilog y OpenTelemetry. Facilita la adición de servicios de logging al contenedor de inyección de dependencias y la configuración de Serilog para enriquecer los logs con información útil y exportarlos a sistemas de telemetría.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `Serilog`: Librería para logging estructurado.
+- `Serilog.Sinks.OpenTelemetry`: Sink de Serilog para exportar logs a OpenTelemetry.
+- `Serilog.Exceptions`: Librería para enriquecer logs con detalles de excepciones.
+- `Microsoft.EntityFrameworkCore`: Necesario para la el enriquecedor de excepciones `DbUpdateExceptionDestructurer` (opcional).
+- `OpenTelemetry.Proto`: Necesario para trabajar con OpenTelemetry.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Necesitan un sistema de logging centralizado y configurable.
+- Requieran enriquecer los logs con información contextual (como nombre de la app, versión, etc.).
+- Deban exportar logs a sistemas de telemetría como OpenTelemetry para monitoreo y análisis.
+- Deseen usar Serilog como proveedor de logging por su flexibilidad y funcionalidades.
+- Quieran manejar excepciones de manera detallada en los logs.
+
+## Beneficios
+---
+
+- **Configuración centralizada:** Facilita la configuración de logging desde una única sección de configuración.
+- **Enriquecimiento de logs:** Permite agregar información contextual valiosa a los logs, como nombre de la app, versión, máquina, usuario, etc.
+- **Integración con OpenTelemetry:** Permite exportar los logs a sistemas de telemetría para monitoreo y análisis.
+- **Manejo detallado de excepciones:** Captura y registra información detallada de excepciones, incluyendo la pila de llamadas y propiedades relevantes.
+- **Flexibilidad:** Permite personalizar la configuración de Serilog mediante un delegado opcional.
+- **Código limpio:** Simplifica la configuración y uso de Serilog al extender directamente la interfaz `IServiceCollection` y `IHostBuilder`
+
+## Ejemplo Práctico
+---
+
+Supongamos que tienes una aplicación de consola .NET Core y deseas configurar un sistema de logging con Serilog y OpenTelemetry. A continuación, se muestra un ejemplo de cómo usar la extensión `ServiceCollectionExtension` para configurar los servicios de logging y Serilog en tu aplicación:
+
+```csharp url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/Program.cs"
+```
+
+## Métodos de extensión
+---
+
+La extensión `ServiceCollectionExtension` proporciona los siguientes métodos de extensión para configurar e integrar un sistema de logging en aplicaciones .NET:
+
+### AddLogger
+**Type:** `public static IServiceCollection AddLogger(this IServiceCollection services, IConfiguration configuration)`
+
+Este método añade los servicios de logging al contenedor de inyección de dependencias. Lee la configuración de la sección especificada en `LoggerOptions.Section`, la valida y la vincula a la clase `LoggerOptions`. Tambien, adiciona los servicios core del proyecto con el método `AddCore`.
+
+- **Parámetros**
+    - `services`: El `IServiceCollection` al que se añadirán los servicios de logging.
+    - `configuration`: El `IConfiguration` que se utilizará para configurar las opciones del logger.
+
+- **Tipo de retorno**
+    - `IServiceCollection`: El `IServiceCollection` modificado, lo que permite encadenar llamadas adicionales.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si `services` o `configuration` son nulos.
+    - `Exceptions.LoggerException`: Se lanza si la sección `LoggerOptions.Section` no se encuentra en la configuración.
+
+- **Ejemplo de uso**
+    ```csharp
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Configuration;
+    using CodeDesignPlus.Net.Logger.Extensions;
+
+    // Suponiendo que tienes una variable 'services' de tipo IServiceCollection
+    // y una variable 'configuration' de tipo IConfiguration
+
+    services.AddLogger(configuration);
+    ```
+
+### UseSerilog
+**Type:** `public static IHostBuilder UseSerilog(this IHostBuilder builder, Action<LoggerConfiguration> configureLogger = null)`
+
+Este método configura Serilog para usarlo como proveedor de logging, leyendo su configuración del `appsettings.json`. Enriquerce los logs con diferentes propiedades como, nombre de la aplicación, versión, máquina, id del proceso, etc, adicionalmente configura el `OpenTelemetry` cuando es requerido. Permite personalizar la configuración de Serilog a través de la acción `configureLogger`.
+
+- **Parámetros**
+    - `builder`: El `IHostBuilder` que se configurará.
+    - `configureLogger`: Una acción opcional que permite personalizar la configuración de `LoggerConfiguration`.
+
+- **Tipo de retorno**
+    - `IHostBuilder`: El `IHostBuilder` modificado, lo que permite encadenar llamadas adicionales.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si `builder` es nulo.
+
+- **Ejemplo de uso**
+    ```csharp
+    using Microsoft.Extensions.Hosting;
+    using CodeDesignPlus.Net.Logger.Extensions;
+    using Serilog;
+
+    // Suponiendo que tienes una variable 'builder' de tipo IHostBuilder
+
+    builder.UseSerilog((config) => {
+        // Configuraciones adicionales de Serilog aquí
+        config.MinimumLevel.Information();
+    });
+    ```
+
+## Conclusiones
+---
+La extensión `ServiceCollectionExtension` proporciona una forma conveniente y robusta de configurar e integrar un sistema de logging con Serilog y OpenTelemetry en aplicaciones .NET. Facilita la configuración, el enriquecimiento de logs y la exportación a sistemas de telemetría, permitiendo a los desarrolladores enfocarse en la lógica del negocio en lugar de la configuración del logging.
+
+## Referencias
+---
+- [Serilog Documentation](https://serilog.net/)
+- [Serilog.Sinks.OpenTelemetry](https://github.com/serilog/serilog-sinks-opentelemetry)
+- [OpenTelemetry](https://opentelemetry.io/)
+- [Serilog.Exceptions](https://github.com/RehanSaeed/Serilog.Exceptions)
+- [Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection?view=dotnet-plat-ext-8.0)
+- [Microsoft.Extensions.Configuration](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration?view=dotnet-plat-ext-8.0)
+- [Microsoft.Extensions.Options](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.options?view=dotnet-plat-ext-8.0)

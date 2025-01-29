@@ -1,0 +1,63 @@
+---
+title: Data Transfer Object
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+En este artículo, exploraremos el concepto de **Data Transfer Objects (DTOs)**, su propósito en la arquitectura de software y cómo se implementan en la librería `CodeDesignPlus.Net.Core`. Aprenderás sobre las interfaces básicas para DTOs y verás un ejemplo práctico con la clase `OrderDto`.
+
+## ¿Qué es un Data Transfer Object (DTO)?
+
+Un **Data Transfer Object (DTO)** es un patrón de diseño que se utiliza para transportar datos entre procesos. Los DTOs son especialmente útiles cuando se necesita transferir grandes volúmenes de datos a través de la red o entre capas de una aplicación, ya que reducen el número de llamadas a la red y mejoran el rendimiento.
+
+Los DTOs son objetos simples que no contienen lógica de negocio. Su principal función es encapsular los datos, lo que permite que los datos sean transportados de manera eficiente y clara. Generalmente, un DTO contiene solo propiedades y métodos de acceso (getters y setters).
+
+### Beneficios de Usar DTOs
+
+1. **Desacoplamiento:** Los DTOs desacoplan las diferentes capas de la aplicación, lo que facilita los cambios en la estructura de datos sin afectar a otras capas.
+
+2. **Rendimiento:** Al enviar solo los datos necesarios, se minimiza el uso de ancho de banda y se mejora la eficiencia de la aplicación.
+
+3. **Facilidad de Pruebas:** Los DTOs simplifican las pruebas, ya que son objetos sencillos que pueden ser fácilmente creados y manipulados.
+
+4. **Validación de Datos:** Puedes validar los datos en los DTOs antes de que sean utilizados en la lógica de negocio, lo que ayuda a mantener la integridad de los datos.
+
+## Interfaces
+---
+
+La librería `CodeDesignPlus.Net.Core` proporciona las siguientes interfaces para trabajar con DTOs:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IDto.cs" 
+```
+
+### IDtoBase
+
+Esta interfaz representa la base para todos los DTOs, definiendo la propiedad `Id`.
+
+### IDto
+
+Esta interfaz hereda de `IDtoBase` e incluye una propiedad adicional para identificar el inquilino (tenant).
+
+## Ejemplo Práctico
+---
+
+Para ilustrar cómo se utilizan los DTOs, veamos la implementación de un DTO específico: `OrderDto`.
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/DataTransferObject/OrderDto.cs" 
+```
+
+La clase `OrderDto` implementa la interfaz `IDto` y sirve para representar un pedido. Aquí están las características principales:
+
+**Propiedades:**
+
+- Tenant: Identificador único del inquilino, útil en aplicaciones multi-tenant.
+- Id: Identificador único del pedido.
+- Name, Description, Price: Propiedades que describen el pedido.
+- Simplicidad: `OrderDto` es una clase sencilla que encapsula solo los datos necesarios, sin ninguna lógica adicional, lo que facilita su uso en la transferencia de datos.
+
+## Conclusiones
+---
+
+Los Data Transfer Objects son una herramienta poderosa en la arquitectura de software que facilitan la transferencia de datos de manera eficiente y clara. En este artículo, hemos explorado las interfaces básicas para trabajar con DTOs y hemos visto un ejemplo práctico con la clase `OrderDto`.
+
+Al implementar DTOs en tus aplicaciones, podrás mejorar el rendimiento, el desacoplamiento y la mantenibilidad de tu código. Si deseas conocer más sobre cómo utilizar DTOs en situaciones específicas o en combinación con otros patrones, no dudes en escribirnos. ¡Estamos aquí para ayudarte!

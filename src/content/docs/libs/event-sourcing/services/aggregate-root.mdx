@@ -1,0 +1,148 @@
+---
+title: AggregateRoot
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La clase abstracta `AggregateRoot` sirve como base para implementar agregados en un sistema de Event Sourcing. Proporciona mecanismos para gestionar eventos de dominio, aplicar cambios y reconstruir el estado de un agregado a partir de su historial de eventos.  `AggregateRoot` es parte del núcleo de la arquitectura de Event Sourcing, asegurando que los cambios de estado se realicen de manera consistente y que el historial sea la fuente de la verdad para el estado del agregado.
+
+## ¿Cómo Funciona?
+
+`AggregateRoot` funciona como un contenedor de eventos de dominio.  Cuando se realiza una acción que modifica el estado del agregado, un evento de dominio se genera y se agrega a la lista de eventos no confirmados del agregado. Estos eventos se utilizan para dos propósitos principales:
+
+1.  **Aplicación de Cambios**: Los eventos se aplican a la entidad de manera inmediata, modificando su estado actual.
+2.  **Persistencia**: Los eventos se almacenan como registros inmutables del historial del agregado.
+
+La clase también gestiona la rehidratación del agregado, reconstruyendo su estado a partir de los eventos almacenados. Esto garantiza que la entidad siempre se pueda reconstruir a su último estado conocido.
+
+## Métodos
+---
+
+La clase `AggregateRoot` proporciona los siguientes métodos para gestionar eventos de dominio y cambios de estado en un agregado:
+
+### AddEvent
+**Type:** `protected override void AddEvent(IDomainEvent @event)`
+
+Agrega un evento de dominio a la lista de eventos no confirmados del agregado.  Además, actualiza la versión del agregado e incluye metadatos como la versión, la categoría, la fecha de ocurrencia y el Id del evento, antes de invocar al método `ApplyEvent` que es donde se aplica el cambio al estado de la entidad.
+
+### ApplyEvent
+**Type:** `public virtual void ApplyEvent(IDomainEvent @event)`
+
+Aplica un evento de dominio específico al agregado.  Determina dinámicamente el método `Apply` apropiado según el tipo de evento y lo invoca.
+
+### Rehydrate
+**Type:** `public static TAggregate Rehydrate<TAggregate>(Guid id, IEnumerable<IDomainEvent> events)`
+
+El método `Rehydrate<TAggregate>(Guid id, IEnumerable<IDomainEvent> events)` reconstruye un agregado a partir de su historial de eventos.  Crea una nueva instancia del agregado y aplica cada evento en orden para restaurar su estado.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.Event.Sourcing/src/CodeDesignPlus.Net.Event.Sourcing.Abstractions/AggregateRoot.cs"
+```
+
+La clase `AggregateRoot` es abstracta y debe ser heredada por clases concretas que representen agregados específicos de un dominio. La implementación se basa en los siguientes principios:
+
+*   **Gestión de Versiones:** Cada evento está asociado con una versión del agregado, asegurando que los eventos se apliquen en el orden correcto y que el estado del agregado esté siempre sincronizado.
+*   **Categorización de Agregados:** La propiedad `Category` permite categorizar los agregados, facilitando su identificación y manejo en la base de datos de eventos.
+*   **Aplicación Dinámica de Eventos:**  La búsqueda dinámica del método `Apply` por reflexión permite a cada agregado definir cómo responde a cada tipo de evento, sin necesidad de una lógica centralizada de aplicación de eventos.
+*   **Cache de Delegados:** La creación de delegados para la creación del agregado se cachea, optimizando la performance al rehidratar los agregados.
+*   **Cache de Métodos:** La búsqueda de los métodos `Apply` por tipo de evento se cachea también, evitando reflexión cada vez que se aplica un evento.
+
+## Ejemplo de Uso
+---
+
+El ejemplo de `OrderAggregate` muestra cómo implementar un agregado en el contexto de Event Sourcing en C#. Un agregado es una colección de objetos relacionados que se tratan como una unidad para fines de cambios de datos. En este caso, `OrderAggregate` representa un pedido que puede tener un nombre, un identificador de usuario y una lista de productos. El agregado también maneja eventos de dominio que representan cambios en el estado del agregado.
+
+```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Aggregates/OrderAggregate.cs"
+```
+
+<Steps>
+1.  **Definición de la clase y propiedades**
+
+    Definimos la clase `OrderAggregate` que hereda de `AggregateRoot` y declaramos las propiedades `Name`, `IdUser` y `Products` que representan el nombre del pedido, el identificador del usuario y la lista de productos, respectivamente. También definimos la propiedad `Category` que representa la categoría del agregado que será utilizada por la implementación del servicio `IEventSourcingService` cuando se almacene el evento en la base de datos.
+    ```csharp
+    public class OrderAggregate : AggregateRoot
+    {
+        public string? Name { get; private set; }
+        public Guid IdUser { get; private set; }
+        public List<string> Products { get; private set; } = new List<string>();
+        public override string Category { get; protected set; } = "Order";
+    }
+    ```
+
+2.  **Constructores**
+
+    Definimos dos constructores, uno sin parámetros que es usado por el proceso de rehidratación y otro con parámetros que es usado para crear una nueva instancia del agregado a partir del patrón name constructor.
+    ```csharp
+    public OrderAggregate(Guid id) : base(id) { }
+
+    private OrderAggregate(Guid id, string name, Guid idUser) : base(id)
+    {
+        this.Name = name;
+        this.IdUser = idUser;
+    }
+    ```
+
+3.  **Name Constructor**
+
+    Definimos un método estático `Create` que se encarga de crear una nueva instancia del agregado a partir de los parámetros proporcionados. En este caso, el método crea una nueva instancia del agregado y agrega un evento de dominio `OrderCreatedDomainEvent` que representa la creación del pedido.
+    ```csharp
+    public static OrderAggregate Create(Guid id, string name, Guid idUser)
+    {
+        var aggregate = new OrderAggregate(id, name, idUser);
+        aggregate.AddEvent(new OrderCreatedDomainEvent(id, name, idUser));
+        return aggregate;
+    }
+    ```
+
+4.  **Métodos**
+
+    Definimos métodos para actualizar el nombre del pedido y agregar un producto al pedido. En ambos métodos, agregamos eventos de dominio que representan los cambios en el estado del agregado.
+
+    Al invocar estos métodos, se agregan eventos de dominio a la lista de eventos del agregado. Estos eventos se aplican al estado del agregado invocando el método `Apply` con su respectivo evento.
+    ```csharp
+    public void UpdateName(string name)
+    {
+        this.AddEvent(new NameUpdatedDomainEvent(this.Id, name, this.IdUser));
+    }
+
+    public void AddProduct(string product)
+    {
+        this.AddEvent(new ProductAddedDomainEvent(this.Id, product));
+    }
+    ```
+
+5.  **Métodos para Rehidratación**
+
+    Implementamos los métodos `Apply` para aplicar los cambios que ocurren en el agregado o cuando se rehidrata a partir de eventos de dominio. En este caso, implementamos los métodos `Apply` para los eventos `OrderCreatedDomainEvent`, `NameUpdatedDomainEvent` y `ProductAddedDomainEvent`.
+    ```csharp
+    private void Apply(OrderCreatedDomainEvent @event)
+    {
+        this.Name = @event.Name;
+        this.IdUser = @event.IdUser;
+    }
+
+    private void Apply(NameUpdatedDomainEvent @event)
+    {
+        this.Name = @event.Name;
+    }
+
+    private void Apply(ProductAddedDomainEvent @event)
+    {
+        this.Products.Add(@event.Product);
+    }
+    ```
+</Steps>
+
+
+## Conclusiones
+---
+
+La clase `AggregateRoot` proporciona una base sólida para implementar agregados en sistemas basados en Event Sourcing. Su diseño modular y flexible permite a los desarrolladores construir modelos de dominio robustos y rastreables,  centralizando la gestión del historial de eventos y la aplicación de cambios de estado.
+
+## Referencias Adicionales
+---
+
+- [Documentación de Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
+- [Patrón Aggregate](https://martinfowler.com/bliki/DDD_Aggregate.html)

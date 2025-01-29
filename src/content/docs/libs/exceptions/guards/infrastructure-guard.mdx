@@ -1,0 +1,396 @@
+---
+title: InfrastructureGuard
+---
+
+La clase `InfrastructureGuard` proporciona métodos de extensión enfocados en implementar cláusulas de guardia para la capa de infraestructura. Estas validaciones se centran en aspectos relacionados con el manejo de dependencias externas, como conexiones a bases de datos, servicios externos o configuraciones del sistema.
+
+`InfrastructureGuard` ayuda a los desarrolladores a garantizar que los recursos de infraestructura se encuentren en un estado válido y a gestionar posibles fallos de manera controlada. Esto refuerza la resiliencia del sistema y reduce los riesgos asociados con errores en las interacciones con componentes externos.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Guards/InfrastructureGuard.cs"
+
+```
+
+## Métodos de Extensión
+
+La clase `InfrastructureGuard` proporciona los siguientes métodos de extensión para realizar validaciones en la capa de infraestructura, utilizando códigos de error estructurados.
+
+### IsNull
+**Type:** `public static void IsNull(object value, string error)`
+
+Lanza una excepción si el valor especificado es nulo.
+
+
+
+```csharp
+public class DatabaseConnection
+{
+    public DatabaseConnection(IDbConnection connection)
+    {
+        InfrastructureGuard.IsNull(connection, "301: La conexión a la base de datos no puede ser nula.");
+        Connection = connection;
+    }
+
+    public IDbConnection Connection { get; }
+}
+```
+
+### IsNotNull
+**Type:** `public static void IsNotNull(object value, string error)`
+
+Lanza una excepción si el valor especificado no es nulo.
+
+
+
+```csharp
+public class ExternalService
+{
+    public ExternalService(HttpClient client)
+    {
+        InfrastructureGuard.IsNotNull(client, "302: El cliente HTTP no puede ser nulo.");
+        Client = client;
+    }
+
+    public HttpClient Client { get; }
+}
+```
+
+### IsNullOrEmpty
+**Type:** `public static void IsNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o vacía.
+
+
+
+```csharp
+public class FileStorage
+{
+    public FileStorage(string path)
+    {
+        InfrastructureGuard.IsNullOrEmpty(path, "303: La ruta del archivo no puede estar vacía.");
+        Path = path;
+    }
+    public string Path {get;}
+}
+```
+
+### IsNotNullOrEmpty
+**Type:** `public static void IsNotNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o vacía.
+
+
+
+```csharp
+public class QueueService
+{
+   public QueueService(string queueName)
+    {
+        InfrastructureGuard.IsNotNullOrEmpty(queueName, "304: El nombre de la cola no puede ser nulo o vacío.");
+        QueueName = queueName;
+    }
+    public string QueueName { get; }
+}
+```
+
+### IsNullOrWhiteSpace
+**Type:** `public static void IsNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o contiene solo espacios en blanco.
+
+
+
+```csharp
+public class ApiKey
+{
+   public ApiKey(string value)
+    {
+        InfrastructureGuard.IsNullOrWhiteSpace(value, "305: La clave de API no puede estar vacía o contener solo espacios en blanco.");
+         Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+### IsNotNullOrWhiteSpace
+**Type:** `public static void IsNotNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o no contiene solo espacios en blanco.
+
+
+
+```csharp
+public class ConnectionString
+{
+  public ConnectionString(string value)
+    {
+        InfrastructureGuard.IsNotNullOrWhiteSpace(value, "306: La cadena de conexión no puede ser nula o solo espacios en blanco.");
+        Value = value;
+    }
+     public string Value { get; }
+}
+```
+
+### IsTrue
+**Type:** `public static void IsTrue(bool value, string error)`
+
+Lanza una excepción si el valor especificado es verdadero.
+
+
+```csharp
+public class CacheService
+{
+  public CacheService(bool isEnabled)
+    {
+        InfrastructureGuard.IsTrue(isEnabled == false, "307: El cache no se encuentra habilitado.");
+        IsEnabled = isEnabled;
+    }
+    public bool IsEnabled { get; }
+}
+```
+
+### IsFalse
+**Type:** `public static void IsFalse(bool value, string error)`
+
+Lanza una excepción si el valor especificado es falso.
+
+
+
+```csharp
+public class FileSystem
+{
+   public FileSystem(bool existFile)
+    {
+       InfrastructureGuard.IsFalse(existFile == true , "308: El archivo existe.");
+        ExistFile = existFile;
+    }
+    public bool ExistFile { get; }
+}
+```
+
+### IsGreaterThan
+**Type:** `public static void IsGreaterThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor que el valor de comparación.
+
+
+
+```csharp
+public class RetryPolicy
+{
+  public RetryPolicy(int retries)
+    {
+       InfrastructureGuard.IsGreaterThan(retries, 0, "309: El número de intentos debe ser mayor que 0.");
+        Retries = retries;
+    }
+    public int Retries { get; }
+}
+```
+
+### IsGreaterThanOrEqual
+**Type:** `public static void IsGreaterThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor o igual que el valor de comparación.
+
+
+
+```csharp
+public class Timeout
+{
+  public Timeout(int value)
+    {
+       InfrastructureGuard.IsGreaterThanOrEqual(value, 1000, "310: El timeout debe ser mayor o igual a 1000 ms.");
+        Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### IsLessThan
+**Type:** `public static void IsLessThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor que el valor de comparación.
+
+
+
+```csharp
+public class MaxConnections
+{
+   public MaxConnections(int value)
+    {
+      InfrastructureGuard.IsLessThan(value, 100, "311: El número máximo de conexiones no puede ser mayor a 100.");
+        Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### IsLessThanOrEqual
+**Type:** `public static void IsLessThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor o igual que el valor de comparación.
+
+
+
+```csharp
+public class BufferSize
+{
+  public BufferSize(int value)
+    {
+      InfrastructureGuard.IsLessThanOrEqual(value, 8192, "312: El tamaño del buffer no puede ser mayor a 8192 bytes.");
+        Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### AreEquals
+**Type:** `public static void AreEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados no son iguales.
+
+
+
+```csharp
+public class ConfigVersion
+{
+   public ConfigVersion(string value, string confirmValue)
+    {
+       InfrastructureGuard.AreEquals(value, confirmValue, "313: Las versiones de configuración no coinciden.");
+         Value = value;
+    }
+    public string Value { get; }
+}
+```
+
+### AreNotEquals
+**Type:** `public static void AreNotEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados son iguales.
+
+
+
+```csharp
+public class DatabaseId
+{
+    public DatabaseId(Guid value, Guid newId)
+    {
+        InfrastructureGuard.AreNotEquals(value, newId, "314: Los ID de la base de datos son iguales");
+         Value = value;
+    }
+    public Guid Value { get; }
+}
+```
+
+### IsInRange
+**Type:** `public static void IsInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no está dentro del rango especificado.
+
+
+
+```csharp
+public class PortNumber
+{
+    public PortNumber(int value)
+    {
+        InfrastructureGuard.IsInRange(value, 1024, 65535, "315: El número de puerto debe estar entre 1024 y 65535.");
+        Value = value;
+    }
+     public int Value { get; }
+}
+```
+
+### IsNotInRange
+**Type:** `public static void IsNotInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado está dentro del rango especificado.
+
+
+
+```csharp
+public class MemoryUsage
+{
+    public MemoryUsage(int value)
+    {
+        InfrastructureGuard.IsNotInRange(value, 0, 90, "316: El uso de memoria no debe estar entre 0 y 90%.");
+         Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### IsEmpty
+**Type:** `public static void IsEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada está vacía.
+
+
+
+```csharp
+public class Headers
+{
+   public Headers(List<string> value)
+    {
+       InfrastructureGuard.IsEmpty(value, "317: La lista de encabezados no puede estar vacía.");
+        Value = value;
+    }
+     public List<string> Value { get; }
+}
+```
+
+### IsNotEmpty
+**Type:** `public static void IsNotEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada no está vacía.
+
+
+
+```csharp
+public class Endpoints
+{
+   public Endpoints(List<string> value)
+    {
+        InfrastructureGuard.IsNotEmpty(value, "318: La lista de endpoints no puede estar vacía.");
+        Value = value;
+    }
+     public List<string> Value { get; }
+}
+```
+
+### GuidIsEmpty
+**Type:** `public static void GuidIsEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado está vacío.
+
+
+
+```csharp
+public class TraceId
+{
+   public TraceId(Guid value)
+    {
+       InfrastructureGuard.GuidIsEmpty(value, "319: El ID de rastreo no puede ser vacío.");
+        Value = value;
+    }
+    public Guid Value { get; }
+}
+```
+
+### GuidIsNotEmpty
+**Type:** `public static void GuidIsNotEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado no está vacío.
+
+
+
+```csharp
+public class CorrelationId
+{
+   public CorrelationId(Guid value)
+    {
+        InfrastructureGuard.GuidIsNotEmpty(value, "320: El ID de correlación no puede ser vacío.");
+       Value = value;
+    }
+    public Guid Value { get; }
+}
+```

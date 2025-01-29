@@ -1,0 +1,123 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+`ServiceCollectionExtensions` es una clase estática que proporciona métodos de extensión para la interfaz `IServiceCollection`. Su propósito principal es facilitar la adición de servicios principales a una colección de servicios utilizando una configuración proporcionada.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+
+## Escenarios de uso
+---
+
+Este método de extensión es particularmente útil en aplicaciones que:
+
+- Siguen principios de diseño como DDD (Domain-Driven Design) o arquitectura hexagonal.
+- Necesitan validar y enlazar configuraciones directamente desde el archivo de configuración.
+- Requieren la integración de servicios básicos como `IDomainEventResolverService`.
+
+## Beneficios
+---
+
+- Simplicidad: Reduce el código repetitivo para configurar servicios comunes.
+- Validación integrada: Garantiza que la configuración cumple con las anotaciones de datos.
+- Modularidad: Promueve una configuración limpia y centralizada de los servicios.
+
+## Ejemplo Práctico
+---
+
+El siguiente ejemplo práctico ilustra cómo utilizar la extensión `AddCore` en una aplicación de consola. El objetivo es demostrar cómo cargar la configuración desde un archivo `appsettings.json`, registrar los servicios en el contenedor de dependencias y resolver un tipo de evento de dominio.
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Program.cs" 
+```
+
+<Steps>
+
+1. **Carga de Configuración**: 
+
+    Utiliza ConfigurationBuilder para cargar la configuración desde un archivo JSON. Esto permite acceder a la configuración de la aplicación de manera estructurada.
+
+    ```csharp 
+    var configuration = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+        .Build();
+    ```
+
+2. **Creación de la Colección de Servicios**:
+
+    Se crea una instancia de `ServiceCollection`, que actúa como el contenedor de dependencias.
+
+    ```csharp
+    var services = new ServiceCollection();
+    ```
+
+3. **Registro de Servicios**:
+
+    Se llama a `AddCore`, lo que no solo agrega los servicios definidos, sino que también asegura que la configuración se valide.
+
+    ```csharp
+    services.AddCore(configuration);
+    ```
+
+4. **Resolución de Servicios**:
+
+    Se utiliza `GetRequiredService` para obtener una instancia del ``IDomainEventResolverService``. Este servicio es clave para el manejo de eventos en la aplicación, permitiendo identificar y gestionar los eventos de dominio de manera efectiva.
+
+    ```csharp
+    var domainEventResolverService = services.BuildServiceProvider().GetRequiredService<IDomainEventResolverService>();
+    ```
+
+5. **Salida de la Consola**:
+
+    Se imprime el nombre completo del tipo de evento de dominio, demostrando que el servicio ha sido correctamente registrado y resuelto.
+
+    ```csharp
+    Console.WriteLine(domainEventResolverService.ResolveEvent(typeof(DomainEventSample)).FullName);
+    ```
+
+</Steps>
+
+## Métodos de extensión
+---
+
+`ServiceCollectionExtensions` proporciona una serie de métodos de extensión que facilitan la adición de servicios a la colección de servicios en una aplicación. Estos métodos permiten una configuración más modular y organizada del contenedor de dependencias. A continuación se detallan algunos de los métodos principales:
+   
+### AddCore
+**Type:** `public static IServiceCollection AddCore(this IServiceCollection services, IConfiguration configuration)`
+
+El método `AddCore` agrega servicios esenciales a la colección de servicios. Estos servicios incluyen opciones de configuración, validación de configuración y servicios de resolución de eventos de dominio.
+
+- **Parámetros**
+
+    - `services`: Instancia de `IServiceCollection` donde se registran los servicios.
+    - `configuration`: Instancia de `IConfiguration` para acceder a las configuraciones.
+
+- **Retorno**
+
+    Devuelve la misma instancia de `IServiceCollection` para permitir un encadenamiento fluido.
+
+- **Excepciones**
+
+    - `ArgumentNullException`: Si services o configuration son nulos.
+    - `CoreException`: Si la sección de configuración CoreOptions no existe.
+
+## Conclusiones
+---
+
+- Centralización de Configuración: La extensión AddCore simplifica la adición de servicios esenciales en la aplicación.
+- Validación Robusta: Valida automáticamente las opciones configuradas.
+- Facilidad de Uso: Su integración es sencilla y se adapta bien a arquitecturas modernas.
+
+## Referencias
+---
+
+- [.Net dependency injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)
+- [Documentación oficial de `IServiceCollection`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection.iservicecollection?view=net-9.0-pp)
+- [Opciones en ASP.NET Core](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-9.0)
+- [Anotaciones de datos](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-9.0)

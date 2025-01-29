@@ -1,0 +1,66 @@
+---
+title: Errors
+---
+
+La gestión de errores es un aspecto crucial en el desarrollo de software, ya que permite manejar situaciones excepcionales de manera controlada y predecible. En esta sección, exploraremos cómo se estructuran los códigos de error en la librería `CodeDesignPlus.Net.Core`, organizándolos en niveles que corresponden a diferentes capas de la aplicación. Esta organización facilita el diagnóstico y la solución de problemas en sistemas complejos.
+
+## Niveles de Códigos de Error
+---
+
+Los códigos de error se agrupan en tres niveles, cada uno correspondiente a una capa específica en la arquitectura hexagonal:
+
+1. **Capa de Dominio (1xx):** 
+   - Códigos que reflejan problemas relacionados con las reglas de negocio y la lógica del dominio. Se utilizan para validar invariantes del dominio y manejar condiciones que no cumplen con las expectativas del modelo.
+
+2. **Capa de Aplicación (2xx):** 
+   - Códigos que se relacionan con la lógica de la aplicación, incluyendo la validación de datos y la interacción entre las diferentes partes de la aplicación.
+
+3. **Capa de Infraestructura (3xx):**
+   - Códigos que reflejan problemas en la infraestructura subyacente, como fallos en la base de datos, problemas de red o fallos de servicio.
+
+## Abstracción de Errores
+---
+
+La interfaz `IErrorCodes` se define como sigue:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IErrorCodes.cs" 
+```
+
+## Ejemplo Práctico
+---
+
+Para ilustrar cómo se estructuran los códigos de error en la librería `CodeDesignPlus.Net.Core`, veamos un ejemplo de implementación de la interfaz `IErrorCodes`:
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/Errors/Errors.cs" 
+```
+
+## Uso de Códigos de Error
+---
+
+Estos códigos de error son especialmente útiles en las cláusulas de guardia y en la validación de invariantes del dominio. Por ejemplo, podrías utilizarlos en un método de creación de pedido para verificar que el `Id` del pedido es válido:
+
+```csharp
+
+public void CreateOrder(Guid orderId, Guid tenantId)
+{
+    if (orderId == Guid.Empty)
+    {
+        throw new CodeDesignPlusException(Errors.IdOrderIsInvalid);
+    }
+
+    if (tenantId == Guid.Empty)
+    {
+        throw new CodeDesignPlusException(Errors.TenantIsInvalid);
+    }
+
+    // Lógica para crear el pedido...
+}
+
+```
+
+## Conclusiones
+---
+
+La gestión de errores es fundamental para mantener la robustez y la mantenibilidad de una aplicación. Al estructurar los códigos de error en niveles que corresponden a diferentes capas de la arquitectura hexagonal, puedes facilitar el diagnóstico de problemas y mejorar la calidad del software. Los códigos de error definidos en la librería `CodeDesignPlus.Net.Core` son una herramienta poderosa que te permite manejar excepciones de manera eficaz y alineada con las expectativas del dominio.
+
+Si deseas profundizar más en la gestión de errores o explorar otros aspectos de la arquitectura hexagonal, no dudes en contactarnos. ¡Estamos aquí para ayudarte!

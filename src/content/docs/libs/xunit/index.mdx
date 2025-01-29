@@ -1,0 +1,298 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería **CodeDesignPlus.Net.xUnit** proporciona un conjunto de herramientas y abstracciones para facilitar la creación de pruebas unitarias en proyectos .NET, especialmente aquellos que utilizan contenedores Docker para dependencias externas. Esta librería busca acelerar el proceso de configuración de entornos de prueba, integrando contenedores de Docker para bases de datos, colas de mensajería, almacenes de eventos y otros servicios.
+
+## Propósito y alcance
+---
+
+El principal propósito de esta librería es simplificar y estandarizar la configuración de pruebas unitarias, utilizando Docker para gestionar las dependencias. Al proporcionar contenedores preconfigurados y herramientas auxiliares, la librería permite a los desarrolladores enfocarse en escribir pruebas de calidad en lugar de invertir tiempo en la configuración del entorno. Su alcance abarca la integración de contenedores Docker comunes en pruebas unitarias, facilitando la creación de tests que simulan escenarios reales.
+
+## Principales características
+---
+
+-   **Contenedores Docker Preconfigurados:** Proporciona contenedores Docker listos para usar para MongoDB, SQL Server, Redis, RabbitMQ, Kafka, EventStore, Vault y Observabilidad (Loki, Grafana, Prometheus, Tempo, OpenTelemetry Collector).
+-   **Colecciones de Pruebas:** Permite organizar las pruebas por colecciones, donde cada colección tiene acceso a un contenedor Docker específico, asegurando entornos de prueba aislados y reproducibles.
+-   **Ayudantes de Configuración:** Incluye ayudantes para facilitar la configuración y el acceso a los contenedores, y la configuración de las aplicaciones a través de archivos `appsettings.json`.
+-   **Logs:** Integra un logger personalizado para mostrar los logs de la prueba en la salida de la consola.
+-   **Soporte OpenTelemetry:** Permite instrumentar las pruebas con OpenTelemetry utilizando un exporter en memoria.
+-   **Certificados para Redis:** Proporciona una colección de certificados y scripts para trabajar con la configuración segura de Redis.
+-   **Soporte para la validación de propiedades:** Integra un ayudante para la validación de propiedades mediante Data Annotations.
+
+## Casos de uso típicos
+---
+
+-   Pruebas unitarias que dependen de bases de datos como MongoDB o SQL Server.
+-   Pruebas unitarias que requieren colas de mensajería como RabbitMQ o Kafka.
+-   Pruebas unitarias que simulan interacciones con un almacén de eventos (EventStore).
+-   Pruebas unitarias que necesitan acceder a una configuración centralizada (Vault).
+-   Pruebas unitarias que necesitan monitoreo y observabilidad (OpenTelemetry y otros).
+-  Pruebas unitarias que necesitan una configuracion segura de Redis.
+
+## Componentes Principales
+---
+
+- **`Containers`:**
+   - `DockerCompose.cs`: Abstracción para la ejecución de comandos Docker Compose.   
+   - `EventStoreContainer`: Configuración para el contenedor de EventStore.
+   - `KafkaContainer`: Configuración para el contenedor de Kafka.
+   - `MongoContainer`: Configuración para el contenedor de MongoDB.
+   - `ObservabilityContainer`: Configuración para los contenedores de Observabilidad (Loki, Grafana, Prometheus, Tempo).
+   - `OpenTelemetryContainer`: Configuración para el contenedor de OpenTelemetry Collector.
+   - `RabbitMQContainer`: Configuración para el contenedor de RabbitMQ.
+   - `RedisContainer`: Configuración para el contenedor de Redis, incluyendo soporte para cluster y certificados.
+   - `SqlServerContainer`: Configuración para el contenedor de SQL Server.
+   - `VaultContainer`: Configuración para el contenedor de Vault.
+
+- **Colecciones de Pruebas (Fixtures):**
+   - `EventStoreCollectionFixture`: Colección para pruebas que utilizan EventStore.
+   - `KafkaCollectionFixture`: Colección para pruebas que utilizan Kafka.
+   - `MongoCollectionFixture`: Colección para pruebas que utilizan MongoDB.
+   - `ObservabilityCollectionFixture`: Colección para pruebas que utilizan Observabilidad.
+   - `RabbitMQCollectionFixture`: Colección para pruebas que utilizan RabbitMQ.
+   - `SqlCollectionFixture`: Colección para pruebas que utilizan SQL Server.
+   - `VaultCollectionFixture`: Colección para pruebas que utilizan Vault.
+   - `KafkaCollectionFixture`: Colección para pruebas que utilizan Kafka.
+
+- **Extensions:**
+   - `ConfigurationUtil.cs`: Ayudante para facilitar la configuración.
+   - `DataAnnotationUtil.cs`: Ayudante para la validación de propiedades mediante Data Annotations.
+   - `LoggerExtensions.cs`: Métodos de extensión para facilitar el logging.
+
+- **Output**
+   -  **Loggers:**
+      - `XunitLogger`: Implementación de `ILogger` para xUnit.
+      - `XunitLoggerProvider`: Proveedor de `ILogger` para xUnit.
+      - `XunitExtensions`: Metodos de extensión para el uso de `XunitLogger`.
+
+- **OpenTelemetry**
+   - `InMemoryExporter`: Implementacion de un exporter en memoria para pruebas.
+
+<FileTree>
+
+- CodeDesignPlus.Net.xUnit
+    - Containers
+           - DockerCompose.cs
+       - EventStoreContainer
+              - docker-compose.yml
+              - EventStoreCollectionFixture.cs
+              - EventStoreContainer.cs
+       - KafkaContainer
+              - docker-compose.yml
+              - KafkaCollectionFixture.cs
+              - KafkaContainer.cs
+       - MongoContainer
+              - docker-compose.yml
+              - MongoCollectionFixture.cs
+              - MongoContainer.cs
+       - ObservabilityContainer
+             - docker-compose.yml
+             - ObservabilityCollectionFixture.cs
+             - ObservabilityContainer.cs
+          - configs
+                  - grafana-datasources.yaml
+                  - loki-config.yaml
+                  - otel-config.yaml
+                  - prometheus-config.yaml
+                  - tempo-config.yaml
+       - OpenTelemetry
+              - collector-config.yml
+              - docker-compose.yml
+              - InMemoryExporter.cs
+              - OpenTelemetryContainer.cs
+       - RabbitMQContainer
+              - docker-compose.yml
+              - RabbitMQCollectionFixture.cs
+              - RabbitMQContainer.cs
+       - RedisContainer
+             - docker-compose.cluster.yml
+             - docker-compose.standalone.yml
+             - RedisContainer.cs
+          - Certificates
+                 - ca.crt
+                 - ca.key
+                 - ca.txt
+                 - client-without-pass.pfx
+                 - client.crt
+                 - client.key
+                 - client.pfx
+                 - openssl.cnf
+                 - redis.crt
+                 - redis.dh
+                 - redis.key
+                 - redis.pfx
+                 - server.crt
+                 - server.key
+                 - server.pfx
+          - Scripts
+                 - gen-test-certs.sh
+                 - start-cluster.sh
+             - tests
+                 - tls
+          - Settings
+                  - redis-standalone.conf
+                  - redis0.conf
+                  - redis1.conf
+                  - redis2.conf
+                  - redis3.conf
+                  - redis4.conf
+                  - redis5.conf
+       - SqlServer
+              - docker-compose.yml
+              - SqlCollectionFixture.cs
+              - SqlServerContainer.cs
+       - VaultContainer
+              - docker-compose.yml
+              - VaultCollectionFixture.cs
+              - VaultContainer.cs
+           - resources
+                  - config.sh
+                  - entrypoint.sh
+                  - full-access.hcl
+           - shared
+               - vault-config
+                       - credentials.json
+    - Extensions
+           - ConfigurationUtil.cs
+           - DataAnnotationUtil.cs
+           - LoggerExtensions.cs
+    - Output
+        - Loggers
+                - XunitExtensions.cs
+                - XunitLogger.cs
+                - XunitLoggerProvider.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.xUnit` en tu proyecto de .NET. Además, explorarás cómo utilizar los diferentes contenedores Docker y colecciones de pruebas para escribir pruebas unitarias con dependencias externas.
+
+### Requisitos previos
+
+-   .NET 8 o superior.
+-   Docker instalado y en ejecución.
+-   xUnit instalado en el proyecto de pruebas.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.xUnit`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.xUnit
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.xUnit
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.xUnit" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.xUnit` proporciona los siguientes métodos de extensión para facilitar la creación de pruebas unitarias en proyectos .NET:
+
+### Logger
+
+La clase `LoggerExtensions` proporciona métodos de extensión para facilitar el uso de `ILogger` en xUnit. 
+
+<LinkCard title="Explora la clase LoggerExtensions" href="/libs/xunit/extensions/logger" />
+
+### Data Annotations
+
+La clase `DataAnnotationsExtensions` proporciona métodos de extensión para facilitar la validación de propiedades mediante Data Annotations.
+
+<LinkCard title="Explora la clase DataAnnotationsExtensions" href="/libs/xunit/extensions/data-annotations" />
+
+### Configuration Util
+
+La clase `ConfigurationUtil` proporciona métodos para facilitar la configuración de las aplicaciones a través de archivos `appsettings.json`.
+
+<LinkCard title="Explora la clase ConfigurationUtil" href="/libs/xunit/extensions/configuration-util" />
+
+### xUnit Logger
+
+La clase `XunitExtensions` proporciona métodos de extensión para facilitar el uso de `ILogger` en xUnit.
+
+<LinkCard title="Explora la clase XunitExtensions" href="/libs/xunit/extensions/xunit-logger" />
+
+## Contenedores
+---
+
+La librería `CodeDesignPlus.Net.xUnit` proporciona contenedores Docker preconfigurados para facilitar la creación de pruebas unitarias. A continuación, se describen los contenedores disponibles y su funcionalidad.
+
+### Event Store
+Proporciona un contenedor Docker para ejecutar EventStoreDB, un sistema de base de datos para almacenar secuencias de eventos.
+
+<LinkCard title="Explora la clase EventStoreContainer" href="/libs/xunit/containers/event-store-container" />
+
+### Kafka
+Proporciona un contenedor Docker para ejecutar Apache Kafka, un sistema de mensajería distribuida.
+
+<LinkCard title="Explora la clase KafkaContainer" href="/libs/xunit/containers/kafka-container" />
+
+### Mongo
+Proporciona un contenedor Docker para ejecutar MongoDB, una base de datos NoSQL orientada a documentos.
+
+<LinkCard title="Explora la clase MongoContainer" href="/libs/xunit/containers/mongo-container" />
+
+### Observability
+Proporciona un conjunto de contenedores Docker para ejecutar herramientas de observabilidad como Loki (para logs), Grafana 
+(para dashboards), Prometheus (para métricas) y Tempo (para trazas).
+
+<LinkCard title="Explora la clase ObservabilityContainer" href="/libs/xunit/containers/observability-container" />
+
+### OpenTelemetry
+Proporciona un contenedor Docker para ejecutar OpenTelemetry Collector, utilizado para recopilar y exportar telemetría.
+
+<LinkCard title="Explora la clase OpenTelemetryContainer" href="/libs/xunit/containers/otel-container" />
+
+### RabbitMQ
+Proporciona un contenedor Docker para ejecutar RabbitMQ, un broker de mensajería.
+
+<LinkCard title="Explora la clase RabbitMQContainer" href="/libs/xunit/containers/rabbitmq-container" />
+
+### Redis
+Proporciona un contenedor Docker para ejecutar Redis, un almacén de datos en memoria, ofreciendo configuraciones para modo 
+standalone y cluster, y soporte para certificados para conexiones seguras.
+
+<LinkCard title="Explora la clase RedisContainer" href="/libs/xunit/containers/redis-container" />
+
+### SqlServer
+Proporciona un contenedor Docker para ejecutar SQL Server, una base de datos relacional.
+
+<LinkCard title="Explora la clase SqlServerContainer" href="/libs/xunit/containers/sql-server-container" />
+
+### Vault
+Proporciona un contenedor Docker para ejecutar HashiCorp Vault, una herramienta para gestionar secretos y proteger información sensible.
+
+<LinkCard title="Explora la clase VaultContainer" href="/libs/xunit/containers/vault-container" />
+
+## Conclusiones
+---
+
+-   La librería `CodeDesignPlus.Net.xUnit` simplifica la creación de pruebas unitarias que dependen de contenedores Docker.
+-   Proporciona una forma estandarizada de configurar y gestionar los contenedores Docker.
+-   Facilita el acceso a las cadenas de conexión y la configuración de cada servicio, acelerando el proceso de creación de pruebas.
+-   Permite organizar las pruebas por colecciones para mantener entornos aislados y reproducibles.
+-   Proporciona un logger para facilitar la visualización de la información durante la ejecución de las pruebas.
+
+## Recursos externos
+---
+
+-   [Documentación de xUnit](https://xunit.net/)
+-   [Documentación de Docker](https://docs.docker.com/)
+-   [Documentación de Docker Compose](https://docs.docker.com/compose/)
+-   [Documentación de Microsoft.Extensions.Logging](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging?view=dotnet-plat-ext-7.0)

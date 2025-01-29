@@ -1,0 +1,125 @@
+---
+title: MediatR Extensions
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Este documento describe las clases `MediatRExtensions` y `ValidationPipeline`, las cuales trabajan en conjunto para facilitar la configuración de MediatR y la implementación de un pipeline de validación basado en FluentValidation en aplicaciones .NET.
+
+`MediatRExtensions` proporciona un método de extensión para la interfaz `IServiceCollection` que simplifica la configuración de MediatR, incluyendo el registro de handlers y el pipeline de validación. `ValidationPipeline`, por su parte, implementa un pipeline de MediatR que valida las solicitudes utilizando los validadores de FluentValidation antes de que lleguen a sus handlers.
+
+```csharp url="packages/CodeDesignPlus.Net.Microservice.Commons/src/CodeDesignPlus.Net.Microservice.Commons/MediatR/MediatRExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+
+- `MediatR`: Necesario para la implementación del patrón Mediator y el envío de mensajes.
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection` y para el registro de servicios en el contenedor de inyección de dependencias.
+- `FluentValidation`: Necesario para definir validadores y utilizarlos en el pipeline de MediatR.
+- `CodeDesignPlus.Net.Core.Abstractions`: Necesario para la interfaz `IStartupServices` utilizada en la configuración.
+
+## Escenarios de uso
+---
+
+Estas clases son particularmente útiles en aplicaciones que:
+
+- Utilizan MediatR para la gestión de comandos y consultas.
+- Implementan el patrón CQRS (Command Query Responsibility Segregation).
+- Desean validar las solicitudes antes de ejecutar la lógica de negocio.
+- Necesitan un pipeline de validación que pueda manejar múltiples validadores por solicitud.
+- Quieren automatizar la configuración de MediatR y la integración con FluentValidation.
+
+## Beneficios
+---
+
+- **Configuración Simplificada:** Reduce la complejidad de configurar MediatR y su integración con FluentValidation.
+- **Validación Centralizada:** Permite centralizar la lógica de validación en un pipeline, evitando la repetición de código en los handlers.
+- **Flexibilidad:** Admite la validación de solicitudes con múltiples validadores.
+- **Separación de Preocupaciones:** Separa la lógica de validación de la lógica de negocio, mejorando la mantenibilidad y la legibilidad del código.
+- **Consistencia:** Garantiza que todas las solicitudes sean validadas de manera consistente.
+
+## Ejemplo Práctico
+---
+
+Para usar estas clases en tu aplicación, debes agregar la configuración de MediatR en el método `ConfigureServices` de tu clase `Startup.cs` o `Program.cs`, utilizando la clase `MediatRExtensions` y registrar los validadores FluentValidation.
+
+```csharp
+// En tu archivo Program.cs
+using CodeDesignPlus.Net.Microservice.Commons.MediatR;
+using CodeDesignPlus.Net.Microservice.Commons.FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
+// Agrega MediatR al contenedor de inyección de dependencias.
+builder.Services.AddMediatR<Program>();
+// Agrega FluentValidation al contenedor de inyección de dependencias.
+builder.Services.AddFluentValidation();
+
+var app = builder.Build();
+
+```
+
+## Métodos de extensión
+---
+
+La clase `MediatRExtensions` proporciona un método de extensión llamado `AddMediatR` que simplifica la configuración de MediatR en aplicaciones .NET. La clase `ValidationPipeline` implementa un pipeline de MediatR que intercepta las solicitudes para validarlas antes de ejecutar la lógica de negocio.
+
+### AddMediatR
+**Type:** `public static IServiceCollection AddMediatR<TApplication>(this IServiceCollection services) where TApplication : IStartupServices`
+
+Este método de extensión configura MediatR, registrando todos los handlers de la asamblea de la aplicación y agregando el pipeline de validación (`ValidationPipeline`) para todas las solicitudes.
+
+- **Parámetros:**
+    - `services`: La instancia de `IServiceCollection` a la cual se agregarán los servicios de MediatR.
+    - `TApplication`: Tipo que implementa la interface `IStartupServices`. El Assembly de esta clase se utiliza para el registro automatico de handlers
+- **Tipo de retorno:**
+   -  `IServiceCollection`: La misma instancia de `IServiceCollection` para permitir el encadenamiento de llamadas a métodos.
+
+- **Ejemplo de Código:**
+    ```csharp
+    // Dentro de ConfigureServices en Startup.cs
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllers();
+        // Agrega MediatR y el pipeline de validacion
+        services.AddMediatR<Program>();
+    }
+    ```
+
+## Clase ValidationPipeline
+---
+
+La clase `ValidationPipeline` implementa un pipeline de MediatR que intercepta las solicitudes para validarlas antes de ejecutar la lógica de negocio. Utiliza los validadores de FluentValidation para realizar la validación de las solicitudes.
+
+```csharp url="/packages/CodeDesignPlus.Net.Microservice.Commons/src/CodeDesignPlus.Net.Microservice.Commons/MediatR/ValidationPipeline.cs"
+```
+
+### Handle
+**Type:** `public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)`
+
+Este método del pipeline ejecuta la validación utilizando todos los validadores registrados para el tipo de solicitud. Si hay algún error de validación, lanza una `ValidationException`. Si no hay errores, ejecuta el delegado `next` para continuar con el procesamiento de la solicitud.
+
+- **Parámetros:**
+    - `request`: La solicitud a ser validada.
+    - `next`: El delegado para el siguiente paso en el pipeline de MediatR.
+    - `cancellationToken`: Un token de cancelación para la tarea asíncrona.
+- **Tipo de retorno:**
+    - `Task<TResponse>`: Una tarea que representa el resultado del manejo de la solicitud, incluyendo la validación y el siguiente paso del pipeline.
+- **Excepciones:**
+    - `ValidationException`: Se lanza si hay errores de validación en la solicitud.
+
+## Conclusiones
+---
+
+Las clases `MediatRExtensions` y `ValidationPipeline` proporcionan una forma robusta y sencilla de configurar MediatR y su integración con FluentValidation en aplicaciones .NET. El uso de un pipeline de validación centralizado facilita la implementación de patrones de diseño como CQRS y garantiza una validación consistente en toda la aplicación. Se recomienda el uso de estas clases en proyectos que necesiten un framework de mensajería y requieran validación de las peticiones.
+
+## Referencias
+---
+
+- [Documentación oficial de MediatR](https://github.com/jbogard/MediatR)
+- [Documentación oficial de FluentValidation](https://fluentvalidation.net/)
+- [Documentación oficial de Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection)

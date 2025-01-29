@@ -1,0 +1,222 @@
+---
+title: Probando los microservicios
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo probar el microservicio **Clients** utilizando los diferentes métodos de comunicación que hemos implementado: REST, gRPC y eventos de dominio con RabbitMQ.  Veremos cómo realizar pruebas de extremo a extremo para asegurar que nuestro microservicio funciona correctamente en todos sus aspectos. Usaremos Postman para las pruebas REST y gRPC, y la interfaz de RabbitMQ para la prueba de eventos.
+
+## ¿Por qué Probar los Microservicios?
+
+Las pruebas son esenciales para asegurar la calidad, estabilidad y confiabilidad de los microservicios.  En este contexto, las pruebas abarcan tanto la lógica interna de un microservicio como su integración con otros servicios. Probar adecuadamente los microservicios nos permite:
+
+*   **Detectar errores:** Identificar bugs en el código de forma temprana.
+*   **Asegurar la funcionalidad:** Verificar que las operaciones REST, gRPC y los consumidores de eventos funcionen según lo esperado.
+*   **Garantizar la integración:** Asegurar que los microservicios se comuniquen correctamente con otros servicios y la infraestructura.
+*   **Mejorar la calidad:**  Aumentar la confianza en el código y reducir el riesgo de errores en producción.
+
+## ¿Qué Aprenderás?
+
+1. Cómo probar las operaciones REST de un microservicio utilizando Postman.
+2. Cómo probar las operaciones gRPC de un microservicio utilizando Postman.
+3. Cómo probar los consumidores de eventos de un microservicio usando RabbitMQ.
+4. Validar la información en la base de datos MongoDB.
+5. Verificar la información en la base de datos Redis.
+
+
+## Prerrequisitos
+
+Para seguir este tutorial, necesitarás tener instalado lo siguiente:
+
+- Ejecutar el entorno de desarrollo de CodeDesignPlus con Docker Compose que se explicó en el [siguiente artículo](/quick-start/dev-environment).
+- Completar el tutorial de [Creación de un Microservicio](/quick-start/create-microservice) para crear el microservicio **Clients**.
+- Completar el tutorial de [Soporte para gRPC](/quick-start/add-support-grpc)
+- Completar el tutorial de [Soporte para Eventos de Dominio](/quick-start/suscribe-events)
+
+## Depuración y Pruebas
+
+Si tienes todos los prerrequisitos listos, puedes comenzar a depurar y probar tu microservicio **Clients**. Para ello, necesitarás tener el microservicio en ejecución y los recursos de infraestructura necesarios levantados.
+
+<Steps>
+
+1. Establecemos los puntos de interrupción en nuestro código para depurar el microservicio. Para este ejemplo, estableceremos un punto de interrupción en el método `Create` del controlador y en el método `Handle` del comando `CreateClientCommand`.
+
+    <Image src="/images/quick-start/e-commerce/ms-client/debug/debug.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Iniciamos la depuración de nuestro microservicio. En Visual Studio Code, puedes dar click derecho en el proyecto `Acme.Net.Microservice.Client.Rest` y seleccionar `Debug` > `Start New Instance`.
+
+    <Image src="/images/quick-start/e-commerce/ms-client/debug/start_debugging.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. La depuración se iniciará. Abra una nueva ventana del navegador con la URL de la API [http://localhost:5000/swagger/index.html](http://localhost:5000/swagger/index.html). Puedes realizar peticiones HTTP a la API y depurar el código en tiempo real.
+
+    <Image src="/images/quick-start/e-commerce/ms-client/debug/swagger.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+<Aside>
+- El microvicio cuenta con seguridad integrada, por lo que es necesario enviar un token JWT en la cabecera de la petición para poder acceder a los recursos protegidos. Para más información sobre la seguridad en los microservicios, puedes consultar la [documentación](/archetypes/security).
+</Aside>
+
+
+## Pruebas con REST (Postman)
+
+Para probar la API REST de nuestro microservicio **Clients**, utilizaremos Postman, una herramienta popular para realizar pruebas de APIs.
+
+<Steps>
+
+1. Inicia el proyecto `Acme.Net.Microservice.Client.Rest` en modo de depuración. Asegúrate de que el microservicio **Clients** esté en ejecución.
+
+    <Image src="/images/quick-start/testing-microservice/postman/clients/running_microservice.png" alt="Running Microservice" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Abre Postman y haz click en el botón Import en la barra de navegación.
+
+    <Image src="/images/quick-start/testing-microservice/postman/import.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Copia la URL de la especificación Swagger [http://localhost:5000/swagger/v1/swagger.json](http://localhost:5000/swagger/v1/swagger.json) y pégala en el campo `Enter a URL` de Postman.
+
+    <Image src="/images/quick-start/testing-microservice/postman/url.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+    
+4. Configuramos la autenticación para obtener el token con nuestro servidor de identidades. Para este ejemplo, usaremos Azure B2C el cual tiene registrada la aplicación `Postman` y el `Scope` `api` para obtener el `token`.
+
+    <Image src="/images/quick-start/testing-microservice/postman/jwt.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+5. Obtenemos el token JWT dando click en el botón `Get New Access Token`
+    
+    <Image src="/images/quick-start/testing-microservice/postman/token_get.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+6. Completa los campos con la información de tu servidor de identidades
+
+    <Image src="/images/quick-start/testing-microservice/postman/token_form.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+7. Autorizamos al navegador para completar el proceso con la aplicación `Postman`
+
+    <Image src="/images/quick-start/testing-microservice/postman/token_open.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+8. En `Postman` se mostrará el token JWT obtenido para el cual debemos dar click en el botón `Use Token`
+
+    <Image src="/images/quick-start/testing-microservice/postman/use_token.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+9.  Configuramos la variable `baseUrl` con la URL de la API http://localhost:5000
+
+    <Image src="/images/quick-start/testing-microservice/postman/variables.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+10. Por ultimo, podemos realizar peticiones HTTP a nuestra API de forma sencilla y rápida. Para el ejemplo, realizaremos una petición `POST` a la URL `{{baseUrl}}/api/v1/clients` para crear un nuevo cliente.
+
+    <Image src="/images/quick-start/testing-microservice/postman/request.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+## Pruebas con gRPC (Postman)
+
+Para probar la API gRPC de nuestro microservicio **Clients**, también utilizaremos Postman, que ahora ofrece soporte para gRPC.
+
+<Steps>
+
+1. Inicia el proyecto `Acme.Net.Microservice.Client.Grpc` en modo de depuración. Asegúrate de que el microservicio **Clients** esté en ejecución.
+
+    <Image src="/images/quick-start/testing-microservice/postman/grpc/running_microservice.png" alt="Running Microservice" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. En postman, no permite tener las request de gRPC y REST en la misma collección, por lo que es necesario crear una nueva colección para las request de gRPC. Para ello, haz click en el botón `New` y selecciona `gRPC`.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_request.png" alt="Postman UI gRPC Request" width="1600" height="900" decoding="async" loading="lazy" />
+
+3.  Ingresa la dirección `localhost:5001` del servidor gRPC y el archivo `.proto` del microservicio en la sección `Import a .proto file`. Sin embargo, Postman hara uso de `Use Server Reflection` para importar el archivo `.proto` del microservicio de forma automática. Esto es posible dado que el arquetipo de microservicios de **CodeDesignPlus** habilita el servicio de reflexión del servidor gRPC para ambientes de desarrollo.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_config.png" alt="Postman UI gRPC config" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. Para realizar las pruebas, selecciona el servicio `Client` y el método `GetClient` y añade el cuerpo del mensaje `GetClientRequest` con el id del cliente. 
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_message.png" alt="Postman UI gRPC Response" width="1600" height="900" decoding="async" loading="lazy" />
+
+5. Configuramos el token JWT en la cabecera de la petición. Para ello, selecciona la pestaña `Authorization` y en el campo `Token` pega el token JWT obtenido al realizar una petición a la API REST.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_token.png" alt="Postman UI gRPC Response" width="1600" height="900" decoding="async" loading="lazy" />
+
+6. Por ultimo, antes de realizar la petición, asigna el header `X-Tenant` con el valor del registro a consultar creado en la Api REST.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_header.png" alt="Postman UI gRPC Response" width="1600" height="900" decoding="async" loading="lazy" />
+
+     Puedes consultar el registro creado en la Api REST en la base de datos MongoDB para obtener el valor del `X-Tenant` por si no lo recuerdas.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/mongo_client.png" alt="Postman UI gRPC Response" width="1600" height="900" decoding="async" loading="lazy" />
+
+5.  Con estas configuraciones, puedes realizar la petición gRPC dando click en el botón `Invoke` para iniciar la comunicación bidireccional entre Postman y el servidor gRPC. Posterirmente, podras hacer click en el botón `Send` para enviar la petición y asi obtener la respuesta del servidor gRPC.
+
+     <Image src="/images/quick-start/testing-microservice/postman/grpc/postman_grpc_send.png" alt="Postman UI gRPC Response" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+## Pruebas de Eventos (RabbitMQ)
+
+Para probar los consumidores de eventos, confirmaremos que los eventos son publicados y consumidos correctamente utilizando la interfaz de administración de RabbitMQ.
+
+<Steps>
+
+1. Inicia el proyecto `AsyncWorker` del microservicio **Clients** en modo de depuración. Asegúrate de que el microservicio **Clients** esté en ejecución ingresando a la URL [http://localhost:5002](http://localhost:5002).
+
+    <Image src="/images/quick-start/testing-microservice/events/running_microservice_async_worker.png" alt="Running Microservice" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Inicia el proyecto `Rest` del microservicio **Subscriptions** en modo de depuración. Asegúrate de que el microservicio **Subscriptions** esté en ejecución. (Configura otro puerto diferente al del microservicio **Clients**)
+
+    <Image src="/images/quick-start/testing-microservice/events/running_subscriptions.png" alt="Running Subscriptions" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. **Accede a la Interfaz de RabbitMQ:** Abre un navegador y ve a la URL [`http://localhost:15672`](http://localhost:15672). Utiliza el usuario `admin` y contraseña `password`.
+
+   <Image src="/images/quick-start/testing-microservice/events/rabbitmq_exchange.png" alt="RabbitMQ Login" width="1600" height="900" decoding="async" loading="lazy" />
+
+   Como muestraa la imagen, la interfaz de administración de RabbitMQ se abrirá. Aquí podrás ver los exchanges, creados automáticamente por `CodeDesignPlus.Net.Sdk`. Por cada evento de dominio que tengamos en nuestro microservicio, se creará un exchange con el nombre `[bussiness].[appname].v[number-version].[aggregate|entity].[event]`.
+
+   <Image src="/images/quick-start/testing-microservice/events/rabbitmq_queues.png" alt="RabbitMQ" width="1600" height="900" decoding="async" loading="lazy" />
+
+   En caso de las queues, estas son creadas automáticamente por `CodeDesignPlus.Net.Sdk` cuando existe un consumer asociado a un evento de dominio. Estos son creados cuando se ejecuta el proyecto `CodeDesignPlus.Net.Microservice.Clients.AsyncWorker`.
+
+3. **Cancela una Suscripción:**  Realiza una petición `PATH` al endpoint de la API REST del microservicio **Subscriptions** (`/api/subscriptions/{id}`)  para cancelar una suscripción ficticia de un cliente. Esto publicará el evento `SubscriptionCanceledDomainEvent`.
+
+    <Image src="/images/quick-start/testing-microservice/events/rabbitmq_publish.png" alt="RabbitMQ" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. Al publicar el evento, el consumidor `AsyncWorker` del microservicio **Clients** lo consumirá y realizará la lógica de negocio asociada. Puedes colocar puntos de interrupción en el consumidor para verificar que el evento es consumido correctamente.
+
+    <Image src="/images/quick-start/testing-microservice/events/rabbitmq_consumed.png" alt="RabbitMQ" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+## Validación de los Datos en MongoDB
+
+El microservicio de **Clientes** utiliza MongoDB como base de datos para persistir la información de los clientes. Puedes acceder a la base de datos MongoDB utilizando una herramienta de administración de bases de datos como MongoDB Compass o Robo 3T.
+
+Como puedes ver, la información del cliente fue correctamente almacenada en la collección `ClientAggregate` y cuando se canceló la suscripción y se proceso el evento `SubscriptionCanceledDomainEvent`, no solo se actualizó el estado del cliente, sino que también se almacenó la información del evento en la colección `SubscriptionAggregate`.
+
+<Image src="/images/quick-start/testing-microservice/mongo.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Validación de Cache en Redis
+
+El microservicio de **Clientes** utiliza Redis como base de datos en memoria para almacenar información de forma rápida y eficiente. En el momento de consultar la información de un cliente, se verifica primero si la información está en Redis antes de consultar la base de datos MongoDB. Puedes acceder a la interfaz de administración de Redis en [http://localhost:5540](http://localhost:5540).
+
+<Image src="/images/quick-start/testing-microservice/redis.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Validación de Eventos en RabbitMQ
+
+El microservicio de **Clientes** y **Subscriptions** utiliza RabbitMQ como broker de mensajes para la comunicación asíncrona entre microservicios. Puedes acceder a la interfaz de administración de RabbitMQ en [http://localhost:15672](http://localhost:15672) con las credenciales por defecto `admin` y `password`.
+
+<Image src="/images/quick-start/testing-microservice/rabbitmq.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+- Cada uno de los exchanges representa un evento de dominio que se publica desde un microservicio.
+- Cada uno de los queues representa un consumidor asociado a un evento de dominio que se suscribe a un exchange.
+- Los exchaanges son creados automáticamente por `CodeDesignPlus.Net.Sdk` con unas configuraciones por defecto. 
+- Los queues son creados automáticamente por `CodeDesignPlus.Net.Sdk` cuando existe un consumer asociado a un evento de dominio. Estos son creados cuando se ejecuta el proyecto `CodeDesignPlus.Net.Microservice.Clients.AsyncWorker`.
+</Aside>
+
+## Conclusiones
+
+En este tutorial, aprendimos cómo probar los microservicios utilizando diferentes métodos de comunicación: REST, gRPC y eventos de dominio con RabbitMQ. Realizamos pruebas de extremo a extremo para asegurar que nuestro microservicio **Clients** funciona correctamente en todos sus aspectos. Utilizamos Postman para las pruebas REST y gRPC, y la interfaz de RabbitMQ para la prueba de eventos. También validamos la información en la base de datos MongoDB y Redis.
+
+Los codigos de este tutorial se encuentran en los siguientes repositorios:
+
+- [Clients](https://github.com/codedesignplus/Acme.Net.Microservice.Clients)
+- [Subscriptions](https://github.com/codedesignplus/Acme.Net.Microservice.Subscriptions)
+
+<Aside>
+La información presentada en este tutorial es solo un ejemplo y puede variar durante la evolución de los microservicios y del ecosistema de CodeDesignPlus.
+</Aside>
+

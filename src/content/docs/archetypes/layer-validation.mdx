@@ -1,0 +1,92 @@
+---
+title: Niveles de Validación
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+<Image src="/images/archetype/level_validation.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+En una arquitectura de microservicios, la validación robusta es fundamental para mantener la integridad de los datos y garantizar que la lógica de negocio se aplique correctamente. En este artículo, exploraremos los tres niveles de validación que hemos implementado en nuestro arquetipo, desde la capa de infraestructura hasta el corazón del dominio, y cómo cada nivel contribuye a la robustez de nuestro sistema.
+
+
+## Nivel 1: Validación en la Pipeline
+---
+
+La **Pipeline de Validación** es nuestro primer punto de control, ubicado en la capa de infraestructura. Este nivel se enfoca en validar la estructura y los tipos de datos de las solicitudes entrantes. Imagina una aduana donde se revisa que cada paquete tenga la etiqueta correcta y cumpla con las especificaciones básicas.
+
+
+<Image src="/images/archetype/level_validation_level_1.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Responsabilidad:
+    * Verificar que los datos tengan el formato correcto.
+    * Validar tipos de datos: asegurar que una dirección de correo electrónico sea válida, que un número de tarjeta de crédito cumpla con el formato adecuado, o que un número de teléfono tenga la cantidad correcta de dígitos.
+    * Sanitizar la entrada para prevenir ataques de inyección.
+
+### ¿Por qué es importante este nivel?
+    *  Previene que datos malformados lleguen a capas más profundas, evitando errores inesperados.
+    *  Asegura la consistencia de datos en todo el sistema.
+    *  Actúa como una primera línea de defensa contra datos maliciosos.
+    *  
+### Códigos de Error
+La Pipeline de Validación utiliza **FluentValidation**, una librería que nos permite especificar validaciones de manera clara y flexible. Los errores generados en esta capa serán los definidos por FluentValidation, proporcionando información detallada sobre el problema encontrado.
+
+## Nivel 2: Validación en el Command Handler
+---
+<Image src="/images/archetype/level_validation_level_2.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+El **Command Handler** actúa en la capa de aplicación y se enfoca en la validación de casos de uso específicos. Si la Pipeline es la aduana, el Command Handler es como el inspector de aduana que verifica que el contenido de cada paquete coincida con la etiqueta y cumpla con las regulaciones específicas para ese tipo de producto.
+
+### Responsabilidad:
+    *  Validar las precondiciones de los casos de uso: verificar, por ejemplo, si se puede crear una orden para un producto con disponibilidad o si un usuario tiene los permisos necesarios para una acción.
+    *  Asegurar la consistencia de la lógica de negocio en la aplicación.
+    *   Depender de otros dominios, esta consulta se realiza internamente a travez de un aggregate que se comporta como proyección de otro dominio.
+### ¿Por qué es importante este nivel?
+    *  Asegura que las operaciones se realicen en condiciones correctas, protegiendo al sistema de cambios inconsistentes.
+    * Permite llevar a cabo validaciones que dependen de otro dominio pero en un ambiente desacoplado
+
+### Códigos de Error:
+Los errores generados en el Command Handler tienen el código **200, 201, 2xx**.  Estos códigos nos indican que el problema radica en la lógica de negocio de la aplicación, y los mensajes de error asociados ofrecerán contexto sobre qué regla de negocio fue violada.
+
+Ejemplo:
+* `200: No se puede crear una orden para un producto sin disponibilidad.`
+* `201: El usuario no tiene permiso para completar esta acción.`
+
+## Nivel 3: Validación en el Aggregate
+---
+
+<Image src="/images/archetype/level_validation_level_3.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+El **Aggregate**, ubicado en la capa de dominio, es donde se encuentran las validaciones más cruciales. Aquí se definen las reglas de negocio que no deben ser violadas, las **invariantes de dominio**. Continuando con nuestra analogía, el Aggregate es el corazón del sistema, donde se realizan las validaciones más importantes, como verificar si un medicamento es seguro y válido.
+
+### Responsabilidad:
+    *  Validar las invariantes del dominio: por ejemplo, asegurar que no se pueda cancelar una orden ya completada, o que un producto no se pueda poner en un estado inconsistente.
+    *  Garantizar la integridad de los datos y la lógica de negocio en la capa más fundamental.
+
+### ¿Por qué es importante este nivel?
+    *   Protege al dominio de inconsistencias, manteniendo la integridad y coherencia.
+    *   Asegura que las entidades del dominio cumplan con sus restricciones.
+    *   Representa la lógica de negocio en su forma más pura y sin dependencias externas.
+
+### Códigos de Error:
+
+Los errores generados en el Aggregate tienen el código **100, 102, 1xx**.  Estos códigos indican que una regla de dominio fue violada y los mensajes proporcionan contexto sobre el problema específico.
+
+Ejemplo:
+* `100: No se puede cancelar una orden en estado completado.`
+* `101: El número de productos en una orden no puede ser cero.`
+
+## Conclusión
+
+La validación en nuestro arquetipo se realiza en tres niveles bien definidos:
+
+1.  **Pipeline (Infraestructura):** Validación de datos básicos y formato.
+2.  **Command Handler (Aplicación):** Validación de casos de uso.
+3.  **Aggregate (Dominio):** Validación de las invariantes del dominio.
+
+Cada nivel juega un papel importante en garantizar la integridad de los datos, la robustez de la aplicación y la coherencia de la lógica de negocio. Al implementar este tipo de validación en capas, logramos un sistema más seguro y confiable, que es más fácil de mantener y escalar.
+
+
+<Aside> 
+Cada capa genera errores bien identificados por su rango de error. La clave radica en una validación temprana en los niveles más bajos (infraestructura) para evitar errores en las capas más altas (dominio), donde podrían tener un costo mayor.
+</Aside>

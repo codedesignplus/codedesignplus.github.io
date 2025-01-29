@@ -1,0 +1,133 @@
+---
+title: OperationBase
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `OperationBase<TEntity>` es una clase base abstracta para la implementación de operaciones de negocio sobre entidades en MongoDB. Hereda de `RepositoryBase` y añade funcionalidades como el registro de auditoría y la actualización parcial de entidades. Está diseñada para ser la base de los servicios de negocio que gestionan las entidades.
+
+## ¿Cómo Funciona?
+
+`OperationBase<TEntity>` extiende la funcionalidad de `RepositoryBase` añadiendo lógica de negocio común. Al crear una entidad, establece automáticamente las propiedades de auditoría (`CreatedBy` y `CreatedAt`). Al actualizar una entidad, actualiza dinámicamente solo las propiedades no nulas y no protegidas en una lista negra, dejando intactas las propiedades de auditoría y la propiedad `Id`.  Utiliza el `IUserContext` para obtener información del usuario autenticado y realiza las operaciones en MongoDB a través de los métodos heredados de `RepositoryBase`.
+
+## Métodos
+---
+
+Esta sección describe los métodos principales proporcionados por la clase `OperationBase<TEntity>`.
+
+### CreateAsync
+**Type:** `public virtual Task CreateAsync(TEntity entity, CancellationToken cancellationToken = default)`
+
+Crea una nueva entidad en la base de datos de forma asíncrona. Antes de insertar, establece las propiedades de auditoría (`CreatedBy` y `CreatedAt`) utilizando la información del `IUserContext`.  `TEntity` debe ser una clase que implemente la interfaz `IEntityBase` y la interfaz `IEntity` cuando sea necesario.
+
+
+```csharp
+// Create a new user
+await repository.CreateAsync(user, CancellationToken.None);
+```
+
+### DeleteAsync
+**Type:** `public virtual Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)`
+
+Elimina una entidad de la base de datos por su `Guid` de forma asíncrona. `TEntity` debe ser una clase que implemente la interfaz `IEntityBase`.
+
+```csharp
+// Delete a user
+await repository.DeleteAsync(user.Id, CancellationToken.None);
+```
+
+### UpdateAsync
+**Type:** `public virtual async Task UpdateAsync(Guid id, TEntity entity, CancellationToken cancellationToken = default)`
+
+Actualiza una entidad en la base de datos por su `Guid` de forma asíncrona. Actualiza solo las propiedades no nulas de la entidad, excluyendo propiedades de auditoría y la propiedad `Id`.  `TEntity` debe ser una clase que implemente la interfaz `IEntityBase`.
+
+```csharp
+// Find a user to update
+user.Name = "John Doe Updated";
+
+await repository.UpdateAsync(user.Id, user, CancellationToken.None);
+```
+
+## Implementación
+---
+
+La clase `OperationBase<TEntity>` se puede utilizar para crear servicios de negocio que gestionen entidades en MongoDB. Al heredar de `OperationBase<TEntity>`, los servicios obtienen funcionalidades de auditoría y actualización parcial sin tener que implementarlas manualmente. A continuación, se muestra un ejemplo de cómo usar `OperationBase<TEntity>` en una aplicación .NET Core:
+
+```csharp url="packages/CodeDesignPlus.Net.Mongo/src/CodeDesignPlus.Net.Mongo/Operations/OperationBase.cs"
+```
+
+## Ejemplo de Uso
+---
+Este código usa `CodeDesignPlus.Net.Mongo` para realizar operaciones CRUD en MongoDB. Configura la base de datos, crea un repositorio (`UserRepository` que herada de `OperationBase`), y luego crea, actualiza y elimina un usuario (`UserEntity`).
+
+```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Program.cs"
+```
+  
+<Steps>
+
+1. Configuración de Mongo en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/appsettings.json"
+    ```
+
+2. Creamos la entidad para el ejemplo:
+
+    Procedemos a crear la entidad que representará los documentos en la colección de MongoDB, esta entidad debe implementar la interfaz `IEntity` de `CodeDesignPlus.Net.Core.Abstractions`.
+    
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/UserEntity.cs"
+    ```
+
+3. Creamos el repositorio:
+
+    Para efectos de este ejemplo, procederemos a crear el repositorio `UserRepository` que hereda de `OperationBase`.
+    
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Respositories/UserRepository.cs"
+    ```
+
+4. Creamos la clase Startup:
+
+    Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
+    
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Startup.cs"
+    ```
+
+5. Creamos el servicio de usuario:
+
+    Para efectos de este ejemplo, procederemos a crear el servicio `FakeUserContext` que implementa `IUserContext`. Este servicio se utiliza para obtener información del usuario autenticado. Para un uso en producción se debe usar la implementación que provee la libreria `CodeDesignPlus.Net.Security`.
+    
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Services/FakeUserContext.cs"
+    ```
+
+6. Registramos los servicios en el contenedor de dependencias:
+
+    ```csharp
+    serviceCollection.AddMongo<Startup>(configuration);
+    serviceCollection.AddSingleton<IUserContext, FakeUserContext>();
+    ```
+7. Obtenemos la instancia de nuestro repositorio:
+
+    ```csharp
+    var repository = serviceProvider.GetRequiredService<IUserRepository>();
+    ```
+
+7. Creamos un nuevo usuario:
+
+    ```csharp
+    var user = new UserEntity
+    {
+        Id = Guid.NewGuid(),
+        Name = "John Doe",
+        Email = "john.doe@codedesignplus.com",
+        //CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), //Valor asignado por la clase OperationBase
+        //CreatedBy = Guid.NewGuid(),                                 //Valor asignado por la clase OperationBase
+        IsActive = true
+    };
+
+    await repository.CreateAsync(user, CancellationToken.None);
+    ```
+</Steps>
+
+## Conclusiones
+---
+
+La clase `OperationBase<TEntity>` simplifica la creación de servicios que interactúan con MongoDB al proporcionar una base sólida para las operaciones de negocio. Al extender `RepositoryBase` con funcionalidades de auditoría y actualización parcial, permite a los desarrolladores concentrarse en la lógica específica de cada servicio sin tener que repetir código común.

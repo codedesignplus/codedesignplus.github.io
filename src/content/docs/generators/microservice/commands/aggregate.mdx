@@ -1,0 +1,139 @@
+---
+title: "Creación de un Agregado"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice aggregate`
+
+Este comando se utiliza para crear un nuevo agregado dentro de un microservicio existente. En el contexto de Domain-Driven Design (DDD), los agregados son bloques de construcción clave que garantizan la consistencia de las entidades dentro de sus límites. El comando facilita la generación de la estructura necesaria para definir un nuevo agregado en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Agregado (Aggregate):** En DDD, un agregado es un clúster de entidades y objetos de valor que se tratan como una sola unidad. Tiene una entidad raíz que es la responsable de mantener la consistencia del agregado.
+*   **Entidad Raíz (Aggregate Root):** La entidad principal dentro de un agregado que tiene identidad y es la única que puede ser referenciada desde fuera del agregado.
+*   **Consistencia:** Los agregados deben mantener la consistencia de sus datos. Las operaciones que cambian el estado de un agregado se deben realizar a través de la entidad raíz.
+*   **DDD:** Domain-Driven Design es un enfoque de desarrollo de software que modela el software alrededor del dominio del negocio. Los agregados son un concepto central en DDD.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice aggregate` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice aggregate \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --aggregate "<aggregate_name>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice aggregate `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --aggregate "<aggregate_name>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se creará el agregado.
+
+### `--aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado que se creará.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un nuevo agregado llamado `UserProfile` en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice aggregate \
+        --organization "Acme" \
+        --microservice "User" \
+        --aggregate "UserProfile"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice aggregate `
+        --organization "Acme" `
+        --microservice "User" `
+        --aggregate "UserProfile"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base del agregado `UserProfile` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/aggregate/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo agregado:
+
+<Image src="/images/generators/microservices/aggregate/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base de un nuevo agregado en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1. Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el agregado.
+
+    <Image src="/images/generators/microservices/aggregate/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1. Este parámetro establece el nombre del microservicio en el que se creará el agregado, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/aggregate/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--aggregate`
+**Flag:** `--aggregate "UserProfile"`
+
+1. Este parámetro establece el nombre del nuevo agregado, reflejándose en los nombres de los archivos y clases generadas dentro de las capas de dominio, aplicación e infraestructura.
+
+   <Image src="/images/generators/microservices/aggregate/1-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*  Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*  Define cuidadosamente los límites de tu agregado. Un agregado debe representar un concepto del dominio que tiene sentido como unidad.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD - Aggregate](https://martinfowler.com/bliki/DDD_Aggregate.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice aggregate` facilita la creación de un nuevo agregado en un microservicio existente. Los agregados son una parte fundamental de DDD y ayudan a mantener la consistencia de los datos dentro de un límite bien definido. Al utilizar este comando, puedes generar rápidamente la estructura base de un nuevo agregado y comenzar a modelar tu dominio de manera efectiva.

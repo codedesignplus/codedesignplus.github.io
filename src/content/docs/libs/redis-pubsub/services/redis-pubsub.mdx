@@ -1,0 +1,89 @@
+---
+title: Redis PubSub
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Este documento describe los servicios `IRedisPubSubService` y `RedisPubSubService`, los cuales proporcionan una capa de abstracción para publicar y suscribirse a eventos de dominio utilizando Redis Pub/Sub. `RedisPubSubService` implementa la interfaz `IRedisPubSubService` y ofrece métodos para la publicación y suscripción asíncrona de eventos, utilizando el servicio de Redis para el manejo de los canales.
+
+<Tabs>
+    <TabItem label="IRedisPubSubService">
+    ```csharp url="packages/CodeDesignPlus.Net.Redis.PubSub/src/CodeDesignPlus.Net.Redis.PubSub.Abstractions/IRedisPubSubService.cs"
+    ```
+    </TabItem>
+    <TabItem label="IMessage">
+    ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IMessage.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+## ¿Cómo Funciona?
+---
+
+`RedisPubSubService` simplifica la comunicación asíncrona entre diferentes partes de una aplicación (o entre microservicios) a través de la publicación y suscripción de eventos de dominio mediante el mecanismo Pub/Sub de Redis. Cuando un evento se publica, el servicio lo serializa y lo envía al canal de Redis correspondiente. Los servicios que se han suscrito a ese canal, a través del servicio, reciben el mensaje y pueden procesarlo. La implementación se basa en un `IRedisService` para interactuar con Redis y el `IDomainEventResolverService` para resolver los canales de los eventos.
+
+## Métodos
+---
+
+`RedisPubSubService` implementa la interfaz `IRedisPubSubService`, que define los siguientes métodos:
+
+### PublishAsync 
+**Type:** `Task PublishAsync(IDomainEvent @event, CancellationToken cancellationToken)`
+
+Publica un evento de dominio en el canal de Redis correspondiente de forma asíncrona. Recibe el evento a publicar y un `CancellationToken`. El método serializa el evento a JSON y lo envía al canal de Redis.
+
+### PublishAsync (sobrecarga)
+**Type:** `Task PublishAsync(IReadOnlyList<IDomainEvent> @event, CancellationToken cancellationToken)`
+
+Publica una lista de eventos de dominio en Redis de forma asíncrona. Recibe la lista de eventos y un `CancellationToken`. Llama al método `PublishAsync` por cada evento en la lista.
+
+### SubscribeAsync 
+**Type:** `Task SubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Se suscribe a un canal de Redis para un tipo de evento específico. Recibe un `CancellationToken` y los tipos del evento y su manejador. El método crea una suscripción a un canal de Redis y pasa los mensajes al manejador de eventos correspondiente.
+
+### UnsubscribeAsync 
+**Type:** `Task UnsubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Cancela la suscripción de un evento y su manejador al canal de Redis. Recibe el `CancellationToken`, el tipo del evento y su manejador.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.Redis.PubSub/src/CodeDesignPlus.Net.Redis.PubSub/Services/RedisPubSubService.cs"
+```
+
+El servicio `RedisPubSubService` se implementa como una clase que hereda de `IRedisPubSubService` y se encarga de:
+
+1.  **Recibir dependencias:** Recibe una instancia de `ILogger<RedisPubSubService>` para el registro de eventos, un `IRedisServiceFactory` para la creación de servicios Redis, un `IServiceProvider` para la resolución de los handlers, y un `IDomainEventResolverService` para la resolución de canales.
+2.  **Publicar eventos:** Al recibir un evento, obtiene el nombre del canal asociado al tipo del evento, lo serializa a JSON, y utiliza el servicio `IRedisService` para publicar el mensaje en el canal de Redis.
+3.  **Suscribirse a eventos:** Al suscribirse a un evento, obtiene el nombre del canal a partir del tipo del evento y crea una suscripción al mismo. Cuando se recibe un mensaje, lo deserializa y lo pasa al manejador de eventos.
+4.  **Manejo de eventos:** Utiliza `System.Text.Json` para serializar y deserializar los eventos.
+
+Las dependencias del servicio son:
+
+- `ILogger<RedisPubSubService>`: Para el registro de eventos.
+- `IRedisServiceFactory`: Para crear la conexión a Redis.
+- `IServiceProvider`: Para resolver los handlers de eventos.
+- `IDomainEventResolverService`: Para obtener el canal de Redis asociado al tipo de evento.
+
+## Ejemplo de Uso
+---
+
+En este ejemplo, se muestra cómo la librería `CodeDesignPlus.Net.PubSub` hace uso de la interfaz `IMessage` para publicar eventos de dominio de forma asíncrona. La clase `PubSubService` implementa la interfaz `IPubSub` y utiliza la inyección de dependencias para obtener una instancia de `IMessage` y otros servicios necesarios. El método `PublishAsync` se encarga de publicar eventos de dominio, verificando si se debe usar una cola para encolar los eventos o si se deben publicar directamente. Si se usa una cola, se obtiene una instancia de `IEventQueueService` y se encola el evento; de lo contrario, se publica directamente utilizando `IMessage`. 
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/PubSubService.cs"
+
+```
+
+## Conclusiones
+---
+
+`RedisPubSubService` ofrece una solución para la comunicación asíncrona utilizando Redis Pub/Sub en aplicaciones .NET. Proporciona una abstracción para la publicación y suscripción de eventos, lo que simplifica el desarrollo de sistemas basados en eventos y reduce la dependencia directa de la implementación de Redis. Es necesario que el `IRedisService` sea registrado en la aplicación, junto con el `IRedisServiceFactory`, y se configure la sección "Redis" en el archivo de configuración.
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de Redis Pub/Sub](https://redis.io/docs/latest/develop/interact/pubsub/)
+- [StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)
+

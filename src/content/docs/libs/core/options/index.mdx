@@ -1,0 +1,87 @@
+---
+title: Options
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. Esta sección describe cómo configurar y validar las opciones para el núcleo de tu aplicación utilizando la clase CoreOptions.
+
+## CoreOptions
+---
+
+La clase CoreOptions proporciona un conjunto de opciones esenciales para configurar aspectos básicos de tu aplicación. Estas opciones pueden definirse en el archivo appsettings.json y validarse automáticamente durante la inicialización.
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/Options/CoreOptions.cs"
+```
+
+### Propiedades
+
+- **Business**
+  - Tipo: string
+  - Descripción: Representa el nombre del negocio asociado con la aplicación.
+  - Requerido: Sí
+
+- **AppName**
+  - Tipo: string
+  - Descripción: Define el nombre de la aplicación.
+  - Requerido: Sí
+
+- **Version**
+  - Tipo: string
+  - Descripción: La versión de la aplicación en formato vN (por ejemplo, v1, v2).
+  - Requerido: Sí
+
+- **Description**
+  - Tipo: string
+  - Descripción: Una descripción breve de la aplicación.
+  - Requerido: Sí
+
+- **Contact**
+  - Tipo: Contact
+  - Descripción: Información de contacto relacionada con la aplicación.
+  - Requerido: Sí
+
+### Validación
+
+La clase `CoreOptions` implementa `IValidatableObject` para realizar validaciones personalizadas. Esto incluye la validación de propiedades complejas como Contact.
+
+## Contact
+---
+
+La clase `Contact` representa la información de contacto asociada con la aplicación.
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/Options/ContactOptions.cs"
+```
+### Propiedades
+
+- **Name**
+  - Tipo: string
+  - Descripción: El nombre del contacto.
+  - Requerido: Sí
+
+- **Email**
+  - Tipo: string
+  - Descripción: La dirección de correo electrónico del contacto.
+  - Requerido: Sí
+  - Validación Adicional: Debe ser una dirección de correo electrónico válida.
+
+### Validación
+
+La clase Contact utiliza atributos de validación (`[Required]`, `[EmailAddress]`) para garantizar que sus propiedades contengan valores válidos.
+
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones requeridas:
+
+```json url="examples/CodeDesignPlus.Net.Core.Sample/appsettings.json"
+``` 
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En `CodeDesignPlus.Net.Core`, utilizamos este patrón para ofrecer opciones de configuración estructuradas y fácilmente accesibles.
+
+## Referencias Adicionales
+---
+
+- [Patrón de opciones en .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Validación de opciones en .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/options#options-validation)

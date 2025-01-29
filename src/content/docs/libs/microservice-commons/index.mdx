@@ -1,0 +1,214 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.Microservice.Commons` proporciona un conjunto de herramientas y abstracciones diseñadas para simplificar y estandarizar la configuración y el manejo de aspectos transversales en microservicios, tanto para APIs REST como para servicios gRPC. Su objetivo principal es promover la consistencia y reducir la duplicación de código en proyectos que implementan esta arquitectura.
+
+## Propósito y alcance
+---
+
+Esta librería se centra en encapsular configuraciones y funcionalidades comunes que son necesarias en microservicios, facilitando la gestión de excepciones, la validación de datos, la integración con frameworks de mensajería y la documentación de APIs. Su alcance abarca aspectos de la infraestructura de los microservicios, no de la lógica de negocio específica.
+
+## Principales características
+---
+
+- **Manejo de excepciones:** Proporciona mecanismos centralizados para la gestión de excepciones tanto en APIs REST como en gRPC.
+- **Validación de datos:** Facilita la integración con FluentValidation para la validación de modelos y comandos.
+- **Integración con MediatR:** Ofrece un pipeline de validación para comandos de MediatR, asegurando que los datos sean válidos antes de ejecutar la lógica de negocio.
+- **Configuración de Swagger:** Simplifica la configuración de Swagger para la documentación de APIs REST.
+- **Intercepción de errores en gRPC:** Implementa un interceptor para el manejo centralizado de errores en servicios gRPC.
+
+## Casos de uso típicos
+---
+
+- Proyectos que implementan microservicios con APIs REST.
+- Proyectos que utilizan gRPC para la comunicación entre microservicios.
+- Sistemas que requieren un manejo centralizado y consistente de excepciones.
+- Aplicaciones que se benefician de la validación de datos utilizando FluentValidation.
+- Proyectos que usan MediatR para la gestión de comandos y queries.
+- Necesidad de documentación API usando Swagger.
+
+## Componentes Principales
+---
+
+- **`EntryPoints/gRpc/Interceptors/ErrorInterceptor.cs`:** Interceptor gRPC que maneja excepciones no controladas que ocurren durante la ejecución de un servicio gRPC, convirtiéndolas en respuestas gRPC adecuadas.
+- **`EntryPoints/Rest/Middlewares/ExceptionMiddleware.cs`:** Middleware de ASP.NET Core que captura excepciones no controladas en APIs REST, transformándolas en respuestas HTTP con el código y mensaje adecuado.
+- **`EntryPoints/Rest/Swagger/SwaggerExtensions.cs`:**  Clase de extensión que facilita la configuración de Swagger para la documentación de APIs REST, incluyendo la definición de esquemas de autenticación y opciones de personalización.
+- **`FluentValidation/FluentExtensions.cs`:** Métodos de extensión para la integración con FluentValidation, facilitando la configuración y el uso de validadores.
+- **`MediatR/MediatRExtensions.cs`:** Métodos de extensión para configurar el pipeline de MediatR en la aplicación.
+- **`MediatR/ValidationPipeline.cs`:**  Pipeline de MediatR que intercepta comandos y queries para validarlos utilizando FluentValidation antes de que lleguen a su respectivo handler.
+
+<FileTree>
+- src 
+    - CodeDesignPlus.Net.Microservice.Commons
+        - EntryPoints
+            - gRpc
+                - Interceptors
+                    - ErrorInterceptor.cs
+            - Rest
+                - Middlewares
+                    - ExceptionMiddlware.cs
+                - Swagger
+                    - SwaggerExtensions.cs
+        - FluentValidation
+            - FluentExtensions.cs
+        - MediatR
+            - MediatRExtensions.cs
+            - ValidationPipeline.cs
+</FileTree>
+
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Microservice.Commons` en tu proyecto de .NET. Además, explorarás los servicios, métodos de extensión y componentes principales que proporciona la librería para simplificar la configuración y el manejo de aspectos transversales en tus microservicios.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimiento básico de ASP.NET Core o gRPC.
+- Familiaridad con el patrón CQRS y/o MediatR (opcional).
+- Conocimiento de FluentValidation (opcional).
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Microservice.Commons`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Microservice.Commons
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Microservice.Commons
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```xml
+    <PackageReference Include="CodeDesignPlus.Net.Microservice.Commons" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+
+## Ejemplo rápido
+---
+
+La solución [CodeDesignPlus.Net.Microservice.Commons.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Microservice.Commons.Sample) muestra cómo configurar y utilizar la librería `CodeDesignPlus.Net.Microservice.Commons` en una aplicación .NET Core. A continución, se muestra un ejemplo de cómo configurar y utilizar la librería en tu proyecto:
+
+### Rest
+
+Este es un ejemplo de cómo configurar una API REST con la librería `CodeDesignPlus.Net.Microservice.Commons`:
+
+```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Program.cs"
+```
+
+<Steps>
+1. Agregar configuración en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/appsettings.json"
+    ```
+
+2. Creamos la clase Startup que se utiliza para configurar los servicios personalizados y obtener una referencia al ensamblado de la aplicación.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Startup.cs"
+    ```
+3. Creamos un controlador de ejemplo con métodos vacios y documentados para probar la configuración de Swagger.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Controllers/UserController.cs"
+    ```
+
+4. Registramos los servicios:
+
+    ```csharp
+    ///...
+    // Add Swagger
+    builder.Services.AddCoreSwagger<Program>(builder.Configuration);
+
+    // Add FluentValidation
+    builder.Services.AddFluentValidation();
+
+    // Add MediatR
+    builder.Services.AddMediatR<Startup>();
+
+    // Add Middleware
+    app.UseMiddleware<ExceptionMiddleware>();
+    ```
+
+</Steps>
+
+
+### gRPC
+
+Este es un ejemplo de cómo configurar un servicio gRPC con la librería `CodeDesignPlus.Net.Microservice.Commons`:
+
+```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Program.cs"
+```
+
+<Steps>
+1. Agregar configuración en `appsettings.json`
+
+    ```json url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/appsettings.json"
+    ```
+
+2. Creamos el archivo `greet.proto` que define el servicio gRPC.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Protos/greet.proto"
+    ```
+3. Creamos el servicio `GreeterService` que implementa el servicio gRPC definido en `greet.proto`. 
+
+    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Services/GreeterService.cs"
+    ```
+
+4. Registramos los servicios:
+
+    ```csharp
+    ///...
+    builder.Services.AddGrpc(x => {
+        // Add Error Interceptor
+        x.Interceptors.Add<ErrorInterceptor>();
+    });
+    ```
+
+</Steps>
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Microservice.Commons` proporciona una serie de métodos de extensión que facilitan la configuración y el uso de sus funcionalidades en aplicaciones .NET. A continuación, se describen los métodos de extensión más comunes y su propósito:
+
+### AddSwagger
+
+Configura los servicios de Swagger con una configuración predeterminada.
+
+<LinkCard title="Explora la clase SwaggerExtensions" href="/libs/microservice-commons/extensions/swagger" />
+
+### AddFluentValidation
+
+Configura FluentValidation para su uso en la aplicación.
+
+<LinkCard title="Explora la clase FluentExtensions" href="/libs/microservice-commons/extensions/fluent-validation" />
+
+### AddMediatR
+
+Configura MediatR y agrega el pipeline de validación a la aplicación.
+
+<LinkCard title="Explora la clase MediatRExtensions" href="/libs/microservice-commons/extensions/mediatr" />
+
+## Conclusiones
+---
+
+La librería `CodeDesignPlus.Net.Microservice.Commons` facilita la construcción de microservicios robustos y consistentes al proporcionar abstracciones y configuraciones comunes. Su enfoque en el manejo de excepciones, la validación de datos y la documentación de APIs mejora la calidad del código y la productividad del desarrollo.
+
+## Recursos externos
+---
+
+- [Documentación oficial de ASP.NET Core](https://docs.microsoft.com/aspnet/core)
+- [Documentación oficial de gRPC](https://grpc.io/docs/)
+- [Documentación oficial de Swagger](https://swagger.io/docs/)
+- [Documentación oficial de FluentValidation](https://fluentvalidation.net/)
+- [Documentación oficial de MediatR](https://github.com/jbogard/MediatR)

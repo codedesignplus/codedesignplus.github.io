@@ -1,0 +1,74 @@
+---
+title: Query
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `QueryAttribute` es un atributo personalizado diseñado para simplificar la creación de pruebas unitarias que validen el comportamiento de las consultas (queries) en tu aplicación, especialmente en arquitecturas que utilizan patrones como CQRS. Este atributo automatiza la generación de instancias de consultas, facilitando la prueba de la correcta creación y el manejo de datos de las mismas.
+
+## ¿Cómo Funciona?
+---
+
+El `QueryAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz genérica `IRequest<T>`, que es un marcador típico para las consultas en arquitecturas CQRS.
+2. **Crear instancias:** Para cada consulta encontrada, se crea una instancia utilizando su constructor y valores predeterminados para sus parámetros.
+3. **Proveer datos:** Suministra el tipo de la consulta, la instancia de la consulta, y un diccionario de los valores utilizados para crear la instancia a la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+
+Este método es el núcleo del `QueryAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Consultas:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+  - Implementan la interfaz genérica `IRequest<T>`, donde `T` es el tipo de respuesta de la consulta.
+  - No son una interfaz o clase abstracta.
+- **Crear Instancias:** Para cada consulta encontrada:
+  - Obtiene el constructor de la consulta.
+  - Obtiene los parámetros del constructor.
+  - Genera un diccionario de valores predeterminados para los parámetros del constructor usando el método `GetParameterValues()`.
+   - Crea una instancia de la consulta utilizando `Activator.CreateInstance` y los valores de los parámetros.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` de la consulta.
+    - La instancia de la consulta.
+    - Un diccionario con los `ParameterInfo` y los valores utilizados en la creación de la consulta.
+
+## Implementación
+---
+
+El `QueryAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar las consultas.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/QueryAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `QueryAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/QueriesTests.cs"
+```
+
+En este ejemplo:
+
+- `[Query<Startup>]` crea instancias de todas las consultas en el ensamblado donde se define `Startup` que implementan `IRequest<T>`.
+- El método de prueba recibe el `Type` de la consulta, la `instancia` de la consulta, y un `diccionario` con los valores de los parámetros utilizados en la creación de la misma, lo que permite realizar aserciones sobre el objeto creado.
+- La prueba verifica que las propiedades de la consulta pueden ser obtenidas y que su valor es el esperado.
+
+## Conclusiones
+---
+
+El `QueryAttribute` es una herramienta valiosa para simplificar la creación y validación de consultas en pruebas unitarias. Al automatizar la creación de instancias de consulta y la provisión de datos necesarios para las pruebas, este atributo ayuda a los desarrolladores a garantizar que su lógica de consulta funciona como se espera.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [Patrón CQRS](https://martinfowler.com/bliki/CQRS.html)

@@ -1,0 +1,68 @@
+---
+title: Aggregates
+---
+
+import { Steps } from '@astrojs/starlight/components';
+
+En este artículo, exploraremos el concepto de **Aggregate** dentro del contexto de la arquitectura de dominio, centrándonos en su implementación a través de la clase `AggregateRoot`. Aprenderás sobre su propósito, funcionalidades clave y cómo utilizarlos en un ejemplo práctico con la clase `OrderAggregate`.
+
+## ¿Qué es un Aggregate?
+
+Un **Aggregate** es un patrón en la arquitectura de dominio que agrupa un conjunto de objetos relacionados. Cada Aggregate tiene una **Aggregate Root**, que actúa como la única entrada para interactuar con los objetos dentro del Aggregate. Este enfoque garantiza la consistencia de las operaciones realizadas en los datos relacionados, lo cual es fundamental en aplicaciones con lógica de negocio compleja.
+
+### Reglas de los Aggregates
+
+Al trabajar con Aggregates, es importante seguir algunas reglas y principios:
+
+1. **Consistencia Transaccional:** Todas las operaciones que afectan un Aggregate deben ser transaccionales. Esto significa que cualquier cambio realizado en el Aggregate debe ser atómico; es decir, debe completarse en su totalidad o no completarse en absoluto.
+
+2. **Integridad de los Datos:** La Aggregate Root es responsable de la integridad de los datos dentro del Aggregate. No debes permitir que los objetos internos se modifiquen directamente desde fuera del Aggregate.
+
+3. **Eventos de Dominio:** Los Aggregates deben emitir eventos de dominio cuando se realizan cambios significativos. Esto permite a otros componentes del sistema reaccionar ante estos cambios y mantener la coherencia.
+
+4. **Carga Lenta:** En la mayoría de los casos, los Aggregates deben ser cargados completamente antes de ser utilizados. Esto se debe a que los cambios deben aplicarse en el contexto de la Aggregate Root para mantener la consistencia.
+
+5. **Límite de Tamaño:** Evita que un Aggregate crezca demasiado. Un Aggregate grande puede causar problemas de rendimiento y dificultad en la gestión de la lógica de negocio. Considera dividirlo en múltiples Aggregates si es necesario.
+
+## AggregateRoot 
+---
+
+La clase `AggregateRoot` es la base para todos los Aggregates en el dominio. Proporciona funcionalidades esenciales, incluyendo:
+
+- **Identificación Única:** Cada instancia tiene un identificador único (`Id`), lo que permite distinguirla de otras instancias.
+  
+- **Estado Activo:** Un flag (`IsActive`) que indica si el Aggregate está activo, útil para gestionar su ciclo de vida.
+
+- **Timestamps y Auditoría:** Propiedades para rastrear cuándo fue creado y actualizado, y por quién, lo que facilita el seguimiento de cambios.
+
+- **Identificación de Tenant:** Permite gestionar datos en aplicaciones multi-tenant.
+
+- **Eventos de Dominio:** Soporta el manejo de eventos de dominio, permitiendo a los desarrolladores agregar eventos que pueden ser procesados posteriormente.
+
+## Ejemplo Práctico
+---
+
+Para ilustrar cómo se utiliza la clase `AggregateRoot`, veamos la implementación de un Aggregate específico: `OrderAggregate`.
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/Aggregate/OrderAggregate.cs"
+```
+
+La clase `OrderAggregate` representa un pedido en nuestro sistema y hereda de `AggregateRoot`. Aquí están las características principales:
+
+- Propiedades del Pedido: Incluye Name, Description y Price, que son fundamentales para describir un pedido.
+
+- Constructores: Hay dos constructores: uno por defecto y otro que inicializa las propiedades del pedido con valores específicos.
+
+- Método Create: Este método estático permite crear un nuevo `OrderAggregate`, estableciendo las propiedades iniciales y generando un evento de dominio (`OrderCreatedDomainEvent`) para registrar la creación del pedido.
+
+- Método Update: Permite actualizar las propiedades del pedido y registra un evento de dominio (`OrderUpdatedDomainEvent`) para mantener un historial de cambios.
+
+- Método Delete: Marca el pedido como eliminado y genera un evento de dominio (`OrderDeletedDomainEvent`), lo que ayuda a mantener un seguimiento de los cambios en el estado del pedido.
+
+
+## Conclusiones
+---
+
+Los Aggregates son una parte fundamental del Domain-Driven Design, y la clase `AggregateRoot` proporciona una base sólida para su implementación. Con la clase `OrderAggregate`, hemos visto cómo se puede modelar un pedido, gestionar su ciclo de vida y registrar eventos significativos.
+
+Al entender y aplicar estos conceptos, podrás construir aplicaciones más robustas y coherentes que mantengan la integridad de los datos y la lógica de negocio.

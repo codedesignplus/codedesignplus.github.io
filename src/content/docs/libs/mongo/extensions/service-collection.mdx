@@ -1,0 +1,84 @@
+---
+title: Service Collection
+---
+
+La clase `ServiceCollectionExtensions` proporciona métodos de extensión que facilitan la configuración y registro de servicios relacionados con MongoDB en una aplicación .NET. Permite añadir la configuración de MongoDB al contenedor de servicios, registrando los servicios necesarios, validando las opciones, y configurando las opciones de diagnóstico si es necesario. También ofrece una forma de registrar automáticamente repositorios asociados a las interfaces adecuadas.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `MongoDB.Driver`: Proporciona las clases necesarias para interactuar con MongoDB.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Necesitan configurar MongoDB de manera centralizada y validar opciones.
+- Requieren servicios de diagnóstico para MongoDB.
+- Requieren el registro automático de repositorios MongoDB según las interfaces definidas.
+
+## Beneficios
+---
+
+- **Configuración centralizada**: Agrupa toda la configuración de MongoDB en un solo lugar.
+- **Validación de opciones**: Utiliza la validación automática de las opciones para asegurarse de que los parámetros necesarios estén configurados correctamente.
+- **Soporte de diagnósticos**: Permite configurar servicios de diagnóstico para MongoDB, lo que es útil para monitoreo y depuración.
+- **Registro automático de repositorios**: Si está habilitado, registra automáticamente los repositorios que implementan la interfaz `IRepositoryBase`, reduciendo el trabajo manual.
+
+## Ejemplo Práctico
+---
+
+En este ejemplo, utilizaremos la extensión `AddMongo` para configurar y registrar servicios relacionados con MongoDB en una aplicación .NET Core.
+
+Primero, definiremos las opciones de configuración en el archivo appsettings.json:
+
+```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
+```
+
+A continuación, registraremos los servicios de MongoDB en el contenedor de servicios de la aplicación:
+
+```csharp
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddMongo(Configuration);
+}
+```
+
+
+## Métodos de extensión
+---
+
+`ServiceCollectionExtensions` proporciona los siguientes métodos de extensión para configurar y registrar servicios relacionados con MongoDB en una aplicación .NET.
+
+### AddMongo
+**Type:** `public static IServiceCollection AddMongo<TStartup>(this IServiceCollection services, IConfiguration configuration) where TStartup : IStartupServices`
+
+El método `AddMongo` registra los servicios necesarios para interactuar con MongoDB en el contenedor de servicios de la aplicación.
+
+- **Parámetros**:
+    - `services`: El contenedor de dependencias (`IServiceCollection`) donde se registran los servicios de MongoDB.
+    - `configuration`: La configuración de la aplicación, que debe incluir la sección correspondiente a MongoOptions.
+
+- **Tipo de retorno**: 
+    - `IServiceCollection` — Permite encadenar llamadas adicionales.
+
+- **Excepciones**:
+    - `ArgumentNullException`: Si services o configuration son null.
+    - `MongoException`: Si la sección MongoOptions no se encuentra en la configuración.
+
+### AddRepositories
+**Type:** `public static void AddRepositories<TStartup>(this IServiceCollection services) where TStartup : IStartupServices`
+
+El método `AddRepositories` registra automáticamente los repositorios que implementan la interfaz `IRepositoryBase` en el contenedor de servicios.
+
+- **Parámetros**:
+    - `services`: El contenedor de dependencias (`IServiceCollection`) donde se registran los repositorios.
+- **Excepciones**:
+    - `MongoException`: Si falta la interfaz correspondiente para el repositorio.
+
+
+## Conclusiones
+---
+
+La clase `ServiceCollectionExtensions` proporciona métodos de extensión útiles para configurar y registrar servicios relacionados con MongoDB en una aplicación .NET. Facilita la configuración centralizada, la validación de opciones y el registro automático de repositorios, lo que simplifica el desarrollo y mantenimiento de aplicaciones que utilizan MongoDB.

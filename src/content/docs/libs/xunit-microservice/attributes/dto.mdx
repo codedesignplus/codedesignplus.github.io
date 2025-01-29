@@ -1,0 +1,98 @@
+---
+title: Data Transfer Object
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `DataTransferObjectAttribute` es un atributo personalizado diseñado para facilitar la creación de pruebas unitarias que validen el comportamiento de los Data Transfer Objects (DTOs) en tu aplicación.  Este atributo automatiza la creación de instancias de DTOs y la asignación de valores a sus propiedades, lo que simplifica el proceso de prueba y asegura una cobertura exhaustiva de tus DTOs.
+
+## ¿Cómo Funciona?
+---
+
+El `DataTransferObjectAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IDtoBase`, que es un marcador típico para DTOs.
+2. **Crear instancias:** Para cada DTO encontrado, se crea una instancia utilizando su constructor predeterminado.
+3. **Asignar valores a las propiedades:** Se utiliza el método de extensión `SetValueProperties` para asignar valores predeterminados a las propiedades de la instancia.
+4. **Proveer datos:** Suministra el tipo del DTO y la instancia del DTO como datos para la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+Este método es el núcleo del `DataTransferObjectAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar DTOs:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+  - Implementan la interfaz `IDtoBase`.
+  - Son una clase concreta (no abstracta).
+- **Crear Instancias:** Para cada DTO encontrado:
+  - Crea una instancia del DTO utilizando `Activator.CreateInstance`.
+  - Asigna valores predeterminados a las propiedades de la instancia utilizando el método de extensión `SetValueProperties`.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` del DTO.
+    - La instancia del DTO con sus propiedades con valores.
+
+## Implementación
+---
+
+El `DataTransferObjectAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar los DTOs.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/DataTransferObjectTests.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `DataTransferObjectAttribute` en un método de prueba unitaria:
+
+```csharp
+namespace CodeDesignPlus.Net.xUnit.Microservice.Test.Validations;
+
+/// <summary>
+/// A class for validating data transfer objects (DTOs).
+/// </summary>
+public class DataTransferObjectTests
+{
+    /// <summary>
+    /// Validates that DTOs can be created and their properties can be set and retrieved correctly.
+    /// </summary>
+    [Theory]
+    [DataTransferObject<Startup>]
+    public void Dtos_GetAndSet_Success(Type dto, object instance)
+    {
+        // Assert
+        Assert.NotNull(instance);
+
+        var properties = dto.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var property in properties)
+        {
+            var value = property.GetValue(instance);
+            Assert.NotNull(value);
+            Assert.NotEqual(value, property.PropertyType.GetDefaultValue());
+        }
+    }
+}
+```
+
+En este ejemplo:
+
+- `[DataTransferObject<Startup>]` crea instancias de todos los DTOs en el ensamblado donde se define `Startup` que implementan `IDtoBase`.
+- El método de prueba recibe el `Type` del DTO y la instancia del DTO con sus propiedades asignadas con valores predeterminados, permitiendo realizar aserciones sobre el objeto creado.
+- La prueba verifica que todas las propiedades del DTO tengan valores no predeterminados, asegurando que se asignan correctamente.
+
+## Conclusiones
+---
+
+El `DataTransferObjectAttribute` simplifica la creación y validación de DTOs en pruebas unitarias. Al automatizar la creación de instancias de DTOs y la asignación de valores a sus propiedades, este atributo ayuda a los desarrolladores a asegurar que sus DTOs están construidos correctamente y listos para su uso en la aplicación.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [Create Data Transfer Objects (DTOs)](https://learn.microsoft.com/en-us/aspnet/web-api/overview/data/using-web-api-with-entity-framework/part-5)

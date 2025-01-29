@@ -1,0 +1,242 @@
+---
+title: Overview
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.EFCore` proporciona una serie de extensiones y configuraciones para trabajar con Entity Framework Core, facilitando la implementación de patrones de repositorio, paginación y manejo de excepciones entre otras funcionalidades.
+
+## Propósito y alcance
+---
+
+El objetivo de CodeDesignPlus.Net.EFCore es proporcionar una base sólida para interactuar con bases de datos utilizando Entity Framework Core, permitiendo a los desarrolladores implementar operaciones CRUD de manera eficiente y estandarizada. A través de sus extensiones y configuraciones, la librería simplifica la gestión de entidades, la paginación de resultados y el manejo de excepciones, mejorando la productividad y la calidad del código.
+
+## Principales características
+---
+
+- Configuración de Entidades: Extensiones para configurar propiedades base de las entidades y manejar la paginación de resultados de consultas.
+- Excepciones Especializadas: Manejo de excepciones específicas para operaciones de EFCore.
+- Registro de Configuraciones de Entidades: Métodos para registrar configuraciones de entidades de manera automática en el ModelBuilder.
+- Operaciones de Repositorio: Implementaciones base para operaciones de creación, actualización, eliminación y transacciones dentro de un contexto de base de datos.
+- Registro de Repositorios: Métodos para registrar repositorios de manera automática en el contenedor de dependencias.
+
+
+## Casos de uso típicos
+---
+
+- Implementación de operaciones CRUD en aplicaciones .NET Core.
+- Configuración de propiedades base de entidades y manejo de paginación.
+- Gestión de excepciones específicas para operaciones de EFCore.
+- Registro automático de configuraciones de entidades y repositorios en el ModelBuilder y el contenedor de dependencias.
+
+## Componentes Principales
+---
+
+- Repositorio Base: Clase base para operaciones CRUD en un contexto de base de datos.
+- Operación Base: Clase base para operaciones de creación, actualización y eliminación de entidades.
+- Extensiones: Métodos de extensión para configurar entidades, manejar paginación y registrar configuraciones de entidades y repositorios.
+- Excepciones: Clases especializadas para manejar excepciones específicas de EFCore.
+
+
+<FileTree>
+- src
+  - CodeDesignPlus.Net.EFCore
+    - Usings.cs
+    - Exceptions
+      - EFCoreException.cs
+    - Extensions
+      - EFCoreExtensions.cs
+      - ServiceCollectionExtensions.cs
+    - Operations
+      - OperationBase.cs
+    - Repository
+      - RepositoryBase.cs
+  - CodeDesignPlus.Net.EFCore.Abstractions
+    - IRepositoryBase.cs
+    - Usings.cs
+    - Operations
+      - ICreateOperation.cs
+      - IDeleteOperation.cs
+      - IOperationBase.cs
+      - IUpdateOperation.cs
+    - Options
+      - ClaimsOption.cs
+      - EFCoreOptions.cs
+</FileTree>
+
+## Primeros Pasos
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.EFCore` en tu proyecto de .NET. Además, explorarás los servicios, métodos de extensión y excepciones que proporciona la librería para interactuar con bases de datos utilizando Entity Framework Core.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimientos básicos de Entity Framework Core y operaciones CRUD.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.EFCore`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continución, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.EFCore
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.EFCore
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.EFCore" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+### Configuración básica
+
+<Steps>
+1. Asignar las opciones de configuración en el `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/appsettings.json"
+    ```
+
+2. Registrar los servicios en el contenedor de dependencias:
+
+    ```csharp
+    //...
+    serviceCollection.AddEFCore<OrderContext>(configuration);
+
+    serviceCollection.AddDbContext<OrderContext>(options =>
+    {
+        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), x =>
+        {
+            x.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        });
+    });
+    ```
+</Steps>
+
+## Ejemplo rápido
+---
+
+El proyecto de ejemplo [`CodeDesignPlus.Net.EFCore.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EFCore.Sample) contiene un par de ejemplos exponiendo el uso de `IOperationBase` y `RepositoryBase`.
+
+<Tabs>
+  <TabItem label="Repository Base">
+  ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/Program.cs"
+  ```
+  </TabItem>
+  <TabItem label="Operation Base">
+  ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Program.cs"
+  ```
+  </TabItem>
+</Tabs>
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.EFCore` proporciona una serie de métodos de extensión que facilitan la implementación de patrones de diseño comunes. A continuación, se presentan los métodos de extensión disponibles junto con una breve descripción de cada uno. Para obtener más detalles sobre cómo utilizar estos métodos, puedes hacer clic en los enlaces proporcionados.
+
+### ServiceCollection
+
+`ServiceCollectionExtensions` proporciona métodos de extensión para registrar servicios en el contenedor de dependencias, como configuraciones de Entity Framework Core y operaciones de repositorio.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/efcore/extensions/service-collection" />
+
+### EFCoreExtensions
+
+Proporciona métodos de extensión para configurar entidades, manejar paginación y registrar configuraciones de entidades y repositorios.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/efcore/extensions/efcore" />
+
+## Opciones de configuración
+---
+
+La librería `CodeDesignPlus.Net.EFCore` ofrece una serie de opciones de configuración que permiten personalizar el comportamiento de la biblioteca. A continuación, se presentan las opciones de configuración disponibles junto con una breve descripción de cada una. Para obtener más detalles sobre cómo configurar estas opciones, puedes hacer clic en los enlaces proporcionados.
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/efcore/options" />
+
+## Servicios
+---
+
+La biblioteca `CodeDesignPlus.Net.EFCore` ofrece una variedad de servicios esenciales para la gestión de operaciones en una base de datos utilizando Entity Framework Core. A continuación, se presenta una lista de estos servicios junto con una breve descripción de cada uno. Para obtener más detalles sobre cada servicio, puedes hacer clic en los enlaces proporcionados.
+
+### Create Operation
+
+Proporciona una interfaz para crear un registro en el repositorio y asignar información a las propiedades transversales de la entidad. Este servicio se encuentra implementado en la clase `OperationBase`.
+
+<LinkCard title="Explora la Clase OperationBase" href="/libs/efcore/services/operation-base" />
+
+### Delete Operation
+
+Proporciona una interfaz para eliminar un registro en el repositorio y asignar información a las propiedades transversales de la entidad. Este servicio se encuentra implementado en la clase `OperationBase`.
+
+<LinkCard title="Explora la Clase OperationBase" href="/libs/efcore/services/operation-base" />
+
+### Update Operation
+
+Permite al repositorio actualizar un registro asignando la información a las propiedades transversales de la entidad. Este servicio se encuentra implementado en la clase `OperationBase`.
+
+<LinkCard title="Explora la Clase OperationBase" href="/libs/efcore/services/operation-base" />
+
+### RepositoryBase y OperationBase
+
+La diferencia principal entre usar OperationBase y RepositoryBase para la creación, actualización y eliminación de entidades radica en las funcionalidades adicionales y el enfoque de cada clase:
+
+1. **RepositoryBase**:
+
+    Proporciona métodos básicos y comunes para interactuar con la base de datos, como crear, actualizar, eliminar y consultar entidades.
+
+    **Características Clave:**
+    - Operaciones CRUD Básicas: Métodos para crear, actualizar, eliminar y consultar entidades.
+    - Contexto de Base de Datos: Utiliza el DbContext para realizar operaciones en la base de datos.
+
+2. **OperationBase**:
+
+    Extiende las funcionalidades de `RepositoryBase` añadiendo gestión de propiedades transversales y auditoría, como `CreatedBy`, `CreatedAt`, `UpdatedBy` y `UpdatedAt`.
+
+    **Características Clave:**
+    - Propiedades Transversales: Asigna automáticamente información de auditoría a las entidades (`CreatedBy`, `CreatedAt`, `UpdatedBy`, `UpdatedAt`).
+    - Lista de Exclusión: Mantiene una lista de propiedades que no deben ser actualizadas durante las operaciones de actualización.
+    - Integración con Usuario Autenticado: Utiliza la información del usuario autenticado (`IUserContext`) para completar las propiedades de auditoría.
+    - Operaciones CRUD: Hereda y extiende las operaciones CRUD de `RepositoryBase`.
+
+#### Diferencias Clave
+
+1. Auditoría y Propiedades Transversales:
+
+  - `OperationBase` asigna automáticamente información de auditoría a las entidades, mientras que `RepositoryBase` no lo hace.
+
+2. Lista de Exclusión:
+
+  - `OperationBase` mantiene una lista de propiedades que no deben ser actualizadas, asegurando que ciertas propiedades (como `Id`, `CreatedBy`, `CreatedAt`) no se modifiquen accidentalmente.
+
+3. Usuario Autenticado:
+
+  - `OperationBase` utiliza la información del usuario autenticado (`IUserContext`) para completar las propiedades de auditoría, proporcionando un mayor nivel de trazabilidad.
+
+4. Uso Genérico vs. Específico:
+
+  - `RepositoryBase` es más genérico y puede ser utilizado para cualquier entidad sin necesidad de gestión de auditoría.
+  - `OperationBase` es más específico y está diseñado para escenarios donde la auditoría y la gestión de propiedades transversales son necesarias.
+
+Para obtener más información sobre cómo utilizar `RepositoryBase` y `OperationBase`, puedes hacer clic en los enlaces proporcionados.
+
+<LinkCard title="Explora la Clase RepositoryBase" href="/libs/efcore/services/repository-base" />
+<LinkCard title="Explora la Clase OperationBase" href="/libs/efcore/services/operation-base" />
+
+## Conclusiones
+---
+
+En esta guía, hemos explorado la librería `CodeDesignPlus.Net.EFCore` y sus principales características, servicios y métodos de extensión. Hemos aprendido cómo instalar y configurar la librería en un proyecto de .NET, y hemos visto ejemplos de uso de `RepositoryBase` y `OperationBase` para interactuar con bases de datos utilizando Entity Framework Core.
+
+## Recursos externos
+---
+
+- [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.EFCore)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EFCore.Sample)
+- [Documentación oficial de Entity Framework Core](https://docs.microsoft.com/en-us/ef/core/)
+- [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.EFCore)

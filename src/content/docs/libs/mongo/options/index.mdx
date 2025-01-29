@@ -1,0 +1,63 @@
+---
+title: Options
+---
+
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En este caso, presentamos la configuración para conectar con MongoDB y sus opciones relacionadas.
+
+## MongoOptions
+---
+
+La clase `MongoOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir el comportamiento y la configuración de la conexión con MongoDB.
+
+```csharp url="packages/CodeDesignPlus.Net.Mongo/src/CodeDesignPlus.Net.Mongo.Abstractions/Options/MongoOptions.cs"
+```
+
+### Propiedades
+
+- **Enable**
+    - Tipo: bool
+    - Descripción: Indica si MongoDB está habilitado.
+    - Valor Predeterminado: false
+
+- **ConnectionString**
+    - Tipo: string
+    - Descripción: La cadena de conexión utilizada para acceder a MongoDB.
+    - Valor Predeterminado: null
+    - Requerido: Sí
+
+- **Database**
+    - Tipo: string
+    - Descripción: El nombre de la base de datos de MongoDB.
+    - Valor Predeterminado: null
+    - Requerido: Sí
+
+- **Diagnostic**
+    - Tipo: MongoDiagnosticsOptions
+    - Descripción: Opciones de diagnóstico para MongoDB.
+    - Valor Predeterminado: Una nueva instancia de MongoDiagnosticsOptions.
+
+- **RegisterAutomaticRepositories**
+    - Tipo: bool
+    - Descripción: Indica si se deben registrar automáticamente los repositorios.
+    - Valor Predeterminado: true
+
+### Validación
+
+La clase `MongoOptions` implementa la interfaz `IValidatableObject` para realizar validaciones adicionales al inicializar las opciones. En este caso, se valida que `ConnectionString` y `Database` no estén vacíos si la opción `Enable` está activada. Además, se valida que las opciones de diagnóstico se ajusten si están habilitadas.
+
+## Ejemplo de Configuración
+---
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones requeridas para MongoDB:
+
+```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample/appsettings.json"
+```
+
+
+## Referencias Adicionales
+---
+
+- [Patrón de opciones en .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Validación de opciones en .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/options#options-validation)

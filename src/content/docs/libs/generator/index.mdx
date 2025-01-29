@@ -1,0 +1,103 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+import { FileTree } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería **CodeDesignPlus.Net.Generator** es una poderosa herramienta diseñada para simplificar y automatizar la generación de código en aplicaciones .NET Core. Facilita la creación de código repetitivo, como Data Transfer Objects (DTOs), mejorando la productividad de los desarrolladores y asegurando la consistencia en los proyectos.
+
+## Propósito y alcance
+---
+
+El objetivo principal de `CodeDesignPlus.Net.Generator` es reducir el tiempo y esfuerzo dedicado a escribir código repetitivo en proyectos .NET Core. Al automatizar la generación de clases y estructuras comunes, permite a los desarrolladores enfocarse en la lógica de negocio y mejorar la mantenibilidad del código.
+
+## Principales características
+---
+
+*   **Generación de Código:** Automatiza la creación de código repetitivo, como DTOs, reduciendo el esfuerzo manual y minimizando errores.
+*   **Consistencia:** Asegura una estructura y estándares de código uniformes en todos los proyectos, mejorando la mantenibilidad y legibilidad del código.
+*   **Productividad:** Incrementa la eficiencia del desarrollador al reducir el tiempo dedicado a tareas repetitivas, permitiendo enfocarse en la lógica de negocio.
+*   **Integración:** Se integra perfectamente con otras librerías de CodeDesignPlus.Net, proporcionando un ecosistema cohesivo para el desarrollo de aplicaciones.
+*   **Escalabilidad:** Diseñada para manejar necesidades de generación de código escalables, adaptándose a proyectos de diferentes tamaños y complejidades.
+
+## Casos de uso típicos
+---
+
+*   Generación automatizada de DTOs a partir de comandos.
+*   Estandarización de la estructura de datos en múltiples proyectos.
+*   Aumento de la productividad en equipos de desarrollo que trabajan en aplicaciones .NET Core.
+*   Reducción de errores y inconsistencias en la generación de código.
+
+## Componentes Principales
+---
+
+*   **DtoGeneratorAttribute:** Atributo utilizado para decorar comandos que se utilizarán para generar clases DTO.
+*   **DtoGenerator:** Generador de código que crea clases DTO basadas en comandos decorados con el atributo `DtoGeneratorAttribute`.
+
+<FileTree>
+    - CodeDesignPlus.Net.Generator
+          - Attributes
+            - DtoGeneratorAttribute.cs
+          - Generators
+              - DtoGenerator.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Generator` en tu proyecto de .NET.
+
+### Requisitos previos
+
+*   .NET 8 o superior.
+*   Un IDE compatible con .NET (Visual Studio, Visual Studio Code, etc.)
+*   Conocimiento básico de desarrollo en .NET Core.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Generator`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Generator
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Generator
+    ```
+    </TabItem>
+     <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Generator" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+---
+
+El siguiente ejemplo muestra cómo utilizar `CodeDesignPlus.Net.Generator` para generar automáticamente un DTO a partir de un comando en una aplicación .NET Core.
+
+1.  Crea un comando en la capa de `Application`:
+    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CreateUserCommand.cs"
+    ```
+
+2.  El generador `DtoGenerator` creará automáticamente el DTO correspondiente `CreateUserDto` en el namespace `CodeDesignPlus.Microservice.Api.Dtos`:
+
+    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
+    ```
+
+## Conclusiones
+---
+
+`CodeDesignPlus.Net.Generator` es una herramienta valiosa para aumentar la eficiencia y consistencia en el desarrollo de aplicaciones .NET Core. Su capacidad para generar automáticamente DTOs y otras estructuras de código reduce la carga de trabajo repetitiva y mejora la calidad del código.
+
+## Recursos externos
+---
+
+- [Documentación oficial de Source Generators en .NET Core](https://learn.microsoft.com/dotnet/csharp/roslyn-sdk/source-generators-overview)
+- [Introducing C# Source Generators](https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/)

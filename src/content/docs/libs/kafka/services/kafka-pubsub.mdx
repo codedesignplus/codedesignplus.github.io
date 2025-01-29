@@ -1,0 +1,97 @@
+---
+title: Kafka PubSub
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Este documento describe los servicios `IKafkaPubSub` y `KafkaPubSub`, los cuales proveen una abstracción para la comunicación mediante un broker de mensajería Kafka. El servicio `KafkaPubSub` implementa la interfaz `IKafkaPubSub` y ofrece métodos para publicar y suscribirse a eventos de dominio utilizando Kafka, incluyendo la configuración y el manejo de productores y consumidores.
+
+
+<Tabs>
+    <TabItem label="IKafkaPubSub">
+    ```csharp url="packages/CodeDesignPlus.Net.Kafka/src/CodeDesignPlus.Net.Kafka.Abstractions/IKafkaPubSub.cs"
+    ```
+    </TabItem>
+    <TabItem label="IMessage">
+    ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IMessage.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+## ¿Cómo Funciona?
+
+`KafkaPubSub` actúa como una capa de abstracción para la interacción con Kafka, facilitando la publicación y suscripción de eventos de dominio de manera asíncrona. Al publicar un evento, el servicio se encarga de serializarlo y enviarlo al topic de Kafka correspondiente.  Al suscribirse a un evento, `KafkaPubSub` configura un consumidor que recibe los mensajes del topic y los entrega al manejador de eventos registrado. El servicio también maneja la configuración inicial, la creación de topics y el manejo de errores, además de la deserialización de los mensajes.
+
+## Métodos
+---
+
+`KafkaPubSub` implementa la interfaz `IKafkaPubSub`, que define los siguientes métodos:
+
+### PublishAsync
+**Type:** `Task PublishAsync(IDomainEvent @event, CancellationToken cancellationToken)`
+
+Publica un evento de dominio en un topic de Kafka. Toma como argumentos el evento a publicar y un `CancellationToken` para poder cancelar la operación. El método obtiene el topic a partir del tipo del evento, crea un mensaje Kafka con headers adicionales (como la fecha de ocurrencia y el ID del evento), y utiliza un productor de Kafka para enviar el mensaje.
+
+### PublishAsync (sobrecarga)
+**Type:** `Task PublishAsync(IReadOnlyList<IDomainEvent> @event, CancellationToken cancellationToken)`
+
+Publica una lista de eventos de dominio en Kafka de forma asíncrona.  Toma una lista de eventos y un `CancellationToken`, y llama al método `PublishAsync` para cada evento en la lista.
+
+### SubscribeAsync
+**Type:** `Task SubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Se suscribe a un topic de Kafka para un tipo de evento específico. Recibe un `CancellationToken` y los tipos del evento y su manejador. El método obtiene el nombre del topic a partir del tipo de evento, espera a que el topic esté creado, y luego inicia un consumidor de Kafka que recibe los mensajes del topic y los pasa al manejador de eventos correspondiente.
+
+### UnsubscribeAsync
+**Type:** `Task UnsubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Cancela la suscripción de un evento y su manejador de un topic de kafka. Recibe el `CancellationToken`, el tipo de evento y su manejador.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.Kafka/src/CodeDesignPlus.Net.Kafka/Services/KafkaPubSub.cs"
+```
+
+El servicio `KafkaPubSub` se implementa como una clase que hereda de `IKafkaPubSub` y se encarga de:
+
+1.  **Recibir dependencias:**  Recibe una instancia de `ILogger<KafkaPubSub>` para logging,  `IDomainEventResolverService` para obtener el nombre del topic,  `IOptions<KafkaOptions>` para obtener la configuración de Kafka y `IServiceProvider` para resolver dependencias (productores y consumidores).
+2.  **Publicar eventos:** Al recibir un evento, se obtiene el topic asociado al tipo del evento, se crea un mensaje con metadata y se utiliza un productor de Kafka (`IProducer<string, IDomainEvent>`) para enviar el mensaje al topic.
+3.  **Suscribirse a eventos:** Al suscribirse a un evento, se obtiene el topic a partir del tipo del evento, se verifica que el topic exista y se crea un consumidor de Kafka (`ConsumerBuilder<string, TEvent>`) para recibir los mensajes del topic,  procesándolos y entregándolos al event handler correspondiente.
+4.  **Manejo de topics:** Se asegura de que el topic exista antes de iniciar el consumidor, esperando hasta que el topic sea creado o hasta que se alcance el número máximo de intentos.
+5. **Deserialización:** Utiliza un deserializador que utiliza `System.Text.Json` para los mensajes.
+6.  **Manejo de errores:** Captura excepciones durante el procesamiento de mensajes y las registra en el log.
+
+Las dependencias del servicio son:
+
+- `ILogger<KafkaPubSub>`: Para el registro de eventos.
+- `IDomainEventResolverService`: Para obtener el nombre del topic a partir del tipo de evento.
+- `IOptions<KafkaOptions>`: Para la configuración de Kafka.
+- `IServiceProvider`: Para la resolución de dependencias, como el productor y el consumidor.
+
+La clase `KafkaOptions` contendría al menos las siguientes propiedades:
+- `AdminClientConfig` (`Dictionary<string, string>`): Configuración para el admin client.
+- `ConsumerConfig` (`Dictionary<string, string>`): Configuración para el consumidor.
+- `MaxAttempts` (int): Numero máximo de intentos para la creación del topic.
+
+## Ejemplo de Uso
+---
+
+En este ejemplo, se muestra cómo la librería `CodeDesignPlus.Net.PubSub` hace uso de la interfaz `IMessage` para publicar eventos de dominio de forma asíncrona. La clase `PubSubService` implementa la interfaz `IPubSub` y utiliza la inyección de dependencias para obtener una instancia de `IMessage` y otros servicios necesarios. El método `PublishAsync` se encarga de publicar eventos de dominio, verificando si se debe usar una cola para encolar los eventos o si se deben publicar directamente. Si se usa una cola, se obtiene una instancia de `IEventQueueService` y se encola el evento; de lo contrario, se publica directamente utilizando `IMessage`. 
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/PubSubService.cs"
+
+```
+
+
+## Conclusiones
+---
+
+`KafkaPubSub` proporciona una solución robusta y eficiente para la comunicación asíncrona mediante Kafka en aplicaciones .NET. Su abstracción para la publicación y suscripción, combinada con un manejo adecuado de topics, productores y consumidores, simplifica el desarrollo de sistemas distribuidos basados en eventos. Es importante que la configuración de `KafkaOptions` sea la correcta y se registren los productores y consumidores de forma correcta usando los builders.
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de Apache Kafka](https://kafka.apache.org/documentation/)
+- [Librería Confluent Kafka .NET](https://github.com/confluentinc/confluent-kafka-dotnet)
+- [Implementación de IHostedService](https://learn.microsoft.com/en-us/dotnet/core/extensions/hosted-services)

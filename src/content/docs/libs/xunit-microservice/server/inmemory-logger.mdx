@@ -1,0 +1,100 @@
+---
+title: InMemory Logging
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Este conjunto de clases (`InMemoryLoggerProvider`, `InMemoryLoggerFactory`, y `InMemoryLogger`) proporciona una solución de logging en memoria para entornos de prueba. Permite a los desarrolladores capturar y verificar mensajes de log generados por la aplicación durante la ejecución de pruebas unitarias y de integración, sin depender de un sistema de logging externo.
+
+## ¿Cómo Funciona?
+---
+
+El logging en memoria funciona a través de una cadena de componentes:
+
+1.  **`InMemoryLoggerProvider`:** Actúa como el proveedor central de loggers en memoria. Mantiene un diccionario de `InMemoryLogger`s, asociando cada logger a una categoría específica.
+2.  **`InMemoryLoggerFactory`:** Es una fábrica de loggers que se encarga de crear instancias de `InMemoryLogger` utilizando el `InMemoryLoggerProvider`.
+3.  **`InMemoryLogger`:** Es el logger en sí, que almacena los mensajes de log en una lista en memoria.
+
+## Métodos
+---
+
+### InMemoryLoggerProvider
+
+*   **`CreateLogger(string categoryName)`:** Crea una instancia de `InMemoryLogger` o la recupera si ya existe para la categoría especificada.
+*   **`Dispose()`:**  Limpia la colección de loggers en memoria y libera los recursos asociados.
+
+### InMemoryLoggerFactory
+
+*   **`CreateLogger(string categoryName)`:**  Crea una instancia de `InMemoryLogger` utilizando el `InMemoryLoggerProvider`.
+*   **`AddProvider(ILoggerProvider provider)`:** Este método está implementado, pero no hace nada. La fabrica esta diseñada solo para usar un `InMemoryLoggerProvider`.
+*   **`Dispose()`:**  Libera los recursos del proveedor.
+
+### InMemoryLogger
+
+*   **`BeginScope<TState>(TState state)`:**  No implementado para este logger en memoria; retorna null.
+*   **`IsEnabled(LogLevel logLevel)`:** Siempre retorna `true`, indicando que todos los niveles de log están habilitados.
+*   **`Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)`:** Almacena el mensaje de log en una lista interna, formateándolo utilizando el `formatter` proporcionado.
+
+## Implementación
+---
+
+Las clases de logging en memoria se implementan como sigue:
+
+<Tabs>
+<TabItem label="InMemoryLoggerProvider">
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/Logger/InMemoryLoggerProvider.cs"
+```
+</TabItem>
+<TabItem label="InMemoryLoggerFactory">
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/Logger/InMemoryLoggerFactory.cs"
+```
+</TabItem>
+<TabItem label="InMemoryLogger">
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/Logger/InMemoryLogger.cs"
+```
+</TabItem>
+</Tabs>
+
+
+## Ejemplo de Uso
+---
+
+Para usar el logging en memoria, se debe registrar el `InMemoryLoggerProvider` y el `InMemoryLoggerFactory` en la configuración de servicios de la aplicación de prueba.  El siguiente ejemplo muestra cómo registrar estos servicios en el método `ConfigureServices` de la clase `Server<TProgram>`:
+
+```csharp
+    /// <summary>
+    /// Configures the services for the application.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    public virtual void ConfigureServices(IServiceCollection services)
+    {
+        services.AddAuthentication("TestAuth")
+                .AddScheme<AuthenticationSchemeOptions, AuthHandler>("TestAuth", options => { });
+
+        services.AddSingleton(this.LoggerProvider);
+        services.AddSingleton<ILoggerFactory, InMemoryLoggerFactory>();
+    }
+```
+En este ejemplo:
+-  El `InMemoryLoggerProvider` se agrega como un singleton para que sea único en el scope de la aplicacion.
+-  El `InMemoryLoggerFactory` se agrega como un singleton para que pueda ser injectado en cualquier parte de la aplicacion.
+
+Luego, las pruebas pueden acceder al `InMemoryLoggerProvider` para inspeccionar los mensajes de log generados durante la ejecución de la aplicación. Por ejemplo, desde la clase `Server<TProgram>`:
+
+```csharp
+    /// <summary>
+    /// Gets the in-memory logger provider for capturing log messages.
+    /// </summary>
+    public InMemoryLoggerProvider LoggerProvider { get; } = new();
+```
+
+## Conclusiones
+---
+
+El logging en memoria proporciona una solución sencilla y efectiva para capturar y analizar mensajes de log durante las pruebas. Al no depender de un sistema de logging externo, se agiliza el proceso de pruebas y se facilita la verificación del comportamiento de la aplicación en relación con el registro de información.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de Microsoft Logging](https://learn.microsoft.com/es-es/dotnet/core/extensions/logging)
+-   [Pruebas Unitarias y de Integración con .NET](https://learn.microsoft.com/es-es/aspnet/core/testing/?view=aspnetcore-8.0)

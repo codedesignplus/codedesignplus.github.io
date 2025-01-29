@@ -1,0 +1,83 @@
+---
+title: PubSubExtensions
+---
+
+La clase `PubSubExtensions` proporciona métodos de extensión relacionados con la funcionalidad de PubSub. Estos métodos permiten determinar si un tipo implementa una interfaz genérica, obtener eventos y manejadores de eventos, y extraer tipos de eventos de interfaces de manejadores de eventos.
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Extensions/PubSubExtensions.cs"
+```
+
+## Características
+---
+- **Determinación de asignabilidad genérica**: Verifica si un tipo implementa una interfaz genérica específica.
+- **Obtención de eventos**: Recupera todos los tipos de eventos que derivan de `IDomainEvent`.
+- **Obtención de manejadores de eventos**: Escanea y devuelve clases que implementan la interfaz `IEventHandler<TEvent>`.
+- **Extracción de tipos de eventos**: Extrae el tipo de evento manejado por una interfaz de manejador de eventos genérica.
+
+## Métodos
+---
+
+La clase `PubSubExtensions` proporciona los siguientes métodos de extensión:
+
+### IsAssignableGenericFrom
+**Type:** `public static bool IsAssignableGenericFrom(this Type type, Type @interface)`
+
+Determina si una instancia de un tipo especificado puede asignarse a una variable del tipo actual.
+
+```csharp
+var eventHandlerType = typeof(UserRegisteredEventHandler);
+var isAssignable = eventHandlerType.IsAssignableGenericFrom(typeof(IEventHandler<>));
+Console.WriteLine(isAssignable); // True si UserRegisteredEventHandler implementa IEventHandler<TEvent>
+```
+
+### GetEvents
+**Type:** `public static List<Type> GetEvents()`
+
+Recupera todas las clases no abstractas que derivan de `IDomainEvent`.
+
+```csharp
+var events = PubSubExtensions.GetEvents();
+foreach (var eventType in events)
+{
+    Console.WriteLine(eventType.Name);
+}
+```
+
+### GetEventHandlers
+**Type:** `public static List<Type> GetEventHandlers()`
+
+Escanea y devuelve clases que implementan la interfaz `IEventHandler<TEvent>`.
+
+```csharp
+var eventHandlers = PubSubExtensions.GetEventHandlers();
+foreach (var handlerType in eventHandlers)
+{
+    Console.WriteLine(handlerType.Name);
+}
+```
+
+### GetInterfaceEventHandlerGeneric
+**Type:** `public static Type GetInterfaceEventHandlerGeneric(this Type eventHandler)`
+
+Recupera la primera interfaz de un tipo dado que es una instancia de tipo genérico de la interfaz `IEventHandler<TEvent>`.
+
+```csharp
+var handlerType = typeof(UserRegisteredEventHandler);
+var interfaceType = handlerType.GetInterfaceEventHandlerGeneric();
+Console.WriteLine(interfaceType?.Name);
+```
+
+### GetEventType
+**Type:** `public static Type GetEventType(this Type interfaceEventHandlerGeneric)`
+
+Dada una interfaz de tipo `IEventHandler<TEvent>`, recupera el tipo de evento que maneja.
+
+```csharp
+var interfaceType = typeof(IEventHandler<UserRegisteredEvent>);
+var eventType = interfaceType.GetEventType();
+Console.WriteLine(eventType?.Name);
+```
+
+## Conclusiones
+---
+La clase `PubSubExtensions` proporciona métodos de extensión útiles para trabajar con la funcionalidad de PubSub en aplicaciones .NET. Estos métodos facilitan la determinación de asignabilidad genérica, la obtención de eventos y manejadores de eventos, y la extracción de tipos de eventos de interfaces de manejadores de eventos, mejorando así la capacidad de gestión y suscripción de eventos en el sistema.

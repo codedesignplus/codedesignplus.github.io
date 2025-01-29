@@ -1,0 +1,36 @@
+---
+title: Configuración
+---
+
+`CodeDesignPlus.Net.PubSub` provee una clase de opciones de configuración para personalizar el comportamiento de la librería. Estas opciones permiten a los desarrolladores configurar parámetros como el uso de un sistema de queue en memoria, el tiempo de espera para procesar eventos y el tiempo de espera para publicar eventos. A continuación se listan las opciones de configuración disponibles:
+
+## PubSubOptions
+---
+
+La clase `PubSubOptions` proporciona opciones de configuración para el servicio PubSub. Esta clase permite configurar varios aspectos del comportamiento del servicio PubSub, como el uso de colas, el tiempo de espera para la cola, la habilitación de diagnósticos y el registro automático de manejadores.
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/Options/PubSubOptions.cs"
+```
+
+### Propiedades
+
+- `UseQueue`: Es una propiedad booleana que indica si se debe usar una queue en memoria para la publicación de eventos. Por defecto está habilitada (true).
+- `SecondsWaitQueue`: Es una propiedad que define el número de segundos a esperar para la queue cuando se encuentra vacía. Debe estar en el rango de 1 a 10, con un valor por defecto de 2.
+- `EnableDiagnostic`: Es una propiedad booleana que indica si los diagnósticos están habilitados. Por defecto está deshabilitada (false).
+- `RegisterAutomaticHandlers`: Es una propiedad booleana que indica si se deben registrar event handlers automáticos. Por defecto está habilitada (true).
+
+## Ejemplo de configuración
+---
+
+A continuación se muestra un ejemplo de configuración de `CodeDesignPlus.Net.PubSub` en un archivo `appsettings.json`:
+
+```json
+{
+  "PubSub": {
+    "UseQueue": true,
+    "SecondsWaitQueue": 2,
+    "EnableDiagnostic": false,
+    "RegisterAutomaticHandlers": true
+  }
+}
+```

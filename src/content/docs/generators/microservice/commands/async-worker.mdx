@@ -1,0 +1,195 @@
+---
+title: Async Worker
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice asyncWorker`
+
+Este comando se utiliza para crear un proyecto Async Worker dentro de un microservicio existente. Los Async Workers son procesos que ejecutan tareas en segundo plano, de forma asíncrona, mejorando el rendimiento y la capacidad de respuesta del microservicio. Este comando facilita la generación de la estructura básica para definir un worker en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Async Worker (Trabajador Asíncrono):** Es un proceso que se ejecuta en segundo plano, desacoplando la ejecución de tareas de la petición inicial. Esto permite que el microservicio responda rápidamente mientras las tareas más complejas se ejecutan de forma asíncrona.
+*   **Tareas en Segundo Plano:** Son operaciones que no requieren una respuesta inmediata al cliente, como el envío de correos electrónicos, procesamiento de archivos, actualización de datos, etc.
+*   **Cola de Mensajes:** Los Async Workers generalmente trabajan en conjunto con una cola de mensajes donde las tareas se encolan y el worker las consume de forma ordenada.
+*   **Desacoplamiento:** Los Async Workers permiten desacoplar el procesamiento de las peticiones de la lógica de negocio, mejorando la escalabilidad y la mantenibilidad del microservicio.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice asyncWorker` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice asyncWorker \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --consumer-name "<consumer_name>" \
+        --consumer-aggregate "<aggregate_name>" \
+        --consumer-action "<consumer_action>" \
+        --consumer-microservice "<consumer_microservice>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice asyncWorker `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --consumer-name "<consumer_name>" `
+        --consumer-aggregate "<aggregate_name>" `
+        --consumer-action "<consumer_action>" `
+        --consumer-microservice "<consumer_microservice>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se creará el proyecto async worker.
+
+### `--consumer-name`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del evento que se consumirá.
+
+### `--consumer-aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado al que pertenece el evento que se consumirá.
+
+### `--consumer-action`
+     - **Tipo**: `string`
+     - **Obligatorio**: Sí
+     - **Descripción**: La acción que realizará el consumer en respuesta al evento.
+
+### `--consumer-microservice`
+     - **Tipo**: `string`
+     - **Obligatorio**: No
+     - **Descripción**: El nombre del microservicio que publica el evento que se consumirá.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un worker para el microservicio `notifications` de la organización `acme`, que consumirá los eventos de tipo `orderCreated` del agregado `order` para el envio de notificaciones.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice asyncWorker \
+        --organization "Acme" \
+        --microservice "Notifications" \
+        --consumer-name "OrderCreated" \
+        --consumer-aggregate "Order" \
+        --consumer-action "send-notification" \
+        --consumer-microservice "ms-order"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice asyncWorker `
+        --organization "Acme" `
+        --microservice "Notifications" `
+        --consumer-name "OrderCreated" `
+        --consumer-aggregate "Order" `
+        --consumer-action "send-notification" `
+        --consumer-microservice "ms-order"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base para el Async Worker en el microservicio `notifications`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/async-worker/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo Async Worker:
+
+<Image src="/images/generators/microservices/async-worker/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para un Async Worker en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "Acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el proyecto Async Worker.
+
+    <Image src="/images/generators/microservices/async-worker/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "Notifications"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se creará el Async Worker, reflejándose en los namespaces y ubicaciones de los archivos.
+
+   <Image src="/images/generators/microservices/async-worker/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+### `--consumer-name`
+**Flag:** `--consumer-name "OrderCreated"`
+
+1. Este parámetro define el nombre del mensaje o evento que consumirá el worker, reflejándose en la lógica de consumo de mensajes.
+
+    <Image src="/images/generators/microservices/async-worker/2-consumer-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-aggregate`
+**Flag:** `--consumer-aggregate "Order"`
+
+1. Este parámetro define el agregado asociado al mensaje o evento que consumirá el worker, reflejándose en la lógica de consumo de mensajes.
+
+   <Image src="/images/generators/microservices/async-worker/3-consumer-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-action`
+**Flag:** `--consumer-action "send-notification"`
+
+1. Este parámetro define la acción del mensaje o evento que consumirá el worker, reflejándose en la lógica de consumo de mensajes.
+
+   <Image src="/images/generators/microservices/async-worker/4-consumer-action-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-microservice`
+**Flag:** `--consumer-microservice "ms-order"`
+
+1. Este parámetro define el microservicio que publica el mensaje. En este caso, el microservicio `ms-order` publica el evento `orderCreated`.
+
+   <Image src="/images/generators/microservices/async-worker/5-consumer-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   Los Async Workers deben encargarse de ejecutar tareas en segundo plano, sin bloquear la respuesta del microservicio.
+*   La configuración de la cola de mensajes debe estar previamente establecida para que el worker pueda consumir los mensajes.
+*   Se recomienda utilizar un mensaje de cola diferente por cada action (consumer-action).
+
+<Aside>
+    Es importante recordar que los Async Workers están diseñados para procesar tareas de forma asíncrona. Para este ejemplo, estamos creando un worker que se encargará de enviar notificaciones cuando se publique el evento <code>orderCreated</code> en el agregado <code>order</code>.
+</Aside>
+
+## Enlaces Relacionados
+
+*  [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*  [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*  [RabbitMQ](https://www.rabbitmq.com/)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice asyncWorker` facilita la creación de proyectos de Async Worker en tu microservicio, permitiendo una mejor gestión de las tareas en segundo plano. Utiliza este comando para desacoplar la ejecución de tareas, mejorando la escalabilidad y capacidad de respuesta de tu microservicio.
+
+¡Ahora el ejemplo es más claro y muestra mejor cómo usar el comando en diferentes contextos!

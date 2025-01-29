@@ -1,0 +1,225 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración.  En esta documentación, exploraremos cómo configurar las opciones para la integración con RabbitMQ utilizando las clases `RabbitMQOptions` y `QueueArguments`.
+
+## RabbitMQOptions
+---
+
+La clase `RabbitMQOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir la conexión y el comportamiento de la integración con RabbitMQ.
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ.Abstractions/Options/RabitMQOptions.cs"
+```
+
+### Propiedades
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción:  Indica si la integración con RabbitMQ está habilitada. Si está deshabilitado, la librería no intentará conectarse a RabbitMQ.
+    - Valor Predeterminado: `false`
+
+- **Host**
+    - Tipo: `string`
+    - Descripción:  La dirección IP o nombre de host del servidor de RabbitMQ.
+    - Valor Predeterminado: `null`
+    - Requerido: Sí, si `Enable` es `true`.
+
+- **Port**
+    - Tipo: `int`
+    - Descripción: El puerto TCP en el que escucha el servidor de RabbitMQ.
+    - Valor Predeterminado: `0`
+    - **Rango:** `1` a `65535`
+    - Requerido: Sí, si `Enable` es `true`.
+
+- **UserName**
+    - Tipo: `string`
+    - Descripción: El nombre de usuario para autenticarse en el servidor de RabbitMQ.
+    - Valor Predeterminado: `null`
+    - Requerido: Sí, si `Enable` es `true`.
+
+- **Password**
+    - Tipo: `string`
+    - Descripción:  La contraseña para autenticarse en el servidor de RabbitMQ.
+    - Valor Predeterminado: `null`
+    - Requerido: Sí, si `Enable` es `true`.
+
+- **RetryInterval**
+    - Tipo: `int`
+    - Descripción: El intervalo de tiempo en milisegundos entre intentos de reconexión a RabbitMQ en caso de fallo.
+    - Valor Predeterminado: `1000` (1 segundo)
+    - Rango: `1000` a `5000` (1 a 5 segundos)
+
+- **MaxRetry**
+    - Tipo: `int`
+    - Descripción: El número máximo de intentos de reconexión a RabbitMQ antes de dar por fallida la conexión.
+    - Valor Predeterminado: `10`
+    - Rango: `1` a `10`
+
+- **QueueArguments**
+    - Tipo: `QueueArguments`
+    - Descripción:  Objeto que contiene los argumentos de configuración específicos de la cola de RabbitMQ. Permite personalizar características como TTL, expiración, longitud máxima, prioridad, modo de cola, etc.
+    - Valor Predeterminado: Un objeto `QueueArguments` nuevo con sus valores por defecto.
+
+### Validación
+
+La clase `RabbitMQOptions` implementa `IValidatableObject` para realizar validaciones al inicializar las opciones.  Se validan:
+*  Que las propiedades `Host`, `Port`, `UserName`, `Password`, `RetryInterval` y `MaxRetry` tengan valores correctos cuando `Enable` es `true`.
+*  Valida el objeto `QueueArguments`.
+
+```csharp
+public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+{
+    var results = new List<ValidationResult>();
+
+    if (this.Enable)
+    {
+        Validator.TryValidateProperty(this.Host, new ValidationContext(this, null, null) { MemberName = nameof(this.Host) }, results);
+        Validator.TryValidateProperty(this.Port, new ValidationContext(this, null, null) { MemberName = nameof(this.Port) }, results);
+        Validator.TryValidateProperty(this.UserName, new ValidationContext(this, null, null) { MemberName = nameof(this.UserName) }, results);
+        Validator.TryValidateProperty(this.Password, new ValidationContext(this, null, null) { MemberName = nameof(this.Password) }, results);
+        Validator.TryValidateProperty(this.RetryInterval, new ValidationContext(this, null, null) { MemberName = nameof(this.RetryInterval) }, results);
+        Validator.TryValidateProperty(this.MaxRetry, new ValidationContext(this, null, null) { MemberName = nameof(this.MaxRetry) }, results);
+
+        if (this.QueueArguments != null)
+            results.AddRange(this.QueueArguments.Validate(new ValidationContext(this.QueueArguments)));
+    }
+
+    return results;
+}
+```
+
+## QueueArguments
+---
+
+La clase `QueueArguments` se utiliza para configurar las propiedades de una cola de RabbitMQ, como la vida útil de los mensajes, la expiración de la cola, la longitud máxima, entre otros. Estas propiedades son configurables para adaptarse a las necesidades específicas de cada aplicación.
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ.Abstractions/Options/QueueArguments.cs"
+```
+
+### Propiedades
+
+- MessageTtl
+    - Tipo: `int`
+    - Descripción: El tiempo de vida (TTL) de los mensajes en milisegundos. Los mensajes que superen este tiempo de vida son eliminados de la cola.
+    - Valor Predeterminado: `172800000` (2 días)
+    - Validación: Debe ser mayor o igual a cero.
+
+- Expires
+    - Tipo: `int?`
+    - Descripción: Tiempo de expiración de la cola en milisegundos. Después de este tiempo, la cola es eliminada automáticamente.
+    - Valor Predeterminado: `null` (nunca expira).
+    - Validación: Si tiene valor, debe ser mayor o igual a cero.
+
+- MaxLength
+    - Tipo: `int?`
+    - Descripción:  Número máximo de mensajes que puede contener la cola. Una vez alcanzado este límite, se pueden aplicar políticas de descarte o rechazo.
+    - Valor Predeterminado: `null` (sin límite).
+    - Validación: Si tiene valor, debe ser mayor o igual a cero.
+
+- MaxLengthBytes
+    - Tipo: `int?`
+    - Descripción: Tamaño máximo de la cola en bytes. Una vez alcanzado este límite, se pueden aplicar políticas de descarte o rechazo.
+    - Valor Predeterminado: `null` (sin límite).
+    - Validación: Si tiene valor, debe ser mayor o igual a cero.
+
+- MaxPriority
+    - Tipo: `int?`
+    - Descripción: Nivel máximo de prioridad que puede tener un mensaje en la cola.
+    - Valor Predeterminado: `null` (sin prioridad).
+    - Rango: `0` a `255`
+
+- QueueMode
+    - Tipo: `string`
+    - Descripción: Modo de la cola. Puede ser "default" o "lazy".  "lazy" indica que la cola debe usar disco para almacenamiento.
+    - Valor Predeterminado: `"lazy"`
+    - Validación:  Debe ser "default" o "lazy".
+
+- QueueMasterLocator
+    - Tipo: `string`
+    - Descripción: Estrategia de ubicación del nodo maestro para la cola. Puede ser "min-masters".
+    - Valor Predeterminado: `null` (valor predeterminado por el servidor).
+    - Validación: Debe ser "min-masters"
+
+- HaPolicy
+    - Tipo: `string`
+    - Descripción:  Política de alta disponibilidad (HA). Determina cómo se maneja la réplica de colas en un cluster de RabbitMQ. Puede ser "all", "exactly", "nodes" o "nodes[n]", donde n es un número de nodos.
+    - Valor Predeterminado: `"all"`
+    - Validación:  Debe ser "all", "exactly", "nodes" o "nodes[n]".
+
+- Overflow
+    - Tipo: `string`
+    - Descripción:  Comportamiento de la cola cuando se alcanza su capacidad máxima. Puede ser "drop-head" (descartar los mensajes más antiguos) o "reject-publish" (rechazar nuevos mensajes).
+    - Valor Predeterminado: `null` (valor predeterminado por el servidor).
+    - Validación: Debe ser "drop-head" o "reject-publish".
+
+- OverflowRejectPublish
+    - Tipo: `int?`
+    - Descripción: Número máximo de mensajes a rechazar cuando se usa la política "reject-publish".
+    - Valor Predeterminado: `null` (rechaza todos los mensajes).
+    - Validación: Si tiene valor, debe ser mayor o igual a cero.
+
+- ExtraArguments
+    - Tipo: `Dictionary<string, object>`
+    - Descripción: Argumentos adicionales que pueden ser requeridos por la cola.
+    - Valor Predeterminado: `null`
+    - Validación: Los valores de este diccionario no deben ser nulos.
+
+### Validación
+
+La clase `QueueArguments` implementa `IValidatableObject` para realizar validaciones al inicializar las opciones.  Se validan:
+
+* Que las propiedades `MessageTtl`, `Expires`, `MaxLength`, `MaxLengthBytes` y `OverflowRejectPublish` no sean negativas.
+* Que la propiedad `MaxPriority` este entre `0` y `255`.
+* Que `QueueMode`  sea uno de los valores permitidos.
+* Que `QueueMasterLocator` sea uno de los valores permitidos.
+* Que `HaPolicy` sea uno de los valores permitidos.
+* Que `Overflow` sea uno de los valores permitidos.
+* Que las propiedades en `ExtraArguments` no sean nulas.
+
+```csharp
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        var results = new List<ValidationResult>();
+
+        if (this.MessageTtl < 0)
+            results.Add(new ValidationResult("The field MessageTtl must be greater than or equal to zero.", new[] { nameof(this.MessageTtl) }));
+
+        if (this.Expires.HasValue && this.Expires.Value < 0)
+            results.Add(new ValidationResult("The field Expires must be greater than or equal to zero.", new[] { nameof(this.Expires) }));
+
+        if (this.MaxLength.HasValue && this.MaxLength.Value < 0)
+            results.Add(new ValidationResult("The field MaxLength must be greater than or equal to zero.", new[] { nameof(this.MaxLength) }));
+
+        if (this.MaxLengthBytes.HasValue && this.MaxLengthBytes.Value < 0)
+            results.Add(new ValidationResult("The field MaxLengthBytes must be greater than or equal to zero.", new[] { nameof(this.MaxLengthBytes) }));
+
+        if (this.MaxPriority.HasValue && this.MaxPriority.Value < 0)
+            Validator.TryValidateProperty(this.MaxPriority, new ValidationContext(this, null, null) { MemberName = nameof(this.MaxPriority) }, results);
+
+        if (this.OverflowRejectPublish.HasValue && this.OverflowRejectPublish.Value < 0)
+            results.Add(new ValidationResult("The field OverflowRejectPublish must be greater than or equal to zero.", new[] { nameof(this.OverflowRejectPublish) }));
+
+        ValidateExtraArguments(results);
+
+        return results;
+    }
+```
+
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones requeridas:
+
+```json url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/appsettings.json"
+```
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación oficial de RabbitMQ](https://www.rabbitmq.com/documentation.html)

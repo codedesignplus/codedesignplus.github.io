@@ -1,0 +1,131 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `ServiceCollectionExtensions` proporciona métodos de extensión para simplificar la configuración de seguridad en aplicaciones .NET, específicamente para la autenticación y autorización basadas en JWT (JSON Web Tokens). Esta clase facilita la adición de servicios de seguridad al `IServiceCollection` y la configuración de la autenticación en el `IApplicationBuilder`, centralizando la lógica y reduciendo la repetición de código.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `Microsoft.AspNetCore.Authentication.JwtBearer`: Necesario para la autenticación JWT.
+- `Microsoft.AspNetCore.Http`: Necesario para el acceso al contexto HTTP.
+- `Microsoft.AspNetCore.Authorization`: Necesario para la autorización.
+- `System.Security.Cryptography.X509Certificates`: Necesario para el uso de certificados X509.
+- `Microsoft.IdentityModel.Tokens`: Necesario para la validación de tokens JWT.
+- `Microsoft.IdentityModel.JsonWebTokens`: Necesario para el manejo de tokens JWT.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Requieren autenticación basada en JWT para proteger APIs o recursos.
+- Necesitan configurar opciones de seguridad de manera centralizada.
+- Desean manejar la validación de tokens JWT de forma configurable.
+- Se benefician de la abstracción de la complejidad de la configuración de seguridad.
+- Necesitan configuraciones personalizadas de autenticación JWT, como la validación del firmante del token.
+- Requieren manejo centralizado de errores de autenticación.
+
+## Beneficios
+---
+
+- **Simplificación de la Configuración:** Facilita la adición de servicios de autenticación y autorización a la aplicación.
+- **Centralización de la Configuración:** Consolida la configuración de seguridad en un solo lugar, mejorando la mantenibilidad.
+- **Reutilización de Código:** Permite la reutilización de la configuración de seguridad en múltiples proyectos.
+- **Configuración Personalizada:** Permite la configuración personalizada de la autenticación JWT mediante opciones.
+- **Manejo de Errores:** Proporciona un manejo centralizado de los errores de autenticación.
+- **Abstracción de la complejidad:** Oculta la complejidad de la configuración de la autenticación JWT, haciendo el código más limpio.
+
+## Ejemplo Práctico
+---
+
+```csharp url="examples/CodeDesignPlus.Net.Security.Sample/src/CodeDesignPlus.Net.Security.Sample/Program.cs"
+```
+
+## Métodos de extensión
+---
+
+La clase `ServiceCollectionExtensions` proporciona varios métodos de extensión para configurar la autenticación y autorización basadas en JWT en aplicaciones .NET. Estos métodos facilitan la adición de servicios de seguridad, la configuración de la autenticación y el manejo de errores de autenticación.
+
+### AddSecurity
+**Type:** `public static IServiceCollection AddSecurity(this IServiceCollection services, IConfiguration configuration,Action<JwtBearerOptions> options = null)`
+
+Este método agrega los servicios necesarios para la autenticación y autorización basadas en JWT a la colección de servicios. Configura la validación de tokens y el manejo de errores. Permite personalizar las opciones de autenticación a través de una acción opcional.
+
+- **Parámetros:**
+  - `services`: (IServiceCollection) La colección de servicios a la que se agregarán los servicios de seguridad.
+  - `configuration`: (IConfiguration) La configuración de la aplicación, utilizada para vincular las opciones de seguridad.
+  - `options`: (Action\<JwtBearerOptions>, opcional) Una acción para configurar adicionalmente las opciones de autenticación JWT.
+- **Tipo de retorno:**
+  - `IServiceCollection`: La colección de servicios modificada, permitiendo el encadenamiento de métodos.
+- **Excepciones:**
+  - `ArgumentNullException`: Si `services` o `configuration` son nulos.
+  - `SecurityException`: Si la sección de configuración de seguridad (`SecurityOptions.Section`) no existe en la configuración.
+     
+- **Ejemplo:**
+    ```csharp
+    // Configuración básica
+    services.AddSecurity(Configuration);   
+
+    // Configuración con opciones adicionales
+    services.AddSecurity(Configuration, options => {
+        options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(5);
+    }); 
+    ```
+
+### UseAuth
+**Type:** `public static IApplicationBuilder UseAuth(this IApplicationBuilder app)`
+
+Este método agrega el middleware de autenticación y autorización al pipeline de la aplicación. Es necesario para que la autenticación JWT funcione correctamente.
+     
+- **Parámetros:**
+  - `app`: (IApplicationBuilder) El constructor de aplicaciones al cual se le configurará la autenticación y autorización.
+- **Tipo de retorno:**
+  - `IApplicationBuilder`: El constructor de aplicaciones modificado, permitiendo el encadenamiento de métodos.
+- **Ejemplo:**
+    ```csharp
+    app.UseAuth();
+    ```
+
+### AddJwtBearer
+**Type:** `public static AuthenticationBuilder AddJwtBearer(this AuthenticationBuilder authenticationBuilder, IConfiguration configuration, Action<JwtBearerOptions> options = null)`
+
+Este método configura la autenticación JWT con las opciones especificadas en la configuración y permite la personalización adicional a través de una acción. También permite el uso de un certificado X509 para la validación de la firma del token.
+
+- **Parámetros:**
+  - `authenticationBuilder`: (AuthenticationBuilder) El constructor de autenticación al que se le agregará la autenticación JWT.
+  - `configuration`: (IConfiguration) La configuración de la aplicación, utilizada para vincular las opciones de seguridad.
+  - `options`: (Action\<JwtBearerOptions>, opcional) Una acción para configurar adicionalmente las opciones de autenticación JWT.
+- **Tipo de retorno:**
+  - `AuthenticationBuilder`: El constructor de autenticación modificado, permitiendo el encadenamiento de métodos.
+    
+- **Ejemplo:**
+  ```csharp
+  // Configuración básica
+  services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+     .AddJwtBearer(Configuration); 
+ 
+  // Configuración con opciones adicionales
+  services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+     .AddJwtBearer(Configuration, options => {
+         options.TokenValidationParameters.ClockSkew = TimeSpan.FromMinutes(5);
+     });
+  ```
+
+## Conclusiones
+---
+- La clase `ServiceCollectionExtensions` proporciona una forma eficiente y organizada de configurar la autenticación JWTen aplicaciones .NET.
+- Facilita la adición de servicios de seguridad, la configuración de la autenticación y el manejo de errores deautenticación.
+- Permite la personalización de la autenticación a través de opciones, y centraliza la configuración de seguridad.
+- Se recomienda usar esta clase en proyectos que requieran autenticación basada en JWT, mejorando la mantenibilidad yreduciendo la repetición de código.
+- Es importante asegurarse de que la sección de configuración de seguridad (`SecurityOptions.Section`) esté presente ycorrectamente configurada en el archivo `appsettings.json` o en cualquier otra fuente de configuración.
+- En caso de usar un certificado X509 para la firma del token, asegúrese de que la configuración sea correcta y que elcertificado esté disponible.
+
+## Referencias
+---
+- [Documentación de ASP.NET Core Authentication](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/view=aspnetcore-7.0)
+- [Documentación de Microsoft.AspNetCore.Authentication.JwtBearer](https://docs.microsoft.com/en-us/dotnet/api/microsoftaspnetcore.authentication.jwtbearer?view=aspnetcore-7.0)
+- [Documentación de Microsoft.IdentityModel.Tokens](https://learn.microsoft.com/en-us/dotnet/api/microsoft.identitymodeltokens?view=msal-dotnet-latest)
+- [Documentación de JWT (JSON Web Tokens)](https://jwt.io/introduction)

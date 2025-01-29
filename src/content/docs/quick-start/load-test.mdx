@@ -1,0 +1,164 @@
+---
+title: Pruebas de Carga del Microservicio de Clientes con K6
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo realizar pruebas de carga en el microservicio **Clients** utilizando K6, una herramienta de pruebas de carga de código abierto.  Profundizaremos en los diferentes tipos de executors que ofrece K6, especialmente los modelos `closed` y `open`, y mostraremos un ejemplo práctico para probar nuestro microservicio.
+
+## ¿Por qué Pruebas de Carga?
+
+Las pruebas de carga son cruciales para evaluar el rendimiento y la escalabilidad de un microservicio bajo condiciones de estrés. Estas pruebas nos permiten:
+
+*   **Identificar cuellos de botella:** Descubrir puntos débiles en el microservicio que limitan su rendimiento.
+*   **Evaluar la capacidad:** Determinar cuántas peticiones el microservicio puede manejar antes de fallar o degradar su rendimiento.
+*   **Simular escenarios reales:** Probar el microservicio bajo condiciones de tráfico similares a las de producción.
+*   **Garantizar la escalabilidad:** Asegurar que el microservicio pueda crecer sin comprometer su rendimiento.
+
+## ¿Qué Aprenderás?
+
+1.  Cómo configurar K6 para realizar pruebas de carga en un microservicio.
+2.  Cómo usar diferentes tipos de executors de K6, incluyendo `closed model` y `open model`.
+3.  Cómo elegir el executor adecuado para diferentes escenarios de prueba.
+4.  Cómo interpretar los resultados de las pruebas de carga con K6.
+5.  Cómo utilizar el ejemplo provisto por el arquetipo de CodeDesignPlus.
+
+## K6 Executors
+
+K6 ofrece diferentes tipos de executors para simular distintos patrones de carga. Cada executor tiene sus propias características y es adecuado para diferentes escenarios. Los executors de tipo `model` definen la forma en la que los usuarios virtuales o VUs (Virtual Users) se comportan durante la ejecución de la prueba. En este contexto profundizaremos en los executors de tipo `open model` y `closed model`:
+
+### Open Model
+En un modelo abierto, los VUs llegan constantemente a un ritmo definido, independientemente de si los usuarios anteriores han terminado sus iteraciones. Esto permite simular escenarios en los que el microservicio siempre está recibiendo solicitudes y es útil para observar el comportamiento del microservicio bajo carga sostenida. K6 ofrece dos tipos de executors para este modelo:
+
+*   **`constant-arrival-rate`:** Este executor mantiene un ritmo constante de llegada de VUs a lo largo del tiempo definido. Es ideal para simular cargas constantes y evaluar el rendimiento del microservicio bajo condiciones sostenidas.
+
+*   **`ramping-arrival-rate`:** Este executor simula un aumento gradual de VUs a lo largo del tiempo definido. Es ideal para simular escenarios en los que el microservicio recibe un tráfico creciente, como en el lanzamiento de un producto o servicio.
+
+### Closed Model
+En un modelo cerrado, la cantidad de VUs es fija. Un nuevo VU no se genera hasta que uno existente complete su iteración actual. Esto representa escenarios en los que el número de usuarios del microservicio está limitado. K6 ofrece tres tipos de executors para este modelo:
+
+*   **`constant-vus`:** Este executor mantiene un número constante de VUs a lo largo del tiempo definido. Es ideal para simular cargas constantes con un número fijo de usuarios concurrentes.
+
+*   **`ramping-vus`:** Este executor simula un aumento gradual de VUs a lo largo del tiempo definido. Es ideal para simular escenarios en los que la cantidad de usuarios del microservicio aumenta gradualmente.
+
+*   **`per-vu-iterations`:** Este executor permite definir el número de iteraciones que cada VU debe ejecutar antes de finalizar la prueba. Es ideal para simular escenarios en los que cada usuario debe realizar una cantidad específica de operaciones.
+
+## Tabla Comparativa de Executors
+
+Para facilitar la elección del executor adecuado, aquí tienes una tabla comparativa:
+
+| Executor               | Descripción                                                                                               | Caso de Uso                                                                                                                                                           |
+| ---------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `constant-vus`         | Mantiene un número constante de VUs durante la prueba.                                                     | Simular una carga constante con un número fijo de usuarios concurrentes.                                                                                          |
+| `ramping-vus`          | Aumenta gradualmente el número de VUs durante la prueba.                                                  | Simular escenarios donde la cantidad de usuarios del microservicio aumenta gradualmente, como durante un pico de tráfico.                                   |
+| `per-vu-iterations`    | Permite definir el número de iteraciones que cada VU ejecuta antes de finalizar la prueba.                 | Simular escenarios donde cada usuario debe realizar una cantidad específica de operaciones.                                                                             |
+| `constant-arrival-rate` | Mantiene un ritmo constante de llegada de VUs durante la prueba.                                         | Simular cargas constantes y evaluar el rendimiento del microservicio bajo condiciones sostenidas, útil para pruebas de estrés.                                  |
+| `ramping-arrival-rate` | Simula un aumento gradual de la tasa de llegada de VUs durante la prueba. | Simular el tráfico creciente a un servicio, ideal para probar la escalabilidad de un microservicio en condiciones de carga cada vez mayores.    |
+
+## Pruebas de Carga con K6 (Ejemplo)
+
+Para probar nuestro microservicio **Clients** realizaremos pruebas de carga con el executor `constant-arrival-rate` utilizando el siguiente ejemplo:
+
+<Steps>
+
+1. **Inicia el Microservicio:** Asegúrate de que el microservicio **Clients** esté en ejecución.
+2. **Analiza el Script de K6:**  El código que te he compartido es un script de K6 que realiza peticiones a la API de ordenes y simula usuarios que realizan peticiones constantemente al microservicio.
+
+    ```javascript
+    import { check, sleep } from 'k6';
+    import http from 'k6/http';
+    import { uuidv4, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+
+
+    const params = {
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Tenant': uuidv4(),
+            'Authorization': 'Bearer <token>'
+        },
+    };
+
+    export const options = {
+        discardResponseBodies: true,
+        scenarios: {
+            contacts: {
+                executor: 'constant-arrival-rate',
+                duration: '120s',
+
+                // How many iterations per timeUnit
+                rate: 10,
+
+                // Start `rate` iterations per second
+                timeUnit: '1s',
+
+                // Pre-allocate 2 VUs before starting the test
+                preAllocatedVUs: 3,
+
+                // Spin up a maximum of 50 VUs to sustain the defined
+                // constant arrival rate.
+                maxVUs: 5000,
+            },
+        },
+    };
+
+    export default async function () {
+
+        const random = randomIntBetween(1, 1000);
+
+        const order = JSON.stringify({
+            "id": uuidv4(),
+            "name": `Client ${random}`,
+            "lastName": `LastName ${random}`,
+            "email": `client-lastname-${random}@fake.com`,
+            "address": {
+                "country": "Colombia",
+                "state": "Bogotá",
+                "city": "Bogotá",
+                "addressValue": `Calle siempre viva ${random}`,
+                "codePostal": 111611
+            }
+        });
+
+        let response = await http.asyncRequest('POST', 'http://localhost:5000/api/client', order, params);
+
+        check(response, {
+            'is status 204': (r) => r.status === 204,
+        });
+
+        sleep(1);
+    }
+    ```
+   
+3. **Ejecuta la Prueba:** Abre una terminal, navega al directorio donde tienes guardado el script de K6 y ejecuta el siguiente comando:
+
+    ```bash
+    k6 run script.js
+    ```
+
+    (Reemplaza `script.js` con el nombre de tu script).
+
+4. **Analiza los Resultados:**  Una vez finalizada la prueba, K6 mostrará un resumen de los resultados en la terminal. Presta especial atención a las siguientes métricas:
+
+    *   `http_req_duration`: Tiempo de respuesta promedio de las solicitudes HTTP.
+    *   `vus`: Número de usuarios virtuales activos durante la prueba.
+    *   `vus_max`: Número máximo de usuarios virtuales que se han utilizado durante la prueba.
+    *   `iterations`: Número total de iteraciones completadas durante la prueba.
+
+    <Aside>
+    - Recuerda que el script de ejemplo envia peticiones al endpoint de ordenes, debido a que este endpoint es un ejemplo de como realizar la configuración inicial para probar el microservicio, pero puedes modificarlo para que apunte al microservicio de clientes.
+    - El número de interaciones por segundo no solo depende del código, sino también de la capacidad de tu computadora y/o recursos de infraestructura que tengas disponibles.
+    </Aside>
+    
+    <Image src="/images/quick-start/testing-microservice/k6/k6.png" alt="K6 Results" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo realizar pruebas de carga en el microservicio **Clients** utilizando K6.  Hemos explorado los diferentes tipos de executors, con énfasis en los modelos `closed` y `open`, y hemos visto cómo elegir el executor adecuado para diferentes escenarios de prueba.  También hemos utilizado el script de K6 provisto en el arquetipo para comenzar a probar nuestros microservicios.
+
+Estas pruebas nos proporcionan información valiosa sobre el rendimiento y la escalabilidad de nuestro microservicio, ayudándonos a garantizar que esté listo para manejar cargas de producción.
+
+---
+
+He incluido una sección detallada sobre los executors `closed model` y `open model`, la tabla comparativa y el ejemplo de prueba con K6. ¿Qué te parece ahora? ¿Hay algo más que necesites ajustar?

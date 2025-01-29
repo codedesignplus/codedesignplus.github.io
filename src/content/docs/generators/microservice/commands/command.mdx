@@ -1,0 +1,176 @@
+---
+title: "Creación de Comando"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice command`
+
+Este comando se utiliza para crear uno o más comandos dentro de un microservicio existente. En el contexto de Command Query Responsibility Segregation (CQRS), un comando es una operación que se utiliza para modificar el estado del sistema. Este comando facilita la generación de la estructura básica para definir comandos en tu microservicio.
+
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+- Tener un agregado y un repositorio definidos en tu microservicio.
+
+## Conceptos Clave
+
+*   **Comando (Command):** En CQRS, un comando es una operación que se utiliza para modificar el estado del sistema.
+*   **CQRS (Command Query Responsibility Segregation):** Un patrón de arquitectura que separa las operaciones de lectura (queries) de las operaciones de escritura (commands), permitiendo optimizar cada lado de forma independiente.
+*   **Modificación de Estado:** Los comandos son responsables de realizar cambios en el estado del sistema a través de un agregado y su repositorio.
+*    **Agregado y Repositorio:** Los comandos suelen interactuar con un repositorio asociado a un agregado para realizar las modificaciones necesarias.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice command` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice command \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --aggregate "<aggregate_name>" \
+         --repository "<repository_name>" \
+        --commands "<command_names>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice command `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --aggregate "<aggregate_name>" `
+         --repository "<repository_name>" `
+        --commands "<command_names>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se crearán los comandos.
+
+### `--aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado al que pertenecen los comandos.
+
+### `--repository`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del repositorio asociado al agregado.
+
+### `--commands`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una lista de nombres de comandos separados por comas que se crearán.
+
+## Ejemplos de Uso
+
+Este ejemplo crea tres comandos, `CreateUserProfile`, `UpdateUserProfile` y `RemoveUserProfile`, asociados al agregado `UserProfile` y su repositorio en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+     yo codedesignplus:microservice command \
+        --organization "Acme" \
+        --microservice "User" \
+        --aggregate "UserProfile" \
+        --repository "UserProfile" \
+        --commands "CreateUserProfile,UpdateUserProfile,RemoveUserProfile"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+     yo codedesignplus:microservice command `
+        --organization "Acme" `
+        --microservice "User" `
+        --aggregate "UserProfile" `
+         --repository "UserProfile" `
+        --commands "CreateUserProfile,UpdateUserProfile,RemoveUserProfile"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generarán las estructuras base para los comandos `CreateUserProfile`, `UpdateUserProfile` y `RemoveUserProfile` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/command/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para los nuevos comandos:
+
+<Image src="/images/generators/microservices/command/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para uno o más comandos en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1. Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para los comandos.
+
+    <Image src="/images/generators/microservices/command/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se crearán los comandos, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/command/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--aggregate`
+**Flag:** `--aggregate "UserProfile"`
+
+1.  Este parámetro define el nombre del agregado al que pertenecen los comandos, reflejándose en la ubicación de los archivos generados.
+
+     <Image src="/images/generators/microservices/command/1-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--repository`
+**Flag:** `--repository "UserProfile"`
+
+1.  Este parámetro define el nombre del repositorio asociado al agregado, reflejándose en la estructura de los comandos.
+
+     <Image src="/images/generators/microservices/command/1-repository-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--commands`
+**Flag:** `--commands "CreateUserProfile,UpdateUserProfile,RemoveUserProfile"`
+
+1.  Este parámetro define los nombres de los comandos que se crearán, generando los archivos correspondientes en la capa de aplicación.
+
+    <Image src="/images/generators/microservices/command/1-commands-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente, un agregado y un repositorio definidos antes de utilizar este comando.
+*   Los nombres de los comandos deben ser descriptivos y reflejar la acción que realizan.
+*   Los comandos deben encargarse de modificar el estado del sistema a través de un agregado y su repositorio.
+*  Los comandos son parte del patrón CQRS, enfocándose en la separación de la escritura de la lectura.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD - Command & Query](https://martinfowler.com/bliki/CommandQuerySeparation.html)
+*   [CQRS](https://martinfowler.com/bliki/CQRS.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice command` facilita la creación de comandos en tu microservicio, asegurando que la estructura y los patrones de CQRS se apliquen correctamente. Utiliza este comando para definir la forma en que tu microservicio modifica su estado.

@@ -1,0 +1,47 @@
+---
+title: Configuración
+---
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En `CodeDesignPlus.Net.Event.Sourcing`, utilizamos este patrón para ofrecer opciones de configuración estructuradas y fácilmente accesibles.
+
+## EventSourcingOptions
+---
+
+La clase EventSourcingOptions proporciona opciones para configurar el event sourcing en la aplicación. A continuación, se listan las opciones de configuración y sus propiedades.
+
+```csharp url="packages/CodeDesignPlus.Net.Event.Sourcing/src/CodeDesignPlus.Net.Event.Sourcing.Abstractions/Options/EventSourcingOptions.cs"
+```
+
+### Propiedades
+1. **Section**: Nombre de la sección utilizada en el appsettings.
+
+```csharp
+public static readonly string Section = "EventSourcing";
+```
+
+2. **SnapshotSuffix**: Sufijo utilizado para denotar snapshots en el patrón de nombres para los agregados en el almacén de eventos. Cuando el estado de un agregado se persiste como un snapshot, este sufijo se agrega al nombre del agregado.
+
+```csharp
+public string SnapshotSuffix { get; set; } = "snapshot";
+```
+
+3. **FrequencySnapshot**: Frecuencia con la que se toman snapshots para el event sourcing.
+
+```csharp
+[Range(1, 500)]
+public int FrequencySnapshot { get; set; } = 20;
+```
+
+## Ejemplo de configuración
+---
+
+Para configurar las opciones de EventSourcing, agregue la siguiente sección a su archivo `appsettings.json`.
+
+```json
+{
+  "EventSourcing": {
+    "SnapshotSuffix": "snapshot",
+    "FrequencySnapshot": 20
+  }
+}
+```

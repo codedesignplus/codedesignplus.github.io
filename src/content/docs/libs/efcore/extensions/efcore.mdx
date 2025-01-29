@@ -1,0 +1,104 @@
+---
+title: EFCore
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+`EFCoreExtensions` proporciona métodos de extensión para configurar entidades de Entity Framework Core y manejar paginación de resultados de consultas.
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.EntityFrameworkCore`: Necesario para trabajar con `DbContext` y realizar consultas a la base de datos.
+- `Microsoft.EntityFrameworkCore.Metadata.Builders`: Necesario para configurar las entidades mediante `EntityTypeBuilder`.
+- `System.Linq`: Necesario para operaciones de consulta como `Skip` y `Take`.
+- `System.Reflection`: Necesario para inspeccionar y manipular tipos y métodos en tiempo de ejecución.
+
+## Escenarios de uso
+---
+
+Este conjunto de extensiones es particularmente útil en aplicaciones que:
+- Necesitan configurar propiedades comunes para todas las entidades de manera centralizada.
+- Implementan paginación para manejar grandes conjuntos de datos de forma eficiente.
+- Registran configuraciones de entidades en un `ModelBuilder` de forma automatizada.
+
+## Beneficios
+---
+
+- **Reutilización**: Centraliza configuraciones comunes, evitando repetición de código.
+- **Facilidad de uso**: Simplifica la paginación con un solo método.
+- **Flexibilidad**: Registra configuraciones de entidades automáticamente, reduciendo la necesidad de configuraciones manuales.
+
+## Ejemplo Práctico
+---
+
+En este ejemplo, configuraremos una entidad `User` con propiedades base y realizaremos una consulta paginada a través de `ToPageAsync`.
+
+```csharp
+public class ApplicationDbContext : DbContext
+{
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        // Registra configuraciones de entidades
+        modelBuilder.RegisterEntityConfigurations<ApplicationDbContext>();
+    }
+}
+
+public class UserConfiguration : IEntityTypeConfiguration<User>
+{
+    public void Configure(EntityTypeBuilder<User> builder)
+    {
+        // Configuración específica de la entidad User
+        builder.ConfigurationBase();
+    }
+}
+
+// Uso de paginación
+var paginatedUsers = await dbContext.Users
+    .Where(u => u.IsActive)
+    .ToPageAsync(1, 10);
+```
+
+## Métodos de extensión
+---
+
+`EFCoreExtensions` proporciona un conjunto de métodos de extensión para simplificar la configuración de entidades y la paginación de resultados de consultas.
+
+### ConfigurationBase
+**Type:** `public static void ConfigurationBase<TEntity>(this EntityTypeBuilder<TEntity> builder) where TEntity : class, IEntityBase`
+
+Configura propiedades base para una entidad.
+
+- **Parámetros**:
+  - `builder`: Instancia de `EntityTypeBuilder` usada para configurar la entidad.
+
+### ToPageAsync
+**Type:** `public static async Task<Pager<TEntity>> ToPageAsync<TEntity>(this IQueryable<TEntity> query, int currentPage, int pageSize) where TEntity : class, IEntity`
+
+Paginación asíncrona de resultados de consultas.
+
+- **Parámetros**:
+  - `query`: Consulta a paginar.
+  - `currentPage`: Número de página actual (debe ser mayor o igual a 1).
+  - `pageSize`: Tamaño de la página (debe ser mayor o igual a 1).
+
+- **Tipo de Retorno**: 
+    - Objeto `Pager<TEntity>` con los resultados paginados.
+
+### RegisterEntityConfigurations
+**Type:** `public static void RegisterEntityConfigurations<TContext>(this ModelBuilder builder) where TContext : DbContext`
+
+Registra configuraciones de entidades desde el contexto especificado.
+
+- **Parámetros**:
+  - `builder`: Instancia de `ModelBuilder` para registrar configuraciones.
+
+## Conclusiones
+---
+
+Las extensiones de EFCore proporcionan una forma sencilla y eficiente de configurar entidades y manejar paginación en aplicaciones .NET. Al centralizar la configuración y simplificar la paginación, estas extensiones ayudan a mejorar la calidad y mantenibilidad del código.
+
+## Referencias
+---
+
+- [Microsoft Entity Framework Core Documentation](https://learn.microsoft.com/en-us/ef/core/)

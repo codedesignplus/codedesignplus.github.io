@@ -1,0 +1,192 @@
+---
+title: Scripts
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+El arquetipo proporciona scripts de PowerShell y Bash para automatizar tareas comunes de desarrollo, como análisis de código, actualización de paquetes NuGet y migración de proyectos .NET. Estos scripts facilitan la ejecución de tareas repetitivas y mejoran la eficiencia y la calidad del código.
+
+## Prerrequisitos
+
+Para ejecutar los algunos scripts, es necesario ejecutar las herramientas de desarrollo en el entorno local que se proporcionan en el repositorio [CodeDesignPlus.Environment.Dev](https://github.com/codedesignplus/CodeDesignPlus.Environment.Dev)
+
+<Image src="/images/archetype/prerequisites.png" alt="Herramientas de desarrollo" width="1600" height="900" decoding="async" loading="lazy" />
+
+Para mas información, consulta la [documentación de las herramientas para desarrollo](/quick-start/tools).
+
+
+## Configuración Vault
+
+Vault es una herramienta de gestión de secretos que permite almacenar y recuperar información sensible, como contraseñas, claves de API y tokens de acceso. Los scripts `config-vault.ps1` (Windows) y `config-vault.sh` (macOS/Linux) automatizan la configuración de Vault en el proyecto.
+
+**Beneficios:**
+- Protege la información sensible, evitando la exposición de contraseñas y claves de API en el código fuente.
+- Facilita la gestión de secretos, permitiendo almacenar y recuperar información sensible de forma segura.
+- Mejora la seguridad del proyecto, reduciendo el riesgo de fugas de información y violaciones de seguridad.
+
+**Cómo usar:**
+
+Para configurar Vault en el proyecto, sigue estos pasos:
+
+<Steps>
+
+1. Ejecuta el script `config-vault.ps1` (Windows) o `config-vault.sh` (macOS/Linux).
+
+    <Tabs>
+        <TabItem label="config-vault.ps1">
+        ```powershell
+        .\tools\vault\config-vault.ps1
+        ```
+        </TabItem>
+
+        <TabItem label="config-vault.sh">
+        ```sh
+        ./tools/vault/config-vault.sh
+        ```
+        </TabItem>
+    </Tabs>
+
+2. El script configura los secretos en Vault
+
+    <Image src="/images/archetype/vault/setup.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+## Análisis de Código con SonarQube
+
+SonarQube es una plataforma de análisis estático de código que identifica problemas de calidad, vulnerabilidades y errores en el código fuente. Es esencial para mantener la calidad del código y prevenir problemas en producción.
+
+**Beneficios:** 
+- Identifica problemas de calidad, vulnerabilidades y errores en el código fuente.
+- Mejora la calidad del código y reduce los errores y vulnerabilidades.
+- Facilita la revisión del código y la detección temprana de problemas.
+
+**Cómo usar:**
+
+Los scripts `sonar.ps1` (Windows) y `sonar.sh` (macOS/Linux) automatizan el análisis de código con SonarQube. Estos scripts realizan las siguientes tareas:
+
+<Steps>
+1. Asignamos el token a los scripts `sonar.ps1` o `sonar.sh` en la variable `token`.
+
+
+    <Tabs>
+        <TabItem label="sonar.ps1">
+        ```powershell
+        $token = "sqa_12f3d20d51de2b4c9639db0035d1c68dc4f2fff1"
+        ```
+        </TabItem>
+
+        <TabItem label="sonar.sh">
+        ```sh
+        token="sqa_12f3d20d51de2b4c9639db0035d1c68dc4f2fff1"
+        ```
+        </TabItem>
+    </Tabs>
+
+2. Ejecuta el script `sonar.ps1` (Windows) o `sonar.sh` (macOS/Linux).
+
+    <Tabs>
+        <TabItem label="sonar.ps1">
+        ```powershell
+        .\tools\sonar.ps1
+        ```
+        </TabItem>
+
+        <TabItem label="sonar.sh">
+        ```sh
+        ./tools/sonar.sh
+        ```
+        </TabItem>
+    </Tabs>
+
+3. El script ejecuta pruebas, genera reportes de cobertura, inicia un análisis de SonarQube, compila el código y finaliza el análisis.
+
+    <Image src="/images/archetype/sonarqube/results.png" alt="SonarQube" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+<Aside>
+La instancia de SonarQube se proporciona en el repositorio [CodeDesignPlus.Environment.Dev](https://github.com/codedesignplus/CodeDesignPlus.Environment.Dev). Para más información, consulta la [documentación de las herramientas para desarrollo](/quick-start/tools).
+</Aside>
+
+## Actualización de Paquetes NuGet
+La actualización de paquetes NuGet es una tarea común en el desarrollo de aplicaciones .NET. Este script automatiza la actualización de las dependencias NuGet de los proyectos a sus versiones más recientes.
+
+**Beneficios:** 
+- Facilita la actualización de las dependencias NuGet de los proyectos a sus versiones más recientes, reduciendo riesgos de seguridad y aprovechando nuevas funcionalidades.
+- Automatiza una tarea repetitiva y propensa a errores, mejorando la eficiencia y la calidad del código.
+
+**Cómo usar:**
+
+Para actualizar las dependencias NuGet de los proyectos, sigue estos pasos:
+
+<Steps>
+1.  Instala `dotnet-outdated-tool`
+
+    ```bash
+    dotnet tool install --global dotnet-outdated-tool
+    ```
+
+2.  Ejecuta el script `update-packages.ps1` desde la raíz del proyecto.
+
+    ```powershell
+    .\tools\update-packages.ps1
+    ```
+    Este script escanea todos los archivos `.csproj` en el proyecto y actualiza las versiones de los paquetes NuGet.
+
+    <Image src="/images/archetype/nuget/update.png" alt="NuGet" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+    
+
+## Actualización de Framework .NET
+
+El script `upgrade-assist.ps1` automatiza la migración de proyectos .NET a nuevas versiones del framework. Utiliza la herramienta `upgrade-assistant` para escanear y actualizar los archivos `.csproj` a la última versión LTS (Long-Term Support) del .NET Framework.
+
+**Beneficios:** 
+- Facilita la migración de proyectos a nuevas versiones del framework .NET, automatizando la mayoría de los cambios y minimizando el esfuerzo manual.
+- Asegura que los proyectos estén actualizados a las versiones más recientes del framework, aprovechando nuevas funcionalidades y mejoras de rendimiento.
+
+**Cómo usar:**
+
+Para migrar proyectos a nuevas versiones del framework .NET, sigue estos pasos:
+
+<Steps>
+1.  Instala `upgrade-assistant`
+    
+    ```bash
+    dotnet tool install -g upgrade-assistant
+    ```
+
+2.  Ejecuta el script `upgrade-assist.ps1` desde la raíz del proyecto.
+
+    ```powershell
+    .\tools\upgrade-assist.ps1
+    ```
+
+    <Image src="/images/archetype/dotnet/upgrade.png" alt="DotNet" width="1600" height="900" decoding="async" loading="lazy" />
+
+    Este script escanea todos los archivos `.csproj` y los migra a la última versión LTS (Long-Term Support) del .NET Framework.
+</Steps>
+
+## Estructura de Carpetas
+
+La estructura de carpetas del arquetipo es organizada y facilita la ubicación de archivos y scripts relevantes.
+
+<FileTree>
+- src
+- tests
+- tools
+    - sonarqube
+      - sonar.sh
+      - sonar.sh
+    - update-packages
+      - update-packages.ps1
+      - update-packages.sh
+    - upgrade-dotnet
+      - upgrade-assist.ps1
+      - upgrade-assist.sh
+    - vault
+      - config-vault.ps1
+      - config-vault.sh
+</FileTree>

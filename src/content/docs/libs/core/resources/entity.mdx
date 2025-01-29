@@ -1,0 +1,67 @@
+---
+title: Entity
+---
+
+En este artículo, exploraremos el concepto de **Entidades** en el contexto de **Domain-Driven Design (DDD)** y su implementación en la librería `CodeDesignPlus.Net.Core`. Aprenderás sobre la estructura básica de las entidades, su propósito dentro de un modelo de dominio y cómo se utilizan para modelar la lógica de negocio.
+
+## ¿Qué es una Entidad en DDD?
+
+En DDD, una **Entidad** es un objeto que se define por su identidad, no solo por sus atributos. Esto significa que, a pesar de que dos entidades pueden tener los mismos valores para sus propiedades, son consideradas diferentes si poseen identificadores únicos distintos.
+
+### Características de las Entidades
+
+1. **Identidad Única:** Cada entidad tiene un identificador único (ID) que la distingue de otras entidades, independientemente de sus atributos.
+
+2. **Estado Mutable:** Las entidades pueden cambiar su estado a lo largo del tiempo. Este cambio puede ser el resultado de acciones realizadas sobre la entidad, como actualizaciones o eliminaciones.
+
+3. **Coherencia y Lógica de Negocio:** Las entidades encapsulan tanto datos como comportamientos, permitiendo que la lógica de negocio se aplique directamente sobre ellas. Esto favorece la cohesión y facilita el mantenimiento del código.
+
+### Importancia de las Entidades en DDD
+
+Las entidades son fundamentales en DDD porque representan conceptos clave del dominio que poseen una identidad y una vida útil. Permiten:
+
+- **Modelar el Dominio:** Ayudan a reflejar conceptos del mundo real, facilitando la comprensión y el desarrollo de soluciones centradas en el negocio.
+- **Encapsular Comportamientos:** Las entidades pueden contener métodos que implementan la lógica necesaria para interactuar con sus datos, lo que fomenta un diseño orientado a objetos más robusto.
+- **Persistencia de Datos:** A menudo, las entidades corresponden a registros en bases de datos, lo que las hace clave para la gestión y almacenamiento de información.
+
+## Abstracciones 
+---
+
+La librería `CodeDesignPlus.Net.Core` proporciona las siguientes interfaces para trabajar con entidades:
+
+### IEntityBase
+
+Esta interfaz define la estructura base para todas las entidades, incluyendo la propiedad `Id`:
+
+### IEntity
+
+Esta interfaz hereda de `IEntityBase` y añade propiedades adicionales para manejar el estado y la información de auditoría de las entidades:
+
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IEntity.cs"
+```
+
+## Ejemplo Práctico
+---
+
+A continuación, se presenta la implementación de una entidad concreta, `ClientEntity`, utilizando las interfaces definidas anteriormente.
+
+```csharp url="examples/CodeDesignPlus.Net.Core.Sample/Resources/Entity/ClientEntity.cs"
+```
+
+**Propiedades:**
+
+- **Id**: Identificador único que representa la entidad cliente.
+- **IsActive**: Indica si el cliente está activo, lo que es crucial para la lógica de negocio.
+- **CreatedAt**: Marca temporal de la creación, útil para auditoría.
+- **CreatedBy**: Identificador del usuario que creó la entidad, esencial para rastrear cambios.
+- **UpdatedAt**: Marca temporal de la última actualización.
+- **UpdatedBy**: Identificador del usuario que realizó la última actualización.
+- **Tenant**: Identificador del inquilino, importante en contextos multi-tenant.
+- **Funcionalidad**: ClientEntity encapsula toda la información relevante sobre un cliente, lo que permite una gestión eficiente dentro del dominio de la aplicación.
+
+## Conclusiones
+---
+
+Las entidades son un componente clave en Domain-Driven Design y son esenciales para modelar la lógica de negocio en aplicaciones complejas. En este artículo, hemos explorado las interfaces que facilitan el trabajo con entidades en la librería `CodeDesignPlus.Net.Core`, junto con un ejemplo práctico que ilustra su implementación.
+
+Al comprender y aplicar el concepto de entidades en tus aplicaciones, podrás construir un modelo de dominio más robusto y alineado con los requisitos del negocio. Si deseas profundizar en la gestión de entidades o su interacción con otros componentes del modelo de dominio, no dudes en investigar más o preguntar.

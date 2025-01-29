@@ -1,0 +1,132 @@
+---
+title: Event Contract Resolver
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `EventContractResolver` es una clase que extiende `DefaultContractResolver` de Newtonsoft.Json, diseñada para personalizar la serialización de eventos de dominio. Su propósito principal es controlar qué propiedades de un evento de dominio se serializan a JSON, ofreciendo flexibilidad para omitir propiedades no deseadas y aplicar convenciones de nombres.
+
+La implementación del `EventContractResolver` se basa en la herencia de `DefaultContractResolver`. La lógica principal reside en los métodos sobrescritos `CreateProperty` y `ResolvePropertyName`.
+
+-   `CreateProperty` realiza la comprobación para las propiedades a ignorar y establece la lógica para que no se serialicen. También asegura que las propiedades no escritas sean accesibles si tienen un setter público o privado.
+-   `ResolvePropertyName` convierte el primer carácter de la propiedad a minúscula, proporcionando un formato de nombre de propiedad específico.
+
+```csharp url="packages/CodeDesignPlus.Net.Serializers/src/CodeDesignPlus.Net.Serializers/EventContractResolver.cs"
+```
+
+## ¿Cómo Funciona?
+---
+
+El `EventContractResolver` funciona interceptando el proceso de creación de propiedades de Newtonsoft.Json durante la serialización. Cuando se serializa un objeto, el `ContractResolver` se encarga de crear `JsonProperty` para cada miembro del objeto. Este `ContractResolver` personalizado revisa cada propiedad, y si cumple ciertas condiciones (como pertenecer a una clase que implementa `IDomainEvent`), aplica reglas específicas:
+
+1.  **Ocultar propiedades:** Ignora las propiedades `EventId`, `OccurredAt` y `Metadata` por defecto, o las propiedades especificadas en el constructor.
+2.  **Cambio de nombres:** Convierte la primera letra del nombre de la propiedad a minúscula.
+
+## Métodos
+---
+
+### EventContractResolver
+**Type:** `public EventContractResolver()`
+
+Este constructor inicializa una nueva instancia de la clase `EventContractResolver` con la configuración predeterminada para ignorar las propiedades comunes en eventos de dominio: `EventId`, `OccurredAt`, y `Metadata`.
+
+### EventContractResolver
+**Type:** `public EventContractResolver(string[] propertyNamesToIgnore)`
+
+Este constructor permite personalizar la lista de propiedades que serán ignoradas durante la serialización, ofreciendo más flexibilidad en casos de uso específicos.
+
+### CreateProperty
+**Type:** `protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)`
+
+Este método, sobrescrito de la clase base `DefaultContractResolver`, es el núcleo de la personalización del `EventContractResolver`. Se encarga de crear una instancia de `JsonProperty` para un miembro específico, aplicando reglas personalizadas antes de que Newtonsoft.Json proceda con la serialización.
+
+### ResolvePropertyName
+**Type:** `protected override string ResolvePropertyName(string propertyName)`
+
+Este método, sobrescrito de la clase base `DefaultContractResolver`, se encarga de transformar el nombre de la propiedad antes de que se utilice en la cadena JSON.
+
+### ResolveDictionaryKey
+**Type:** `protected override string ResolveDictionaryKey(string dictionaryKey)`
+
+Este método, sobrescrito de la clase base `DefaultContractResolver`, define cómo se manejan las claves de los diccionarios durante la serialización.
+
+## Ejemplo de Uso
+---
+
+```csharp
+using CodeDesignPlus.Net.Serializers;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+
+// Define un evento de dominio (puedes tener tu propia clase base)
+public interface IDomainEvent
+{
+    Guid EventId { get; }
+    DateTime OccurredAt { get; }
+    Dictionary<string, object> Metadata { get; }
+}
+
+public class DomainEvent : IDomainEvent
+{
+    public Guid EventId { get; }
+    public DateTime OccurredAt { get; }
+    public Dictionary<string, object> Metadata { get; }
+    public DomainEvent()
+    {
+        EventId = Guid.NewGuid();
+        OccurredAt = DateTime.UtcNow;
+        Metadata = new Dictionary<string, object>();
+    }
+}
+
+public class UserCreatedEvent : DomainEvent
+{
+    public string UserName { get; set; }
+    public string Email { get; set; }
+}
+
+public class Example
+{
+    public static void Main(string[] args)
+    {
+        var userCreatedEvent = new UserCreatedEvent
+        {
+            UserName = "Test User",
+            Email = "test@test.com"
+        };
+
+        // Serializar el evento de dominio usando el EventContractResolver
+        var settings = new JsonSerializerSettings
+        {
+            ContractResolver = new EventContractResolver()
+        };
+
+        var json = JsonSerializer.Serialize(userCreatedEvent, settings);
+
+        Console.WriteLine(json);
+        // Resultado: {"userName":"Test User","email":"test@test.com"}
+
+        // Serializar el evento de dominio sin EventContractResolver
+         var settings2 = new JsonSerializerSettings();
+        var json2 = JsonSerializer.Serialize(userCreatedEvent, settings2);
+         Console.WriteLine(json2);
+         // Resultado: {"EventId":"guid","OccurredAt":"datetime","Metadata":{},"UserName":"Test User","Email":"test@test.com"}
+    }
+}
+
+```
+
+## Conclusiones
+---
+
+-   El `EventContractResolver` proporciona un control detallado sobre qué propiedades se serializan de los eventos de dominio, permitiendo excluir metadatos no necesarios.
+-   La capacidad de modificar los nombres de las propiedades proporciona flexibilidad para seguir convenciones de nombres específicas.
+-   La clase `EventContractResolver` es reutilizable y puede adaptarse a diferentes tipos de eventos de dominio con la especificación de propiedades adicionales a ignorar en el constructor.
+-   Se recomienda usar el `EventContractResolver` en conjunto con el `JsonSerializer` para serializar eventos de dominio.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de Newtonsoft.Json](https://www.newtonsoft.com/json)
+-   [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)

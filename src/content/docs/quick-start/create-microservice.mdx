@@ -1,0 +1,415 @@
+---
+title: Microservicio de Clientes
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+Este tutorial te guiará, paso a paso, en la construcción de un microservicio REST utilizando los diferentes componentes que provee CodeDesignPlus. En este ejemplo, crearemos un microservicio de Cliente que responderá a peticiones REST, y servirá como la base para los siguientes artículos de la serie.
+
+## Responsabilidades del Microservicio
+
+El microservicio de **Clientes** tendrá las siguientes responsabilidades principales:
+
+- **Registrar nuevos clientes:** Permitir a los usuarios crear una cuenta en nuestra plataforma.
+- **Actualizar información de clientes:** Permitir a los usuarios modificar sus datos personales y de contacto.
+- **Consultar información de clientes:** Permitir a otros microservicios acceder a la información de los clientes, de forma segura.
+
+## ¿Qué Aprenderás?
+
+1. Cómo generar un microservicio de **Clientes** utilizando el generador `codedesignplus:microservice`
+2. Cómo modificar el microservicio de **Clientes** para adaptarlo a tus necesidades específicas.
+   - Conceptos de DDD (Domain-Driven Design), CQRS (Command Query Responsibility Segregation) y Ports and Adapters.
+   - Diagramas UML para representar los componentes del microservicio.
+   - Codificación de agregados, entidades, value objects, eventos de dominio, comandos, queries y controladores.
+
+## Diagramas UML
+
+Para visualizar mejor la estructura del microservicio de **Clientes**, vamos a crear algunos diagramas UML que representen los principales componentes del microservicio.
+
+### Agregados, Entidades y Value Objects
+
+Los agregados, entidades y value objects son los componentes principales de la capa de dominio de nuestro microservicio. En el caso del microservicio de **Clientes**, el agregado principal es el `Client`, que contiene la información del cliente, como su nombre, apellido, email y dirección. También tenemos value objects como `Address`, que representa la dirección del cliente.
+
+<Image src="/images/quick-start/create-microservice/uml/aggregate_entities_value_object.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Eventos de Dominio
+
+Los eventos de dominio son una parte fundamental de la arquitectura basada en eventos. En el caso del microservicio de **Clientes**, podemos definir eventos como `ClientCreatedDomainEvent`, `ClientUpdatedDomainEvent` y `ClientDeletedDomainEvent`, que se lanzarán cuando se registre, actualice o elimine un cliente, respectivamente.
+
+<Image src="/images/quick-start/create-microservice/uml/domain_events.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Comandos
+
+Los comandos son las acciones que pueden realizar los usuarios en nuestro microservicio. En el caso del microservicio de **Clientes**, podemos definir comandos como `CreateClientCommand`, `UpdateClientCommand` y `DeleteClientCommand`, que permiten a los usuarios registrar, actualizar y eliminar clientes, respectivamente.
+
+<Image src="/images/quick-start/create-microservice/uml/command.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Queries
+
+Las queries son las consultas que pueden realizar otros microservicios para obtener información del microservicio de **Clientes**. En el caso del microservicio de **Clientes**, podemos definir queries como `GetClientByIdQuery` y `GetAllClientQuery`, que permiten a otros microservicios obtener información de un cliente específico o de todos los clientes, respectivamente.
+
+<Image src="/images/quick-start/create-microservice/uml/query.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Creando el Microservicio
+
+El microservicio de **Clientes** es un buen ejemplo de [microservicio CRUD](/generators/microservice/commands/microservice-crud). Por lo tanto, usaremos el generador `codedesignplus:microservice` con la opción `--is-crud`.
+
+Para crear el microservicio de **Clientes**, usaremos el siguiente comando:
+
+<Tabs>
+<TabItem label="Bash">
+
+```bash
+yo codedesignplus:microservice microservice \
+    --organization "Acme" \
+    --microservice "Clients" \
+    --description "Microservicio para gestionar los clientes de la tienda online." \
+    --contact-name "Jane Doe" \
+    --contact-email "jane.doe@example.com" \
+    --vault store-acme \
+    --is-crud \
+    --aggregate "Client" 
+```
+
+</TabItem>
+
+<TabItem label="Powershell">
+
+```powershell
+yo codedesignplus:microservice microservice `
+    --organization "Acme" `
+    --microservice "Clients" `
+    --description "Microservicio para gestionar los clientes de la tienda online." `
+    --contact-name "Jane Doe" `
+    --contact-email "jane.doe@example.com" `
+    --vault store-acme `
+    --is-crud `
+    --aggregate "Client"
+```
+
+</TabItem>
+    
+</Tabs>
+
+<Aside>
+Para mas información sobre los parámetros del comando, puedes consultar la [documentación del generador](/generators/microservice/commands/microservice-crud).
+</Aside>
+
+
+
+Para ejecutar el comando, abre tu terminal y copia y pega el comando anterior. Asegúrate de que estás en el directorio raíz donde deseas crear el microservicio de **Clientes**. El generador creará una nueva carpeta con el nombre del microservicio y generará la estructura base del microservicio dentro de esa carpeta.
+
+<Image src="/images/quick-start/create-microservice/generator/output-1.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+Durante la ejecución del comando, se te pedirá algunas confirmaciones para sobre escribir algunos archivos. Puedes responder `Y` para confirmar.
+</Aside>
+
+Una vez que el comando termine de ejecutarse, el generador habrá creado la estructura base de nuestro microservicio de **Clientes**. Esto incluye la estructura de carpetas, los archivos de configuración iniciales, los modelos y las interfaces.
+
+<Image src="/images/quick-start/create-microservice/generator/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+Ejecute el comando `dotnet build` en la raíz del proyecto para asegurarse de que el microservicio se compila correctamente. Pueden aparecer algunos warnings, pero no deberían impedir la compilación del microservicio. Estos warnings serán corregidos en los siguientes pasos.
+</Aside>
+
+## Modificando el Microservicio
+
+Ahora que hemos generado el microservicio de **Clientes**, podemos comenzar a modificarlo para adaptarlo a nuestras necesidades específicas.
+
+### Value Objects
+
+Los value objects son objetos inmutables que representan un concepto o entidad específica en nuestro dominio. En la carpeta `src/domain/ValueObjects` modificaremos la clase `Address` para definir las propiedades de la dirección del cliente, como `Country`, `State`, `City` y `AddressValue`.
+
+Para crear nuestro value object `Address`, seguiremos los siguientes pasos:
+
+<Steps>
+1. Ejecutamos el siguiente comando para crear el value object `Address`
+
+    ```bash
+    yo codedesignplus:microservice valueObject --valueObjects "Address"
+    ```
+
+    <Image src="/images/quick-start/create-microservice/value-object/output.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Modificamos la clase `Address` para definir las propiedades de la dirección del cliente, como `Country`, `State`, `City` y `AddressValue`.
+
+    <Image src="/images/quick-start/create-microservice/value-object/address.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Hacemos uso de los Guard Clauses para validar las propiedades de la dirección del cliente.
+
+    <Image src="/images/quick-start/create-microservice/value-object/address_guard_clauses.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. Creamos los códigos de error para cada propiedad de la dirección del cliente en la clase `Errors`.
+   
+    <Image src="/images/quick-start/create-microservice/value-object/address_vo_errors.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+   <Aside>
+   Los codigos de error estan definidos en la clase `Errors` siguiendo el estandar de errores implementado. Para mas información sobre los errores implementados puedes consultar:
+   - Los [niveles de validación](/archetypes/layer-validation).
+   - La clase [`CodeDesignPlusException`](/libs/exceptions/exceptions/codedesignplusexception).
+   </Aside>
+</Steps>
+
+### Eventos de Dominio
+
+Los eventos de dominio son una parte fundamental de la arquitectura basada en eventos. En el microservicio de **Clientes**, definiremos los eventos `ClientCreatedDomainEvent`, `ClientUpdatedDomainEvent` y `ClientDeletedDomainEvent` que se lanzarán cuando se registre, actualice o elimine un cliente, respectivamente.
+
+En este punto, los eventos de dominio ya han sido creados por el generador `CodeDesignPlus.Net.Generator`. Sin embargo, necesitamos modificar las clases `ClientCreatedDomainEvent`, `ClientUpdatedDomainEvent` y `ClientDeletedDomainEvent` para definir las propiedades de los eventos.
+
+<Aside>
+Si necesita crear un nuevo evento de dominio, puede hacerlo ejecutando el siguiente comando:
+
+`yo codedesignplus:microservice domainEvent --domainEvents "<domain_event_names>"`
+
+Para más información sobre cómo crear eventos de dominio, puedes consultar la [documentación](/generators/microservice/commands/domain-events).
+</Aside>
+
+<Tabs>
+
+<TabItem label="Client Created">
+
+El evento `ClientCreatedDomainEvent` se lanza cuando se crea un nuevo cliente en el sistema. Este es creado internamente en el agregado `Client` cuando se invoca el método `Create`.
+
+<Image src="/images/quick-start/create-microservice/domain-event/client_created_domain_event.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+<TabItem label="Client Updated">
+
+El evento `ClientUpdatedDomainEvent` se lanza cuando se actualiza la información de un cliente en el sistema. Este es creado internamente en el agregado `Client` cuando se invoca el método `Update`.
+
+<Image src="/images/quick-start/create-microservice/domain-event/client_updated_domain_event.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+<TabItem label="Client Deleted">
+
+El evento `ClientDeletedDomainEvent` se lanza cuando se elimina un cliente del sistema. Este es creado internamente en el agregado `Client` cuando se invoca el método `Delete`.
+
+<Image src="/images/quick-start/create-microservice/domain-event/client_deleted_domain_event.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+</Tabs>
+
+
+### Aggregate
+
+El agregado `Client` es el componente principal del microservicio de **Clientes**. Contiene la lógica de negocio y las reglas de validación relacionadas (invariantes). En esta etapa, modificaremos el agregado `Client` para definir las propiedades debido a que ya ha sido creado por el generador `CodeDesignPlus.Net.Generator`.
+
+<Aside>
+Si necesitas crear un nuevo agregado, puedes hacerlo ejecutando el siguiente comando:
+
+`yo codedesignplus:microservice aggregate --aggregate "<aggregate_name>"`
+
+Para más información sobre cómo crear agregados, puedes consultar la [documentación](/generators/microservice/commands/aggregate).
+
+</Aside>
+
+<Steps>
+
+1. Creamos las propiedades del agregado `Client` con los valores por defecto.
+
+    <Image src="/images/quick-start/create-microservice/aggregate/properties.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Creamos el constructor privado del agregado `Client` para evitar la creación de instancias sin los valores requeridos y asociamos el evento de dominio `ClientCreatedDomainEvent` a la instancia del agregado.
+
+    <Image src="/images/quick-start/create-microservice/aggregate/private_constructor.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Usamos `name constructor pattern` para crear una nueva instancia del agregado `Client` y usamos guard clauses para validar las propiedades del cliente.
+
+    <Image src="/images/quick-start/create-microservice/aggregate/name_constructor.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. Creamos los métodos `Update` y `Delete` en el agregado `Client` para actualizar y eliminar la información del cliente, respectivamente.
+
+    <Image src="/images/quick-start/create-microservice/aggregate/update_delete.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+
+<Aside>
+- Los `aggregates` son los responsables de la tercera capa de validación. Para mas información sobre los niveles de validación puedes consultar la [documentación](/archetypes/layers-validation).
+- El `name constructor` pattern es un patrón de diseño que consiste en utilizar métodos estáticos con nombres descriptivos para crear instancias de una clase. Esto permite mejorar la legibilidad del código y facilitar la creación de instancias con valores predeterminados.
+- Los `guard clauses` son una técnica de programación defensiva que se utiliza para validar los parámetros de entrada de un método o función. Si los parámetros no cumplen con ciertas condiciones, se lanza una excepción o se devuelve un valor predeterminado.
+- Los codigos de error para cada propiedad del cliente se deben crear en la clase `Errors` siguiendo el estandar de errores implementado en la clase [`CodeDesignPlusException`](/libs/exceptions/exceptions/codedesignplusexception).
+- Para más información sobre los errores implementados puedes consultar los [niveles de validación](/archetypes/layer-validation).
+- Si necesitas crear un nuevo agregado, puedes hacerlo ejecutando el siguiente comando:
+
+  `yo codedesignplus:microservice aggregate --aggregate "<aggregate_name>"`
+
+  Para más información sobre cómo crear agregados, puedes consultar la [documentación](/generators/microservice/commands/aggregate).
+</Aside>
+
+### Repositorio
+
+El SDK de CodeDesignPlus proporciona una clase base `RepositoryBase` que implementa los métodos CRUD básicos para interactuar con la base de datos. En esta etapa, no modificaremos la interfaz `IClientRepository` ni su implementación `ClientRepository`, ya que hereadamos de la clase `RepositoryBase`. 
+
+Si el `RepositoryBase` no cumple con tus necesidades, puedes modificar la interfaz `IClientRepository` y su implementación `ClientRepository` para agregar los métodos necesarios.
+
+<Image src="/images/quick-start/create-microservice/repository/repository.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside type="caution">
+- La clase `RepositoryBase` genera excepciones cuando no es enviado el `Tenant`. Esto con la finalidad de asegurar que la información a consultar sea del `Tenant` correspondiente al que se esta autenticando.
+- Si el `RepositoryBase` no cumple con tus necesidades, puedes definir nuevos métodos en la interfaz `IClientRepository` y su implementación en `ClientRepository`. Sin embargo, si son métodos de consulta, no olvides pasar el `Tenant` como parámetro.
+
+</Aside>
+
+<Aside>
+- Si necesitas crear un nuevo repositorio, puedes hacerlo ejecutando el siguiente comando:
+
+  `yo codedesignplus:microservice repository --repository "<repository_name>"`
+
+  Para más información sobre cómo crear repositorios, puedes consultar la [documentación](/generators/microservice/commands/repository).
+
+- Para conocer más sobre los métodos disponibles en la clase `RepositoryBase` puedes consultar la [documentación](/libs/mongo/services/repository-base).
+
+</Aside>
+
+### Comandos
+
+Los comandos representan las acciones que los usuarios pueden ejecutar en nuestro microservicio. Por ello, comenzaremos modificando los `commands` y, posteriormente, ajustaremos los `handlers` asociados a cada uno. En esta etapa, recibiremos la información del comando, la validaremos y luego invocaremos el método correspondiente en el agregado `Client`. Finalmente, generaremos y lanzaremos los eventos de dominio correspondientes, los cuales serán creados internamente dentro del agregado.
+
+<Tabs>
+<TabItem label="Create Client">
+
+<Steps>
+
+1. El comando `CreateClientCommand` representa la acción de crear un nuevo cliente en el sistema. Contiene las propiedades necesarias para crear un nuevo cliente, como `Name`, `LastName`, `Email` y `Address`.
+
+    <Image src="/images/quick-start/create-microservice/commands/create_client.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El handler `CreateClientCommandHandler` recibe el comando `CreateClientCommand`, valida la información del cliente y luego invoca el método `Create` en el agregado `Client`. Finalmente, genera y lanza el evento de dominio `ClientCreatedDomainEvent`.
+
+    <Image src="/images/quick-start/create-microservice/commands/create_client_handler.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+</TabItem>
+
+<TabItem label="Update Client">
+
+<Steps>
+
+1. El comando `UpdateClientCommand` representa la acción de actualizar la información de un cliente en el sistema. Contiene las propiedades necesarias para actualizar un cliente, como `Id`, `Name`, `LastName`, `Email` y `Address`.
+
+    <Image src="/images/quick-start/create-microservice/commands/update_client.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El handler `UpdateClientCommandHandler` recibe el comando `UpdateClientCommand`, valida la información del cliente y luego invoca el método `Update` en el agregado `Client`. Finalmente, genera y lanza el evento de dominio `ClientUpdatedDomainEvent`.
+
+    <Image src="/images/quick-start/create-microservice/commands/update_client_handler.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+</TabItem>
+
+<TabItem label="Delete Client">
+
+<Steps>
+
+1. El comando `DeleteClientCommand` representa la acción de eliminar un cliente del sistema. Contiene la propiedad `Id` que identifica al cliente que se desea eliminar.
+
+    <Image src="/images/quick-start/create-microservice/commands/delete_client.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El handler `DeleteClientCommandHandler` recibe el comando `DeleteClientCommand`, valida la información del cliente y luego invoca el método `Delete` en el agregado `Client`. Finalmente, genera y lanza el evento de dominio `ClientDeletedDomainEvent`.
+
+    <Image src="/images/quick-start/create-microservice/commands/delete_client_handler.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+</TabItem>
+
+</Tabs>
+
+<Aside>
+- Los comandos son invocados por los `Controllers` para Rest, los `Services` para gRPC o los `Consumers` para los eventos.
+- Los `handlers` son los responsables de la segunda capa de validación. Para mas información sobre los niveles de validación puedes consultar la [documentación](/archetypes/layers-validation).
+- Los `commands` tienen internamente un `validator` que son los responsables de la primera capa de validación. Para mas información sobre los niveles de validación puedes consultar la [documentación](/archetypes/layers-validation).
+- Si necesitas crear un nuevo comando, puedes hacerlo ejecutando el siguiente comando:
+
+  `yo codedesignplus:microservice command --aggregate "<aggregate_name>" --repository "<repository_name>" --commands "<command_name>"`
+
+  Para más información sobre cómo crear comandos, puedes consultar la [documentación](/generators/microservice/commands/command).
+</Aside>
+
+
+### Queries
+
+Las queries representan las consultas que otros microservicios pueden realizar para obtener información del microservicio de **Clientes**. En esta etapa, crearemos las queries `GetAllClientQuery` y `GetClientByIdQuery` para obtener información de un cliente específico o de todos los clientes, respectivamente.
+
+<Tabs>
+<TabItem label="GetAllClientQuery">
+
+<Steps>
+
+1. La query `GetAllClientQuery` representa la acción de obtener información de todos los clientes en el sistema.
+
+    <Image src="/images/quick-start/create-microservice/queries/get_all_client.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El handler `GetAllClientQueryHandler` recibe la query `GetAllClientQuery` y luego invoca el método `FindAll` en el repositorio `ClientRepository` para obtener la información de todos los clientes.
+
+    <Image src="/images/quick-start/create-microservice/queries/get_all_client_handler.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+</TabItem>
+
+<TabItem label="GetClientByIdQuery">
+
+<Steps>
+
+1. La query `GetClientByIdQuery` representa la acción de obtener información de un cliente específico en el sistema.
+
+    <Image src="/images/quick-start/create-microservice/queries/get_client_by_id.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El handler `GetClientByIdQueryHandler` recibe la query `GetClientByIdQuery`, valida si el registro existe en la cache. Si no existe, invoca el método `FindAsync` en el repositorio `ClientRepository` para obtener la información del cliente.
+
+    <Image src="/images/quick-start/create-microservice/queries/get_client_by_id_handler.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+</TabItem>
+
+</Tabs>
+
+<Aside>
+- Las queries son invocadas por los `Controllers` para Rest, los `Services` para gRPC o los `Consumers` para los eventos.
+- Si necesitas crear una nueva query, puedes hacerlo ejecutando el siguiente comando:
+
+  `yo codedesignplus:microservice query --aggregate "<aggregate_name>" --repository "<repository_name>" --queries "<query_name>"`
+
+  Para más información sobre cómo crear queries, puedes consultar la [documentación](/generators/microservice/commands/query).
+
+</Aside>
+
+### Controladores
+
+Los controladores son responsables de recibir las peticiones HTTP e invocar los comandos o los queries correspondientes. En esta etapa, el controlador `ClientController` fue creado por el generador `CodeDesignPlus.Net.Generator` y se encarga de recibir las peticiones HTTP para crear, actualizar, eliminar y consultar información de los clientes.
+
+<Image src="/images/quick-start/create-microservice/controllers/client_controller.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+Es importante documentar el controlador con C# XML Comments para que la documentación del API sea generada automáticamente.
+
+<Image src="/images/quick-start/create-microservice/controllers/client_controller_doc.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+- Los Data Transfer Object (DTO) como `CreateClientDto` y `UpdateClientDto` son generados automáticamente por el generador `CodeDesignPlus.Net.Generator` y se utilizan para transferir datos entre el controlador y los comandos. Para más información sobre el generador, puedes consultar la [documentación](/libs/generator).
+- La documentación del API es generada automáticamente a partir de los [C# XML Comments](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/xmldoc/recommended-tags) en los controladores.
+</Aside>
+
+### Configuración Mapster
+
+Mapster es una librería de mapeo de objetos que nos permite mapear fácilmente los objetos como nuestros commands, queries, aggregate, entities, value object a los DTOs y viceversa. En esta etapa, configuraremos Mapster para mapear los objetos en nuestra capa de aplicación.
+
+Procedemos a configurar las siguientes clases de mapeo:
+
+- `CreateClientDto` a `CreateClientCommand`
+- `UpdateClientDto` a `UpdateClientCommand`
+- `ClientAggregate` a `ClientDto`
+
+<Image src="/images/quick-start/create-microservice/mapster/mapster.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+## Compilación
+
+Para asegurarnos de que nuestro microservicio de **Clientes** se compila correctamente, ejecutaremos el comando `dotnet build` en la raíz del proyecto. El resultado de la compilación se mostrará en la consola y se generará una carpeta `bin` con los archivos binarios necesarios para ejecutar el microservicio.
+
+<Image src="/images/quick-start/create-microservice/build.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo generar un microservicio de **Clientes** utilizando el generador `codedesignplus:microservice` y cómo modificarlo para adaptarlo a nuestras necesidades específicas. Hemos creado agregados, entidades, value objects, eventos de dominio, comandos, queries y controladores, y hemos configurado Mapster para mapear los objetos en nuestra capa de aplicación.

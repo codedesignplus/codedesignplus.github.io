@@ -1,0 +1,143 @@
+---
+title: "Creación de Entidad"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice entity`
+
+Este comando se utiliza para crear una o más entidades dentro de un microservicio existente. En el contexto de Domain-Driven Design (DDD), las entidades son objetos con identidad que pueden cambiar de estado a lo largo de su ciclo de vida. Este comando facilita la generación de la estructura básica para definir entidades en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Entidad (Entity):** En DDD, una entidad es un objeto que tiene una identidad única y un ciclo de vida. Su identidad persiste incluso si cambian sus atributos. Las entidades son responsables de su propia consistencia.
+*   **Identidad:** La característica que diferencia a una entidad de otra, incluso si sus atributos son los mismos.
+*   **Ciclo de Vida:** Las entidades pueden crearse, modificarse y eliminarse a lo largo del tiempo.
+*   **Agregado:** Un clúster de entidades y objetos de valor que se tratan como una sola unidad. Un agregado tiene una entidad raíz que es la responsable de mantener la consistencia del agregado.
+*   **DDD:** Domain-Driven Design es un enfoque de desarrollo de software que modela el software alrededor del dominio del negocio. Las entidades y agregados son conceptos centrales en DDD.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice entity` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice entity \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --entities "<entity_names>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice entity `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --entities "<entity_names>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se crearán las entidades.
+
+### `--entities`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una lista de nombres de entidades separadas por comas que se crearán.
+
+## Ejemplos de Uso
+
+Este ejemplo crea dos entidades, `UserAccount` y `UserPreference`, en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice entity \
+        --organization "Acme" \
+        --microservice "User" \
+        --entities "UserAccount,UserPreference"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice entity `
+        --organization "Acme" `
+        --microservice "User" `
+        --entities "UserAccount,UserPreference"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generarán las estructuras base para las entidades `UserAccount` y `UserPreference` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/entity/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para las nuevas entidades:
+
+<Image src="/images/generators/microservices/entity/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para una o más entidades en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para las entidades.
+
+    <Image src="/images/generators/microservices/entity/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se crearán las entidades, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/entity/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--entities`
+**Flag:** `--entities "UserAccount,UserPreference"`
+
+1.  Este parámetro define los nombres de las entidades que se crearán, generando los archivos correspondientes en la capa de dominio.
+
+    <Image src="/images/generators/microservices/entity/1-entities-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   Utiliza nombres descriptivos para tus entidades, reflejando su rol en el dominio.
+*   Las entidades son objetos con identidad y ciclo de vida, así que piensa en sus atributos y relaciones con otros objetos.
+*   Las entidades deben ser parte de un agregado.
+*  Un agregado es un conjunto de entidades y objetos de valor, agrupados para modelar un concepto del dominio.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD](https://martinfowler.com/bliki/DomainDrivenDesign.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice entity` facilita la creación de nuevas entidades en tu microservicio, asegurando que la estructura y los patrones DDD se apliquen correctamente. Utiliza este comando para modelar tu dominio de manera coherente y mantenible.

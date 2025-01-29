@@ -1,0 +1,154 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.Observability` proporciona un conjunto de herramientas y extensiones para simplificar la configuración y el uso de la telemetría en aplicaciones .NET. Su objetivo principal es facilitar la implementación de la observabilidad a través de OpenTelemetry, permitiendo a los desarrolladores recopilar métricas y trazas para monitorear el rendimiento y el comportamiento de sus aplicaciones.
+
+## Propósito y alcance
+---
+
+Esta librería se centra en encapsular las configuraciones y las integraciones necesarias para habilitar la observabilidad en aplicaciones .NET. El alcance abarca la recopilación de métricas y trazas de varios componentes como ASP.NET Core, gRPC, SQL, Redis, Kafka y componentes personalizados de la librería CodeDesignPlus. Su propósito es proporcionar una forma consistente y sencilla de instrumentar aplicaciones para mejorar la capacidad de monitoreo y depuración.
+
+## Principales características
+---
+
+- **Configuración Simplificada de OpenTelemetry:** Facilita la configuración de OpenTelemetry para la recopilación de métricas y trazas.
+- **Integración con ASP.NET Core:** Habilita la instrumentación para métricas y trazas de ASP.NET Core.
+- **Soporte para gRPC:** Proporciona instrumentación para clientes gRPC.
+- **Soporte para bases de datos SQL:** Permite la recopilación de trazas de bases de datos SQL.
+- **Integración con Redis:** Habilita la recopilación de trazas de Redis.
+- **Soporte para Kafka:** Proporciona instrumentación para productores y consumidores de Kafka.
+- **Instrumentación Personalizada:** Ofrece la posibilidad de instrumentar componentes específicos de la librería CodeDesignPlus.
+- **Exportación a OTLP:** Configura la exportación de telemetría utilizando el protocolo OTLP.
+- **Salida a Consola:** Permite la visualización de telemetría en la consola durante el desarrollo.
+
+## Casos de uso típicos
+---
+
+- Proyectos que implementan microservicios en .NET.
+- Aplicaciones que requieren monitoreo y seguimiento de rendimiento.
+- Sistemas que utilizan gRPC, SQL, Redis y Kafka para la comunicación y el almacenamiento.
+- Desarrolladores que desean una solución sencilla para instrumentar sus aplicaciones con OpenTelemetry.
+- Proyectos que requieren la recopilación y el análisis de métricas y trazas.
+
+## Componentes Principales
+---
+
+- **`ServiceCollectionExtensions.cs`**: Proporciona métodos de extensión para la interfaz `IServiceCollection`, facilitando la configuración de la telemetría.
+- **`AddObservability`**: Método de extensión principal que configura OpenTelemetry para métricas y trazas, también permite la configuración personalizada a través de actions.
+- **`ConfigureMetrics`**: Método que configura la instrumentación y el exportador de métricas de OpenTelemetry.
+- **`ConfigureTracing`**: Método que configura la instrumentación y el exportador de trazas de OpenTelemetry, también los instrumentadores para diferentes frameworks.
+- **`AddMetricsAspNetCoreInstrumentation`**: Método que configura la instrumentación de métricas para ASP.NET Core.
+- **`AddTraceAspNetCoreInstrumentation`**: Método que configura la instrumentación de trazas para ASP.NET Core.
+- **`AddTraceGrpcClientInstrumentation`**: Método que configura la instrumentación de trazas para clientes gRPC.
+- **`AddTraceSqlClientInstrumentation`**: Método que configura la instrumentación de trazas para clientes SQL.
+- **`AddTraceCodeDesignPlusSdkInstrumentation`**: Método que configura la instrumentación de trazas para componentes de CodeDesignPlus.
+- **`AddTraceRedisInstrumentation`**: Método que configura la instrumentación de trazas para Redis.
+-  **`AddTraceKafkaInstrumentation`**: Método que configura la instrumentación de trazas para Kafka.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.Observability
+        - Exceptions
+            - ObservabilityException.cs       
+        - Extensions
+            - ServiceCollectionExtensions.cs
+    - CodeDesignPlus.Net.Observability.Abstractions
+        - Options
+            - Metrics.cs
+            - ObservabilityOptions.cs
+            - Trace.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Observability` en tu proyecto de .NET. Explorarás los servicios, métodos de extensión y componentes principales que proporciona la librería para configurar la telemetría en tus aplicaciones.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimiento básico de OpenTelemetry.
+- Familiaridad con ASP.NET Core y/o gRPC.
+- Familiaridad con la configuración de opciones en .NET.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Observability`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Observability
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Observability
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```xml
+    <PackageReference Include="CodeDesignPlus.Net.Observability" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+
+## Ejemplo rápido
+---
+
+La solución [CodeDesignPlus.Net.Observability.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Observability.Sample) muestra cómo configurar la telemetría en una aplicación .NET Core. A continuación, se muestra un ejemplo de cómo configurar la telemetría en tu proyecto:
+
+```csharp url="examples/CodeDesignPlus.Net.Observability.Sample/src/CodeDesignPlus.Net.Observability.Sample/Program.cs"
+```
+
+<Steps>
+1. Agregar configuración en `appsettings.json`
+
+    ```json url="examples/CodeDesignPlus.Net.Observability.Sample/src/CodeDesignPlus.Net.Observability.Sample/appsettings.json"
+    ```
+
+2. Registramos los servicios en `Startup.cs` o `Program.cs`
+
+    ```csharp 
+    builder.Services.AddObservability(builder.Configuration, builder.Environment);
+    ```
+</Steps>
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Observability` proporciona métodos de extensión para configurar y añadir comportamiento a los servicios de telemetría. A continuación, se describen los métodos de extensión más importantes:
+
+### AddObservability
+
+Método de extensión principal que configura OpenTelemetry, permite la configuración de metricas y trazas de manera customizada mediante actions.
+
+<LinkCard title="Explora la clase ServiceCollectionExtensions" href="/libs/observability/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+`CodeDesignPlus.Net.Observability` utiliza una sección de configuración llamada "Observability" para definir el comportamiento de la telemetría. Las opciones incluyen:
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/observability/options" />
+
+## Conclusiones
+---
+
+La librería `CodeDesignPlus.Net.Observability` simplifica la configuración y la integración de OpenTelemetry en aplicaciones .NET. Al proporcionar métodos de extensión y opciones de configuración predefinidas, reduce la complejidad y el tiempo necesario para habilitar la telemetría en aplicaciones. Su capacidad de instrumentar varios componentes la convierte en una herramienta esencial para construir aplicaciones observabless y fácilmente monitoreables.
+
+## Recursos externos
+---
+
+- [Documentación oficial de OpenTelemetry](https://opentelemetry.io/docs/)
+- [Documentación oficial de ASP.NET Core](https://docs.microsoft.com/aspnet/core)
+- [Documentación oficial de gRPC](https://grpc.io/docs/)
+- [Documentación oficial de Redis](https://redis.io/documentation)
+- [Documentación oficial de Kafka](https://kafka.apache.org/documentation/)
+- [Documentación oficial de SqlClient](https://learn.microsoft.com/dotnet/api/system.data.sqlclient)
+- [Documentación de CodeDesignPlus.Net.Core.Abstractions](https://github.com/CodeDesignPlus/CodeDesignPlus.Net.Core)
+- [Documentación de CodeDesignPlus.Net.Observability](https://github.com/CodeDesignPlus/CodeDesignPlus.Net.Observability)

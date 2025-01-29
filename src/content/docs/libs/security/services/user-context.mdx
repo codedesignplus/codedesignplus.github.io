@@ -1,0 +1,110 @@
+---
+title: User Context
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El servicio `UserContext` proporciona información sobre el usuario autenticado actual durante una solicitud HTTP. Este servicio es esencial para acceder a datos del usuario, como su ID, nombre, email, claims y headers personalizados, facilitando la implementación de lógica basada en el usuario autenticado. Además, esta libreria trabaja con los claims standar de Azure AD B2C, lo cual hace que sea más facil de entender.
+
+```csharp url="packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security.Abstractions/IUserContext.cs"
+```
+
+## ¿Cómo Funciona?
+---
+
+El `UserContext` obtiene la información del usuario a través del `IHttpContextAccessor`, que proporciona acceso al contexto HTTP actual. Los datos del usuario se obtienen principalmente de dos fuentes:
+
+-   **Claims:** Los claims son pares clave-valor que se encuentran dentro del token JWT. Esta librería trabaja con los claims definidos en la clase `ClaimTypes` y corresponden a los claims estandar de Azure AD B2C. Estos claims pueden incluir información como el `ObjectIdentifier` (ID de usuario), nombre, email, rol, ciudad, pais, dirección y otros datos personales.
+-   **Headers:** Los headers HTTP proporcionan información adicional sobre la solicitud. El `UserContext` puede acceder a headers personalizados, como el "X-Tenant".
+
+El `UserContext` implementa la interfaz `IUserContext`, la cual define las propiedades y métodos para acceder a la información del usuario de manera estandarizada.
+
+## Métodos
+---
+
+El `UserContext` proporciona métodos y propiedades para acceder a la información del usuario autenticado. Algunos de los métodos más comunes son:
+
+### GetClaim
+**Type:** `public TValue GetClaim<TValue>(string claimType)`
+
+Obtiene el valor de un claim específico del usuario autenticado y se utiliza para extraer información del token JWT basada en el tipo de claim solicitado. Esta librería proporciona la clase `ClaimTypes` con todos los claims estandar de Azure AD B2C.
+
+### GetHeader
+**Type:** `public TValue GetHeader<TValue>(string header)`
+
+Obtiene el valor de un header específico de la solicitud HTTP actual y se utiliza para extraer información adicional de la solicitud, como el ID del tenant.
+
+## Implementación
+---
+
+El `UserContext` se implementa como un servicio singleton y depende de los siguientes componentes:
+
+-   `IHttpContextAccessor`: Proporciona acceso al contexto HTTP actual.
+-   `IOptions<SecurityOptions>`: Permite acceder a las opciones de seguridad configuradas.
+
+El servicio extrae información de los claims del token JWT y los headers HTTP, utilizando el `IHttpContextAccessor` para acceder a los datos de la solicitud. La conversión de los valores se realiza utilizando `Convert.ChangeType` para asegurar que el tipo de valor obtenido corresponda al tipo `TValue` especificado. En el caso de los claims, se verifica si el valor es un GUID, y se realiza la conversion de forma adecuada.
+
+```csharp url="packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security/Services/UserContext.cs"
+```
+
+## Ejemplo de Uso
+---
+
+```csharp
+using CodeDesignPlus.Net.Security.Abstractions;
+using Microsoft.AspNetCore.Mvc;
+
+[ApiController]
+[Route("api/[controller]")]
+public class UserController : ControllerBase
+{
+    private readonly IUserContext userContext;
+
+    public UserController(IUserContext userContext)
+    {
+        this.userContext = userContext;
+    }
+
+    [HttpGet("info")]
+    public IActionResult GetUserInfo()
+    {
+        return Ok(new
+        {
+            IsAuthenticated = userContext.IsAuthenticated,
+            IdUser = userContext.IdUser,
+            Name = userContext.Name,
+            Email = userContext.Emails,
+            Tenant = userContext.Tenant,
+            FirstName = userContext.FirstName,
+            LastName = userContext.LastName,
+            City = userContext.City,
+            Country = userContext.Country,
+            PostalCode = userContext.PostalCode,
+            StreetAddress = userContext.StreetAddress,
+            State = userContext.State,
+            JobTitle = userContext.JobTitle,
+            IsApplication = userContext.IsApplication
+        });
+    }
+}
+```
+
+En este ejemplo:
+
+-   Se inyecta `IUserContext` a través del constructor del controlador.
+-   Se accede a las propiedades de `IUserContext`, como `IsAuthenticated`, `IdUser`, `Name` y `Emails`, para obtener la información del usuario autenticado.
+-  Se acceden a los properties personalizados para obtener informacion adicional como el `FirstName` o el `JobTitle`.
+-  Se verifica si el usuario es una aplicación a traves de la propiedad `IsApplication`
+
+## Conclusiones
+---
+
+El servicio `UserContext` facilita la gestión del contexto del usuario en una aplicación .NET. Al abstraer la complejidad de acceder a claims y headers, este servicio permite a los desarrolladores implementar lógica basada en el usuario autenticado de manera más sencilla y eficiente. Es recomendable utilizar este servicio en cualquier proyecto que requiera acceder a información del usuario autenticado. Además, al usar los `ClaimTypes` que esta libreria provee, facilita el uso de claims de Azure AD B2C.
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Claims en .NET](https://docs.microsoft.com/en-us/dotnet/standard/security/claims)
+- [Autenticación y autorización en ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/authentication/?view=aspnetcore-7.0)
+- [Claims estandar de Azure AD B2C](https://learn.microsoft.com/en-us/azure/active-directory-b2c/tokens-overview#claims)

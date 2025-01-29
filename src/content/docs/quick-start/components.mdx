@@ -1,0 +1,60 @@
+---
+title: Componentes
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este primer artículo, vamos a explorar los tres componentes principales que te permitirán crear microservicios de manera eficiente: los generadores, el arquetipo y el SDK en sí. Estos componentes están diseñadas para simplificar el proceso de desarrollo, automatizar tareas repetitivas y promover las mejores prácticas.
+
+## Generadores Yeoman
+---
+
+<Image src="/images/quick-start/Generator.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+Los generadores de código son herramientas que automatizan la creación de proyectos, componentes y configuraciones, ahorrando tiempo y reduciendo errores. **Yeoman** es un sistema de scaffolding que facilita la creación de proyectos o partes de ellos, funcionando como un sistema de plantillas que se ejecutan desde la línea de comandos. En el contexto de CodeDesignPlus, hemos creado generadores que están diseñados específicamente para el desarrollo de aplicaciones .NET siguiendo los principios y patrones del SDK.
+
+Los generadores de CodeDesignPlus te ofrecen:
+
+*   **Creación rápida de proyectos:** Genera la estructura inicial de un proyecto, incluyendo carpetas, archivos de configuración y dependencias.
+*   **Generación de código boilerplate:** Crea componentes reutilizables, como controladores, modelos, servicios, etc.
+*   **Configuración de herramientas:** Configura automáticamente herramientas de desarrollo, como linters, formateadores y sistemas de pruebas.
+*   **Automatización de tareas:** Simplifica tareas comunes del desarrollo, como la creación de pruebas, el despliegue y la integración continua.
+
+En CodeDesignPlus, actualmente contamos con el siguiente generador:
+
+*   `codedesignplus:microservice`: Diseñado para la creación de microservicios con un enfoque en Domain-Driven Design (DDD), Command Query Responsibility Segregation (CQRS) y arquitectura orientada a eventos (Event-Driven).
+
+<LinkCard title="Aprender más sobre los Generadores de CodeDesignPlus" href="/generators/" />
+
+
+## Arquetipo Microservicio
+---
+
+<Image src="/images/quick-start/Archetype.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+El arquetipo **CodeDesignPlus.Net.Microservice** es una plantilla base, construida con `CodeDesignPlus.Net.Sdk`, diseñada para facilitar el desarrollo de microservicios robustos, escalables y mantenibles en .NET. Este arquetipo proporciona una estructura predefinida y las herramientas necesarias para construir aplicaciones siguiendo buenas prácticas y patrones de diseño comunes. Su principal objetivo es simplificar el proceso de creación de microservicios, proporcionando una base sólida que aborda las tareas comunes y permite a los desarrolladores:
+
+*   Comenzar rápidamente evitando la configuración manual.
+*   Seguir buenas prácticas con una arquitectura limpia.
+*   Facilitar el mantenimiento con una organización clara del código y una arquitectura modular.
+*   Reducir la complejidad inicial.
+*   Promover la escalabilidad con patrones de diseño adecuad
+
+<LinkCard title="Aprender más sobre el Arquetipo CodeDesignPlus.Net.Microservice" href="/archetypes/" />
+
+
+## CodeDesignPlus.Net.Sdk
+---
+
+<Image src="/images/quick-start/sdk.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+**CodeDesignPlus.Net.Sdk** es un conjunto de librerías diseñadas para potenciar a los desarrolladores en la creación de soluciones de software modernas, robustas y escalables. Este SDK está dirigido a organizaciones que buscan construir plataformas sólidas desde cero, implementando las mejores prácticas de desarrollo y arquitectura.
+
+Este SDK ofrece las siguientes ventajas:
+
+*   **Arquitectura limpia y escalable:** Implementa patrones como DDD, arquitectura hexagonal y CQRS, asegurando que tu código sea modular y fácil de mantener.
+*   **Estandarización y consistencia:** Proporciona una base común que reduce la complejidad del inicio de un proyecto, promoviendo estándares que minimizan errores y aceleran los tiempos de desarrollo.
+*   **Facilidad de integración:** Incluye herramientas preconfiguradas para integrar tus aplicaciones con tecnologías y servicios externos, facilitando la interoperabilidad.
+
+<LinkCard title="Aprender más sobre CodeDesignPlus.Net.Sdk" href="/libs/introduction" />

@@ -1,0 +1,367 @@
+---
+title: RepositoryBase
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `RepositoryBase` es una implementación genérica para interactuar con una base de datos utilizando Entity Framework Core. Esta clase abstracta proporciona métodos comunes para crear, actualizar, eliminar y gestionar entidades en la base de datos. Además, maneja las transacciones de manera eficiente y segura.
+
+```csharp url="packages/CodeDesignPlus.Net.EFCore/src/CodeDesignPlus.Net.EFCore/Repository/RepositoryBase.cs"
+```
+
+## ¿Cómo Funciona?
+
+El servicio funciona interactuando con el contexto de la base de datos (DbContext) proporcionado al momento de la instanciación de la clase. A través de sus métodos, los usuarios pueden realizar operaciones CRUD (crear, leer, actualizar, eliminar) de forma asíncrona, garantizando una correcta gestión de los cambios y la persistencia de los datos. También soporta operaciones en transacciones para asegurar la integridad de los datos.
+
+## Métodos
+---
+
+La clase `RepositoryBase` proporciona una serie de métodos que facilitan la gestión de las entidades. A continuación, se describen los métodos más importantes:
+
+### GetContext
+**Type:** `public TContext GetContext<TContext>() where TContext : DbContext`
+
+El método `GetContext` permite obtener el contexto de la base de datos asociado a un repositorio específico. En este caso, utilizaremos el repositorio de órdenes para obtener el contexto de la base de datos.
+
+```csharp	
+// code example
+
+var context = orderRepository.GetContext<OrderContext>();
+```
+
+### GetEntity
+**Type:** `public DbSet<TEntity> GetEntity<TEntity>() where TEntity : class, IEntityBase`
+
+El método `GetEntity` permite obtener un conjunto de entidades de la base de datos basado en un tipo específico. En este caso, utilizaremos el repositorio de órdenes para obtener todas las órdenes de la base de datos.
+
+```csharp
+// code example
+
+var ordersCount = await orderRepository.GetEntity<OrderAggregate>().CountAsync();
+```
+
+### CreateAsync
+**Type:** `public Task CreateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `CreateAsync` permite crear una entidad en la base de datos de forma asincrónica. En este caso, utilizaremos el repositorio de órdenes para crear una nueva orden en la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+var order = OrderAggregate.Create(Guid.NewGuid(), "Order 1", "Description 1", 1000, Guid.NewGuid(), Guid.NewGuid());
+
+await orderRepository.CreateAsync(order);
+```
+
+### UpdateAsync
+**Type:** `public Task UpdateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `UpdateAsync` permite actualizar una entidad existente en la base de datos. En este caso, utilizaremos el repositorio de órdenes para modificar una orden existente en la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+var order = orderRepository.GetEntity<OrderAggregate>().FirstOrDefault(x => x.Id == order.Id);
+
+if (order is not null)
+{
+    order.Update("Order 1 Updated", "Description 1 Updated", 2000, Guid.NewGuid());
+
+    await orderRepository.UpdateAsync(order);
+}
+```
+
+### DeleteAsync
+**Type:** `public Task DeleteAsync<TEntity>(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `DeleteAsync` permite eliminar una entidad de la base de datos basada en una condición. En este caso, utilizaremos el repositorio de órdenes para eliminar una orden específica de la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+await orderRepository.DeleteAsync<OrderAggregate>(x => x.Id == order.Id);
+```
+
+### CreateRangeAsync
+**Type:** `public async Task CreateRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `CreateRangeAsync` permite crear un conjunto de entidades en la base de datos de forma asincrónica. En este caso, utilizaremos el repositorio de órdenes para insertar múltiples órdenes a la vez en la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+var ordersList = new List<OrderAggregate>
+{
+    OrderAggregate.Create(Guid.NewGuid(), "Order 2", "Description 2", 2000, Guid.NewGuid(), Guid.NewGuid()),
+    OrderAggregate.Create(Guid.NewGuid(), "Order 3", "Description 3", 3000, Guid.NewGuid(), Guid.NewGuid()),
+    OrderAggregate.Create(Guid.NewGuid(), "Order 4", "Description 4", 4000, Guid.NewGuid(), Guid.NewGuid()),
+    OrderAggregate.Create(Guid.NewGuid(), "Order 5", "Description 5", 5000, Guid.NewGuid(), Guid.NewGuid()),
+};
+
+await orderRepository.CreateRangeAsync(ordersList);
+```
+
+### UpdateRangeAsync
+**Type:** `public async Task UpdateRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `UpdateRangeAsync` permite actualizar un conjunto de entidades en la base de datos. En este caso, utilizaremos el repositorio de órdenes para modificar múltiples órdenes de una sola vez en la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+var ordersList = [.. orderRepository.GetEntity<OrderAggregate>().Where(x => x.Price > 3000)];
+
+foreach (var item in ordersList)
+{
+    item.Update(item.Name, item.Description, item.Price + 1000, Guid.NewGuid());
+}
+
+await orderRepository.UpdateRangeAsync(ordersList);
+```
+
+### DeleteRangeAsync
+**Type:** `public async Task DeleteRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken = default) where TEntity : class, IEntityBase`
+
+El método `DeleteRangeAsync` permite eliminar un conjunto de entidades de la base de datos. En este caso, utilizaremos el repositorio de órdenes para eliminar múltiples órdenes simultáneamente de la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+var ordersList = [.. orderRepository.GetEntity<OrderAggregate>().Where(x => x.Price < 3000)];
+
+await orderRepository.DeleteRangeAsync(ordersList);
+```
+
+### ChangeStateAsync
+**Type:**  `public async Task ChangeStateAsync<TEntity>(Guid id, bool state, CancellationToken cancellationToken = default) where TEntity : class, IEntity`
+
+El método `ChangeStateAsync` permite cambiar el estado activo de una entidad en la base de datos. En este caso, utilizaremos el repositorio de órdenes para activar o desactivar una orden en lugar de eliminarla de la base de datos.
+
+```csharp
+// code example
+
+var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+
+if (order is not null)
+{
+    await orderRepository.ChangeStateAsync(order.Id, false);
+}
+```
+
+### TransactionAsync
+**Type:** `public async Task TransactionAsync<TResult>(Func<DbContext, Task> process, IsolationLevel isolation = IsolationLevel.ReadUncommitted, CancellationToken cancellationToken = default)`
+
+El método `TransactionAsync` permite ejecutar múltiples operaciones permitiendo al usuario controlar la transacción. En este caso, utilizaremos el repositorio de órdenes para crear, actualizar y eliminar una orden en una transacción única. Si alguna de las operaciones falla, se revertirán todas las operaciones realizadas en la transacción.
+
+```csharp	
+// code example
+
+await orderRepository.TransactionAsync<bool>(async (context) =>
+{
+    var order = OrderAggregate.Create(Guid.NewGuid(), "Order 6", "Description 6", 6000, Guid.NewGuid(), Guid.NewGuid());
+
+    await orderRepository.CreateAsync(order);
+
+    order = orderRepository.GetEntity<OrderAggregate>().FirstOrDefault(x => x.Id == order.Id);
+
+    if (order is not null)
+    {
+        order.Update("Order 6 Updated", "Description 6 Updated", 7000, Guid.NewGuid());
+
+        await orderRepository.UpdateAsync(order);
+    }
+
+    order = orderRepository.GetEntity<OrderAggregate>().FirstOrDefault(x => x.Id == order.Id);
+
+    if (order is not null)
+        await orderRepository.DeleteAsync<OrderAggregate>(x => x.Id == order.Id);
+
+});
+```
+
+
+## Implementación
+---
+
+La clase `RepositoryBase` es una implementación genérica que proporciona una serie de métodos comunes para interactuar con una base de datos utilizando Entity Framework Core. A continuación, se muestra la implementación de la clase `RepositoryBase`:
+
+```csharp url="packages/CodeDesignPlus.Net.EFCore/src/CodeDesignPlus.Net.EFCore/Repository/RepositoryBase.cs"
+```
+
+## Ejemplo de Uso
+---
+
+Imaginemos que estamos desarrollando una aplicación de comercio electrónico y queremos implementar un repositorio para gestionar las ordenes en nuestra base de datos. Utilizaremos la clase `RepositoryBase` para simplificar la creación y actualización de productos en la base de datos.
+
+### Recursos Necesarios
+
+Para este ejemplo, primero debemos llevar a cabo la creación de una serie de recursos que se mostrarán a continuación:
+
+<Steps>
+1. Creación del Aggregate
+
+    Lo primero que debemos hacer es crear una clase que represente el agregado de ordenes en nuestra aplicación. En este caso, crearemos una clase `OrderAggregate` que defina las propiedades y métodos necesarios para gestionar las ordenes en nuestra base de datos.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/Entities/OrderAggregate.cs" 
+    ```
+
+2. Creación del Repositorio
+
+    A continuación, crearemos una interfaz `IOrderRepository` que defina los métodos necesarios para gestionar las ordenes en nuestra base de datos. Esta interfaz hereda de `IRepositoryBase` y proporciona una abstracción para las operaciones de creación, actualización y eliminación de ordenes.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/Repositories/IOrderRepository.cs" 
+    ```
+
+
+3. Implementación del Repositorio
+
+    A continuación, implementaremos la interfaz `IOrderRepository` en la clase `OrderRepository`. Esta clase hereda de `RepositoryBase` y proporciona una implementación concreta de los métodos definidos en la interfaz.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/Repositories/OrderRepository.cs" 
+    ```
+
+
+4. Configuración del Repositorio
+
+    Continuamos con la configuración de la entidad `OrderAggregate` en el contexto de la base de datos. Para ello, creamos una clase `OrderConfiguration` que implemente la interfaz `IEntityTypeConfiguration<OrderAggregate>`. En esta clase, configuramos las propiedades y relaciones de la entidad `OrderAggregate` en la base de datos.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/EntityConfiguration/OrderConfiguration.cs" 
+    ```
+
+5. Configuración del Contexto
+
+    Por último, configuramos el contexto de la base de datos en la clase `OrderContext`. En esta clase, registramos la entidad `OrderAggregate` y su configuración en el modelo de datos.
+
+    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/OrderContext.cs" 
+    ```
+
+</Steps>
+
+### Aplicación Base de Consola
+
+Al finalizar la creación de los recursos necesarios, podemos ahora registrar el repositorio en el contenedor de dependencias de .NET Core y utilizar la clase `RepositoryBase` para gestionar las ordenes en nuestra base de datos.
+
+```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.RepositoryBase/Program.cs" 
+```
+
+<Aside>
+
+**Nota:** Este ejemplo es una simplificación de la implementación de un repositorio utilizando la clase `RepositoryBase`. En una aplicación real, es posible que necesites añadir más funcionalidades y lógica de negocio a tu repositorio para adaptarse a tus necesidades específicas.
+
+</Aside>
+
+<Steps>
+1. Importación de Dependencias:
+
+    Se importan las bibliotecas necesarias para la configuración de Entity Framework Core, la inyección de dependencias y la configuración de la aplicación.
+
+    ```csharp	
+    using CodeDesignPlus.Net.EFCore.Extensions;
+    using CodeDesignPlus.Net.EFCore.Sample;
+    using CodeDesignPlus.Net.EFCore.Sample.Entities;
+    using CodeDesignPlus.Net.EFCore.Sample.Repositories;
+    using Microsoft.EntityFrameworkCore;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    ```
+2. Configuración de la Aplicación:
+    
+    Se crea un `ConfigurationBuilder` para leer la configuración desde el archivo `appsettings.json`. Este archivo contiene las configuraciones necesarias, como la cadena de conexión a la base de datos.
+
+    ```csharp
+    var configurationBuilder = new ConfigurationBuilder()
+        .SetBasePath(Directory.GetCurrentDirectory())
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
+    var configuration = configurationBuilder.Build();
+    ```
+
+3. Configuración de los Servicios:
+
+    Se crea una colección de servicios `ServiceCollection` para registrar los servicios necesarios en la aplicación. Se añade la configuración de la aplicación al contenedor de dependencias y se registra la configuración de EFCore.
+
+    ```csharp
+    var serviceCollection = new ServiceCollection();
+
+    serviceCollection.AddSingleton(configuration);
+    serviceCollection.AddEFCore(configuration);
+    ```
+
+4. Registro del Contexto de la Base de Datos:
+
+    Se registra el contexto de la base de datos `OrderContext` en el contenedor de dependencias. Se configura la conexión a la base de datos utilizando la cadena de conexión proporcionada en la configuración.
+
+    ```csharp
+    serviceCollection.AddDbContext<OrderContext>(options =>
+    {
+        options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"), x =>
+        {
+            x.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+        });
+    });
+    ```
+
+5. Registro de Repositorios:
+
+    Se escanean y registran automáticamente todos los repositorios en el contenedor de dependencias. Esto facilita la inyección de dependencias para los repositorios al detectar y registrar todas las implementaciones de `IRepositoryBase`.
+
+    ```csharp
+    serviceCollection.AddRepositories<OrderContext>();
+    ```
+
+6. Construcción del Proveedor de Servicios:
+
+    Se construye el proveedor de servicios a partir de la colección de servicios registrados. Este proveedor se utiliza para obtener instancias de los servicios registrados en la aplicación.
+
+    ```csharp
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    ```
+
+7. Creación de la Base de Datos:
+
+    Se obtiene una instancia del contexto de la base de datos `OrderContext` a partir del proveedor de servicios. Se asegura que la base de datos esté creada y vacía antes de continuar con las operaciones de repositorio.
+
+    ```csharp
+    var context = serviceProvider.GetRequiredService<OrderContext>();
+
+    await context.Database.EnsureDeletedAsync(); //Esto aplica solo para pruebas, no se debe hacer en producción
+    await context.Database.EnsureCreatedAsync();
+    ```
+
+8. Obtención del Repositorio de Órdenes:
+
+    Se obtiene una instancia del repositorio de órdenes `IOrderRepository` a partir del proveedor de servicios. Esta instancia se utilizará para gestionar las órdenes en la base de datos.
+
+    ```csharp
+    var orderRepository = serviceProvider.GetRequiredService<IOrderRepository>();
+    ```
+
+9. Crear una Orden:
+
+    Se crea una nueva orden utilizando el método `Create` de la clase `OrderAggregate`. Esta orden se añadirá a la base de datos utilizando el método `CreateAsync` del repositorio de órdenes.
+
+    ```csharp
+   var order = OrderAggregate.Create(Guid.NewGuid(), "Order 1", "Description 1", 1000, Guid.NewGuid(), Guid.NewGuid());
+
+    await orderRepository.CreateAsync(order);
+    ```
+</Steps>
+
+En este ejemplo, hemos creado un repositorio para gestionar las ordenes en nuestra base de datos utilizando la clase `RepositoryBase`. Hemos definido una serie de recursos necesarios para la creación y configuración del repositorio, incluyendo la clase `OrderAggregate`, la interfaz `IOrderRepository`, la clase `OrderRepository`, la clase `OrderConfiguration` y la clase `OrderContext`.
+
+## Conclusiones
+---
+
+La clase `RepositoryBase` es una implementación genérica que facilita la gestión de entidades en una base de datos utilizando Entity Framework Core. Proporciona una serie de métodos comunes para realizar operaciones CRUD de forma eficiente y segura. Al utilizar esta clase, los desarrolladores pueden simplificar la creación y gestión de repositorios en sus aplicaciones .NET.

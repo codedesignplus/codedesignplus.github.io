@@ -1,0 +1,121 @@
+---
+title: Monitoreando Microservicios con Grafana
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo monitorear los microservicios de CodeDesignPlus utilizando Grafana. Explicaremos el flujo de métricas desde los microservicios, a través de OpenTelemetry y Prometheus, hasta la visualización en Grafana. Esto nos permitirá observar el rendimiento y la salud de nuestros microservicios en tiempo real.
+
+## ¿Por qué Monitorear Microservicios con Grafana?
+
+El monitoreo es esencial para mantener la salud, el rendimiento y la estabilidad de los microservicios. Grafana, con su capacidad de crear dashboards y visualizar datos de diferentes fuentes, es una herramienta poderosa para analizar las métricas de nuestros microservicios. El monitoreo nos permite:
+
+*   **Observar el rendimiento:** Analizar métricas como el tiempo de respuesta, el uso de CPU y memoria, y el número de solicitudes por minuto.
+*   **Detectar problemas:** Identificar cuellos de botella, errores y anomalías en el comportamiento de los microservicios.
+*   **Optimizar el uso de recursos:** Ajustar la configuración y los recursos de los microservicios para mejorar su eficiencia.
+*   **Recibir alertas:** Configurar alertas que nos avisen cuando se detecten problemas.
+
+## ¿Qué Aprenderás?
+
+1. Cómo los microservicios exportan métricas a OpenTelemetry.
+2. Cómo Prometheus obtiene las métricas de OpenTelemetry.
+3. Cómo visualizar las métricas de los microservicios en Grafana.
+4.  Cómo explorar y personalizar los dashboards predefinidos.
+5.  Cómo agregar dashboards adicionales según la necesidad.
+
+## Arquitectura de Monitoreo de Métricas
+
+El flujo de métricas en nuestro entorno de microservicios sigue la siguiente arquitectura:
+
+1.  **Microservicios:** Los microservicios, construidos con el framework de CodeDesignPlus, generan métricas y las envían a través de OpenTelemetry (OTLP) al OpenTelemetry Collector.
+2.  **OpenTelemetry Collector:** Recibe las métricas de los microservicios y las direcciona a Prometheus.
+3.  **Prometheus:** Obtiene las métricas del OpenTelemetry Collector mediante scraping (es decir, consultando un endpoint) y las almacena en una base de datos de series temporales.
+4.  **Grafana:** Consulta las métricas almacenadas en Prometheus y las visualiza en dashboards.
+
+<Image src="/images/quick-start/dev-environment/dev-environment.svg" alt="Entorno de Desarrollo" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Configuración
+
+El entorno de desarrollo de CodeDesignPlus ya incluye la configuración necesaria para el monitoreo de métricas. La librería `CodeDesignPlus.Net.Observability` se encarga de exportar las métricas de los microservicios a OpenTelemetry, que a su vez las envía a Prometheus.
+
+```csharp url="packages/CodeDesignPlus.Net.Observability/src/CodeDesignPlus.Net.Observability/Extensions/ServiceCollectionExtensions.cs"
+```
+
+## Pasos para la Visualización de Métricas en Grafana
+
+<Steps>
+1.  **Asegúrate de que los Microservicios estén en Ejecución:** Verifica que los microservicios, OpenTelemetry Collector, Loki y Grafana estén en ejecución. El microservicio puede ser ejecutado de forma local o en un contenedor Docker.
+
+    <Image src="/images/quick-start/grafana-metrics/running_services.png" alt="Docker ps" width="1600" height="900" decoding="async" loading="lazy" />
+
+2.  **Accede a Grafana:** Abre un navegador y ve a la URL [`http://localhost:3000`](http://localhost:3000) (o la dirección donde se está ejecutando Grafana).
+
+    <Image src="/images/quick-start/grafana-metrics/grafana_home.png" alt="Grafana Home" width="1600" height="900" decoding="async" loading="lazy" />
+ 
+3.  **Explora los Dashboards:** En la barra lateral de Grafana, haz clic en `Dashboards` (icono de cuatro cuadrados).
+
+    <Image src="/images/quick-start/grafana-metrics/grafana_dashboards.png" alt="Grafana Dashboards" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. **Visualiza los Dashboards:** Observa los dashboards predefinidos, que proporcionan información detallada sobre los microservicios y la infraestructura:
+
+    - **ASP.NET Core**: Muestra métricas generales de la aplicación ASP.NET Core.
+
+    <Image src="/images/quick-start/grafana-metrics/grafana_aspnetcore.png" alt="Grafana ASP.NET Core Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - **ASP.NET Core Endpoint**: Ofrece métricas detalladas de cada endpoint de la API ASP.NET Core, como tiempo de respuesta y número de solicitudes.
+
+      <Image src="/images/quick-start/grafana-metrics/grafana_aspnetcore_endpoint.png" alt="Grafana ASP.NET Core Endpoint Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - **OpenTelemetry Collector**: Visualiza las métricas del OpenTelemetry Collector, como el número de receptores, procesadores y exportadores activos.
+
+     <Image src="/images/quick-start/grafana-metrics/grafana_otel_collector.png" alt="Grafana OpenTelemetry Collector Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+     - **Loki Metrics Dashboard**: Muestra métricas relacionadas con el funcionamiento interno de Loki.
+
+     <Image src="/images/quick-start/grafana-metrics/grafana_loki_metrics.png" alt="Grafana Loki Metrics Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+5.  **Analiza las Métricas:** Utiliza los paneles de Grafana para analizar el comportamiento del microservicio. Verifica que las métricas sean consistentes con el rendimiento esperado y que no haya errores o anomalías.
+
+6.  **Agrega Dashboards Personalizados:** Si necesitas métricas adicionales o personalizadas, puedes crear tus propios dashboards. Selecciona el botón `Create` y crea un nuevo panel.
+
+    <Image src="/images/quick-start/grafana-metrics/grafana_create_dashboard.png" alt="Grafana Create Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+    
+    <Aside>
+    Para obtener más información sobre cómo crear dashboards en Grafana, consulta la [documentación oficial](https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/create-dashboard/).
+    </Aside>
+
+7.  Selecciona la fuente de datos de Prometheus y escribe las queries necesarias para visualizar las métricas de tus microservicios.
+
+    <Image src="/images/quick-start/grafana-metrics/grafana_prometheus_query.png" alt="Grafana Prometheus Query" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+## Configuración Adicional de Dashboards
+
+El entorno de desarrollo de CodeDesignPlus proporciona los siguientes dashboards de forma predeterminada:
+
+*   **ASP.NET Core**:  Métricas generales de la aplicación ASP.NET Core.
+*   **ASP.NET Core Endpoint**:  Métricas detalladas de cada endpoint de la API.
+*   **OpenTelemetry Collector**: Métricas internas del OpenTelemetry Collector.
+*   **Loki Metrics Dashboard**: Métricas internas de Loki.
+
+Puedes agregar más dashboards según tus necesidades. Algunos dashboards populares que puedes añadir son:
+
+*   **Node Exporter Full**: Muestra métricas del sistema operativo donde se están ejecutando los microservicios (CPU, memoria, disco, red).
+*   **Docker Engine**:  Muestra métricas del motor de Docker y el rendimiento de los contenedores.
+*   **RabbitMQ**: Permite monitorear las métricas del broker de mensajes RabbitMQ
+
+Puedes importar los dashboards a Grafana en la opción `Import` del panel lateral y pegar el id del dashboard que deseas.
+
+<Image src="/images/quick-start/grafana-metrics/grafana_import_dashboard.png" alt="Grafana Import Dashboard" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+Para importar dashboards adicionales a Grafana, puedes buscar en el directorio [Grafana Dashboards](https://grafana.com/grafana/dashboards/), copiar el ID del dashboard que necesitas e importarlo desde el menú `Import` de Grafana.
+</Aside>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo monitorear los microservicios de CodeDesignPlus utilizando Grafana. Hemos comprendido el flujo de métricas desde los microservicios, a través de OpenTelemetry y Prometheus, hasta la visualización en Grafana. Ahora, puedes utilizar Grafana para monitorear la salud y el rendimiento de tus microservicios, detectar problemas, optimizar el uso de recursos y recibir alertas.
+
+Esta configuración proporciona una base sólida para la observabilidad de tus microservicios y facilita la gestión de tu sistema.

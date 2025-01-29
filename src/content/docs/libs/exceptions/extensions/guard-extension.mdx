@@ -1,0 +1,23 @@
+---
+title: Guard Extension
+---
+
+La clase `GuardExtensions` proporciona métodos de extensión para manipulación de cadenas relacionados con cláusulas de guardia.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Extensions/GuardExtensions.cs"
+```
+
+## Métodos
+---
+
+Los métodos que se pueden utilizar con la clase `GuardExtensions` son los siguientes:
+
+### GetCode
+**Type:** `public static string GetCode(this string message)`
+
+Extrae el código de una cadena de mensaje. Se asume que el código es la parte antes de los dos puntos (":").
+
+### GetMessage
+**Type:** `public static string GetMessage(this string message)`
+
+Extrae el mensaje de una cadena de mensaje. Se asume que el mensaje es la parte después del último dos puntos (":").

@@ -1,0 +1,131 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. Estas clases definen cómo se configura la observabilidad en la aplicación, permitiendo habilitar o deshabilitar diferentes aspectos de las métricas y el rastreo (tracing).
+
+## ObservabilityOptions
+---
+
+La clase `ObservabilityOptions` proporciona un conjunto de opciones para configurar la observabilidad en la aplicación. Estas opciones incluyen la activación general de la observabilidad, la configuración del servidor OpenTelemetry y la configuración detallada de métricas y rastreo.
+
+```csharp url="packages/CodeDesignPlus.Net.Observability/src/CodeDesignPlus.Net.Observability.Abstractions/Options/ObservabilityOptions.cs"
+```
+
+### Propiedades
+
+- **Section**
+    - Tipo: `string` (estático y de solo lectura)
+    - Descripción: El nombre de la sección utilizada en el archivo de configuración (por ejemplo, `appsettings.json`) para enlazar estas opciones.
+    - Valor Predeterminado: `"Observability"`
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción: Indica si la observabilidad está habilitada en general. Si es `true`, se activarán las métricas y el rastreo configurados.
+    - Valor Predeterminado: `false`
+
+- **ServerOtel**
+    - Tipo: `Uri`
+    - Descripción: La URI del servidor OpenTelemetry al cual se enviarán los datos de telemetría. Este campo es obligatorio si la observabilidad está habilitada (`Enable` es `true`).
+    - Valor Predeterminado: `null`
+
+- **Metrics**
+    - Tipo: `Metrics`
+    - Descripción: Objeto que contiene opciones específicas para la configuración de métricas.
+    - Valor Predeterminado: Un objeto `Metrics` con sus valores predeterminados.
+
+- **Trace**
+    - Tipo: `Trace`
+    - Descripción: Objeto que contiene opciones específicas para la configuración de rastreo (tracing).
+    - Valor Predeterminado: Un objeto `Trace` con sus valores predeterminados.
+
+### Validación
+
+La clase `ObservabilityOptions` implementa `IValidatableObject` para validar que, si la observabilidad está habilitada (`Enable` es `true`), la propiedad `ServerOtel` no sea nula.
+
+```csharp
+public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+{
+    var results = new List<ValidationResult>();
+
+    if (Enable && ServerOtel is null)
+        results.Add(new ValidationResult("The ServerOtel field is required.", new[] { nameof(ServerOtel) }));
+
+    return results;
+}
+```
+
+## Metrics
+---
+
+La clase `Metrics` contiene las opciones para configurar las métricas de observabilidad. Permite habilitar o deshabilitar las métricas en general, así como la instrumentación específica de ASP.NET Core.
+
+```csharp url="packages/CodeDesignPlus.Net.Observability/src/CodeDesignPlus.Net.Observability.Abstractions/Options/Metrics.cs"
+```
+
+### Propiedades
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción: Indica si las métricas están habilitadas. Si es `true`, se recopilarán métricas para la aplicación.
+    - Valor Predeterminado: `false`
+
+- **AspNetCore**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de métricas de ASP.NET Core está habilitada. Si es `true`, se recopilarán métricas relacionadas con ASP.NET Core.
+    - Valor Predeterminado: `false`
+
+## Trace
+---
+
+La clase `Trace` contiene las opciones para configurar el rastreo (tracing) de observabilidad. Permite habilitar o deshabilitar el rastreo en general y habilitar instrumentaciones específicas para ASP.NET Core, gRPC, SQL Client, Redis, Kafka y el SDK de CodeDesignPlus.
+
+```csharp url="packages/CodeDesignPlus.Net.Observability/src/CodeDesignPlus.Net.Observability.Abstractions/Options/Trace.cs"
+```
+
+### Propiedades
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción: Indica si el rastreo (tracing) está habilitado. Si es `true`, se recopilarán trazas para la aplicación.
+    - Valor Predeterminado: `false`
+
+- **AspNetCore**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo de ASP.NET Core está habilitada.
+    - Valor Predeterminado: `false`
+
+- **CodeDesignPlusSdk**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo del SDK de CodeDesignPlus está habilitada.
+    - Valor Predeterminado: `false`
+
+- **Redis**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo para Redis está habilitada.
+    - Valor Predeterminado: `false`
+
+- **Kafka**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo para Kafka está habilitada.
+    - Valor Predeterminado: `false`
+
+- **SqlClient**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo para SQL Client está habilitada.
+    - Valor Predeterminado: `false`
+
+- **GrpcClient**
+    - Tipo: `bool`
+    - Descripción: Indica si la instrumentación de rastreo para clientes gRPC está habilitada.
+    - Valor Predeterminado: `false`
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones de observabilidad:
+
+```json url="examples/CodeDesignPlus.Net.Observability.Sample/src/CodeDesignPlus.Net.Observability.Sample/appsettings.json"
+```

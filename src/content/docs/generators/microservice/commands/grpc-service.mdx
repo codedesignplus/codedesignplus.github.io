@@ -1,0 +1,148 @@
+---
+title: "Creación de Proto"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice proto`
+
+Este comando se utiliza para crear un archivo `.proto` dentro de un microservicio existente. Los archivos `.proto` se utilizan en gRPC para definir los servicios, mensajes y métodos que se exponen para la comunicación entre clientes y servidores. Este comando facilita la generación de la estructura básica para definir un archivo proto en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con `codedesignplus:microservice` que tenga habilitado gRPC.
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+*   
+
+## Conceptos Clave
+
+*   **Archivo Proto (.proto):** Es un archivo de texto que define la estructura de los mensajes y servicios que se utilizarán en gRPC.
+*   **gRPC:** Un framework de alto rendimiento para la comunicación entre microservicios y aplicaciones. Utiliza Protocol Buffers para la definición de servicios y mensajes.
+*   **Servicio:** En gRPC, un servicio define un conjunto de métodos que se pueden invocar remotamente.
+*   **Mensaje:** En gRPC, un mensaje define la estructura de los datos que se intercambian entre el cliente y el servidor.
+*   **Protocol Buffers:** Un mecanismo de serialización de datos de alto rendimiento utilizado por gRPC.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice proto` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice proto \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --proto-name "<proto_name>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice proto `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --proto-name "<proto_name>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se creará el archivo proto.
+
+### `--proto-name`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del archivo proto que se creará.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un archivo proto llamado `UserProfile` en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice proto \
+        --organization "Acme" \
+        --microservice "User" \
+        --proto-name "UserProfile"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice proto `
+        --organization "Acme" `
+        --microservice "User" `
+        --proto-name "UserProfile"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará el archivo `UserProfile.proto` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/proto/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo archivo proto:
+
+<Image src="/images/generators/microservices/proto/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para un archivo proto en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el servicio gRPC.
+
+   <Image src="/images/generators/microservices/proto/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se creará el archivo proto, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/proto/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--proto-name`
+**Flag:** `--proto-name "UserProfile"`
+
+1.  Este parámetro establece el nombre del archivo proto que se creará, reflejándose en el nombre del archivo y en la definición del servicio gRPC.
+
+    <Image src="/images/generators/microservices/proto/1-proto-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente y que tenga habilitado gRPC antes de utilizar este comando.
+*   El nombre del archivo proto debe ser descriptivo y reflejar el servicio que define.
+*   El archivo proto es la base para la comunicación gRPC y define los mensajes y métodos que se utilizarán.
+*  Es importante definir correctamente los mensajes y servicios gRPC para que la comunicación entre el cliente y servidor sea efectiva.
+
+<Aside>
+    Es importante tener en cuenta que los archivos proto definen los servicios gRPC que se exponen en el microservicio. Para este ejemplo, estamos creando el archivo <code>UserProfile.proto</code> que contendrá la definición del servicio gRPC relacionado con el agregado <code>UserProfile</code>.
+</Aside>
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [gRPC](https://grpc.io/)
+*   [Protocol Buffers](https://developers.google.com/protocol-buffers)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice proto` facilita la creación de archivos proto en tu microservicio, asegurando que la estructura y los patrones de gRPC se apliquen correctamente. Utiliza este comando para definir la comunicación entre tu microservicio y otros servicios o aplicaciones.

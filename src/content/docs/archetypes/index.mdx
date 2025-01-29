@@ -1,0 +1,82 @@
+---
+title: Introducción
+---
+
+import { Image } from 'astro:assets';
+
+<Image src="/images/archetype/archetype.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+## ¿Qué es este Arquetipo?
+
+Este arquetipo es una plantilla base, construida con el SDK de CodeDesignPlus.Net.Sdk, diseñada para facilitar el desarrollo de microservicios robustos, escalables y mantenibles en .NET. Proporciona una estructura predefinida y las herramientas necesarias para construir aplicaciones siguiendo buenas prácticas y patrones de diseño comunes. Este arquetipo te ofrece un punto de partida sólido y bien organizado para el desarrollo de tus microservicios, permitiéndote enfocarte en la lógica de negocio específica de tu aplicación.
+
+## Objetivo del Arquetipo
+
+El objetivo principal de este arquetipo es simplificar el proceso de creación de microservicios en .NET, proporcionando una base sólida que aborda las tareas comunes y permite a los desarrolladores:
+
+*   **Comenzar rápidamente**: Evita la necesidad de configurar manualmente la estructura de un nuevo microservicio desde cero.
+*   **Seguir buenas prácticas**: Fomenta el uso de patrones de diseño recomendados y una arquitectura limpia.
+*   **Facilitar la mantenibilidad**: Promueve una organización clara del código y una arquitectura modular para facilitar los cambios y el mantenimiento a largo plazo.
+*   **Reducir la complejidad**: Oculta detalles de configuración y gestión de dependencias para que puedas concentrarte en la lógica de negocio.
+*   **Promover la escalabilidad**: La estructura y los patrones utilizados permiten que los microservicios sean fácilmente escalables y adaptables a las necesidades cambiantes.
+
+En resumen, este arquetipo busca resolver el problema de la complejidad inicial en el desarrollo de microservicios, ofreciendo una base lista para usar que acelera el desarrollo y mejora la calidad del código.
+
+## Beneficios de Utilizar este Arquetipo
+
+Este arquetipo ofrece múltiples beneficios para un desarrollador, incluyendo:
+
+*   **Aprendizaje práctico**: Permite entender en la práctica cómo funcionan los microservicios, los patrones de diseño y las buenas prácticas de programación en C#.
+*   **Reducción de la curva de aprendizaje**: Facilita la comprensión de la arquitectura de microservicios y reduce la curva de aprendizaje al proporcionar un ejemplo práctico.
+*   **Aumento de la productividad**: Permite comenzar el desarrollo de nuevos microservicios de forma rápida y eficiente, sin preocuparse por los detalles de configuración inicial.
+*   **Código limpio y organizado**: Fomenta la escritura de código limpio, organizado y fácil de entender, lo que mejora la calidad y la mantenibilidad de los proyectos.
+*   **Base para la experimentación**: Proporciona una estructura modular que permite a los desarrolladores experimentar e iterar rápidamente.
+*   **Acelera el aprendizaje**: al usar una estructura predefinida, los desarrolladores pueden enfocarse en aprender como funciona cada capa y como se usa cada herramienta.
+
+En resumen, este arquetipo no solo acelera el desarrollo, sino que también proporciona una herramienta de aprendizaje valiosa para los desarrolladores que están comenzando en el mundo de los microservicios.
+
+## Requisitos Previos
+
+Para aprovechar al máximo este arquetipo, se espera que tengas:
+
+*   **Conocimientos básicos de C# y .NET**: Familiaridad con la sintaxis del lenguaje, tipos de datos, estructuras de control y conceptos de programación orientada a objetos.
+*   **Conocimientos básicos de microservicios**: Comprensión de la arquitectura de microservicios, incluyendo conceptos como servicios, APIs, comunicación entre servicios y escalabilidad.
+*   **Entendimiento básico de patrones de diseño (DDD)**: Familiaridad con patrones de diseño como DDD (Domain-Driven Design), agregados, entidades, objetos de valor y repositorios.
+
+Si no estás familiarizado con alguno de estos conceptos, te recomendamos repasar la documentación asociada para aprovechar al máximo este arquetipo.
+
+## Convenciones
+
+Este arquetipo sigue las siguientes convenciones:
+
+*   **Carpetas:**
+    *   `src/domain`: Contiene el código del dominio.
+    *   `src/application`: Contiene la lógica de la aplicación.
+    *   `src/infrastructure`: Contiene el código de infraestructura.
+    *   `src/entrypoints`: Contiene los servicios expuestos.
+    *   `tests/unit`: Contiene las pruebas unitarias.
+    *   `tests/integration`: Contiene las pruebas de integración.
+    *   `resources`: Contiene archivos de configuración de docker, loki, etc.
+*   **Archivos:**
+    *   Los archivos de dominio terminan con "Aggregate", "Entity", "DomainEvent", "Enum".
+    *   Los archivos de aplicación terminan con "Command", "Query", "Dto"
+    *   Los archivos de infraestructura terminan con "Repository"
+    *   Los archivos de test siguen el mismo nombre que la clase que testean y terminan con "Test"
+*   **Clases:**
+    *   Clases del dominio: Usan `PascalCase`.
+    *   Métodos: Usan `PascalCase`.
+    *   Interfaces: Usan `IPascalCase`.
+    *   Propiedades: Usan `PascalCase`.
+*   **Namespaces**: Cada capa tiene su namespace:
+    * `CodeDesignPlus.Net.Microservice.Domain`
+    * `CodeDesignPlus.Net.Microservice.Application`
+    * `CodeDesignPlus.Net.Microservice.Infrastructure`
+    * `CodeDesignPlus.Net.Microservice.gRpc`
+    * `CodeDesignPlus.Net.Microservice.Rest`
+    * `CodeDesignPlus.Net.Microservice.AsyncWorker`
+    * `CodeDesignPlus.Net.Microservice.Default`
+*   **Tests**: Siguen el patron `ClaseATestarTest`, para los tests unitarios, y `ClaseATestarTest`, para los tests de integración.
+*   **Configuración**: La configuración se basa en archivos `appsettings.json`, `appsettings.Development.json` y variables de entorno.
+
+Estas convenciones ayudan a mantener la consistencia y la legibilidad del código, facilitando la colaboración y el mantenimiento del proyecto.

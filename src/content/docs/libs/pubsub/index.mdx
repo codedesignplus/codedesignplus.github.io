@@ -1,0 +1,267 @@
+---
+title: Overview
+---
+
+import { Tabs, TabItem, FileTree, LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La arquitectura orientada a eventos (Event-Driven) es un estilo de arquitectura de software que promueve la producción, detección, consumo y reacción a eventos. Un evento es un cambio de estado o una actualización significativa en el sistema. Esta arquitectura es ideal para aplicaciones que requieren alta escalabilidad, flexibilidad y desacoplamiento entre componentes.
+
+Este tipo de arquitectura se basa en patrón de publicación y suscripción (Pub/Sub), donde los componentes del sistema se comunican entre sí mediante eventos. Los eventos son mensajes que representan un cambio en el estado de una entidad o un cambio significativo en el sistema. Los eventos son generados por productores de eventos y consumidos por consumidores de eventos.
+
+
+## Propósito y alcance
+---
+
+La librería `CodeDesignPlus.Net.PubSub` tiene como objetivo estandarizar la implementación y el uso de un sistema de publicación y suscripción (Pub/Sub) en aplicaciones .NET. Esta librería proporciona una serie de interfaces y clases base que facilitan la implementación de clientes de eventos y manejadores de eventos como RabbitMQ, Kafka, Redis Pub/Sub, Event Store entre otros.
+
+## Principales características
+---
+
+- Estandariza la implementación de un sistema de publicación y suscripción (Pub/Sub) en aplicaciones .NET.
+- Facilita la integración con brokers de eventos como RabbitMQ, Kafka, Redis Pub/Sub, Event Store, entre otros.
+- Desacoplamiento: Los publicadores y suscriptores no necesitan conocerse entre sí.
+- Escalabilidad: Maneja fácilmente un gran número de mensajes y suscriptores.
+- Asincronía: Los eventos se procesan de manera asíncrona.
+- Flexibilidad: Se pueden añadir o eliminar suscriptores sin afectar al sistema.
+- Filtrado: Los suscriptores reciben solo los mensajes de su interés.
+- Reactividad: Los componentes reaccionan a eventos en tiempo real.
+- Estado Descentralizado: El estado se distribuye entre eventos y consumidores.
+- Desempeño Mejorado: Reduce la latencia al procesar eventos de inmediato.
+- Interoperabilidad: Facilita la integración entre sistemas heterogéneos.
+- Resiliencia> Mejora la tolerancia a fallos mediante la redundancia y el manejo de errores.
+
+## Casos de uso típicos
+---
+
+- Notificaciones en Tiempo Real: En sistemas de mensajería instantánea y redes sociales, donde los usuarios reciben notificaciones sobre nuevas publicaciones, mensajes o eventos.
+- Monitorización de Sistemas: Herramientas que envían alertas cuando se detectan problemas en la infraestructura, como picos de tráfico o caídas de servicio.
+- Aplicaciones de E-Commerce: Para actualizar el stock en tiempo real y enviar notificaciones sobre cambios en precios o promociones.
+- Sistemas de Logs: Para la recolección y análisis de logs distribuidos en tiempo real.
+- Microservicios: En arquitecturas de microservicios, donde los componentes independientes reaccionan a eventos sin necesidad de llamadas directas.
+- Procesamiento de Datos en Tiempo Real: Análisis de flujos de datos en tiempo real, como procesamiento de transacciones financieras o análisis de datos de sensores IoT.
+- Aplicaciones de Juegos: Sincronización de eventos de juego entre múltiples jugadores en tiempo real.
+- Automatización de Procesos Empresariales: Donde varios sistemas reaccionan automáticamente a eventos, como en la gestión de inventarios o la orquestación de workflows.
+
+## Componentes Principales
+---
+
+- `IMessage`: Interfaz que define el contrato para los servicios de mensajería que se utilizan para publicar eventos a un broker externo como RabbitMQ, Kafka o Redis Pub/Sub.
+- `IEventHandler<TEvent>`: Interfaz que define el contrato para los manejadores de eventos. Los manejadores de eventos son responsables de procesar los eventos recibidos.
+- `IPubSub`: Interfaz que define el contrato para la publicación de eventos de dominio y es usada por los clientes para publicar eventos.
+- `IEventQueueService`: Interfaz que define el contrato para el servicio de cola de eventos. Este servicio se utiliza para almacenar eventos en una cola en memoria antes de ser procesados.
+- `IActivityService`: Interfaz que define el contrato para el servicio de actividad. Este servicio se utiliza para registrar y rastrear actividades dentro del sistema que serán expuestas usando OpenTelemetry.
+- `EventQueueBackgroundService`: Clase que implementa `BackgroundService` y se encarga de procesar los eventos en segundo plano cuando se activa el sistema de queue en memoria.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.PubSub      
+        - Diagnostics
+            - ActivitySourceService.cs   
+        - Exceptions
+            - EventHandlerAlreadyRegisteredException.cs
+            - EventIsNotRegisteredException.cs
+            - EventNotExistException.cs
+            - EventNotImplementedException.cs
+            - PubSubException.cs   
+        - Extensions
+            - PubSubExtensions.cs
+            - ServiceCollectionExtensions.cs   
+        - Services
+            - EventQueueBackgroundService.cs
+            - EventQueueService.cs
+            - PubSubService.cs
+            - RegisterEventHandlerBackgroundService.cs
+    - CodeDesignPlus.Net.PubSub.Abstractions
+        - IActivityService.cs
+        - IEventHandler.cs
+        - IEventQueueService.cs
+        - IMessage.cs
+        - IPubSub.cs
+        - IQueueService.cs
+        - Subscription.cs    
+        - Options
+            - PubSubOptions.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.PubSub` en tu aplicación .NET. Sigue los siguientes pasos para comenzar a utilizar la librería en tu proyecto.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimientos básicos de patrones de diseño y sistemas distribuidos.
+- Conocimientos sobre la arquitectura orientada a eventos (Event-Driven).
+- Inyección de dependencias en aplicaciones .NET.
+
+### Instalación
+
+Para instalar la librería CodeDesignPlus.Net.PubSub en tu proyecto de .NET, puedes utilizar el administrador de paquetes NuGet o la interfaz de línea de comandos de .NET. A continuación, se muestran los comandos para instalar la librería en tu proyecto:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.PubSub
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.PubSub
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.PubSub" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+### Configuración básica
+
+<Steps>
+1. Asignar las opciones de configuración en el `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/appsettings.json"
+    ```
+2. Registra los servicios el contenedor de dependencias de tu aplicación: 
+
+    ```csharp
+    // ...
+    services.AddPubSub(configuration);
+    ```
+</Steps>
+
+## Ejemplo rápido
+---
+
+El proyecto de ejemplo [`CodeDesignPlus.Net.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.PubSub.Sample) muestra cómo publicar y suscribir eventos de dominio. De igual forma se muestra cómo implementar un broker en memoria para el ejemplo.
+
+```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Program.cs"
+```
+
+
+<Steps>
+1. Creamos la entidad `UserEntity` que sera utilizada en el evento `UserCreatedEvent`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Entities/UserEntity.cs"
+    ```
+
+2. Creamos el evento `UserCreatedEvent` que hereda de `DomainEvent`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEvent.cs"
+    ```
+
+3. Creamos el manejador `UserCreatedEventHandler` que implementa `IEventHandler<UserCreatedEvent>`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEventHandler.cs"
+    ```
+
+4. Creamos el servidor `InMemoryBroker` que implementa `IMessage`. 
+
+    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Server/InMemoryBroker.cs"
+    ```
+
+    <Aside>
+        Esta implementación es un broker en memoria que se utiliza para el ejemplo. En un entorno de producción, se recomienda implementar un broker de eventos como RabbitMQ, Kafka o RedisPubSub.
+
+        Para mas información sobre cómo implementar un broker de eventos, puedes consultar las siguientes implementaciones:
+
+        - RabbitMQ: [CodeDesignPlus.Net.RabbitMQ](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/RabbitPubSubService.cs)
+        - Kafka: [CodeDesignPlus.Net.Kafka](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.Kafka/src/CodeDesignPlus.Net.Kafka/Services/KafkaPubSub.cs)
+        - RedisPubSub: [CodeDesignPlus.Net.RedisPubSub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.Redis.PubSub/src/CodeDesignPlus.Net.Redis.PubSub/Services/RedisPubSubService.cs)
+    </Aside>
+
+5. Registraremos los servicios necesarios en el contenedor de dependencias.
+
+    ```csharp
+    builder.Services.AddPubSub(builder.Configuration);
+    ```
+
+6. Obtenemos una instancia de `IPubSub` del contenedor de dependencias.
+
+    ```csharp
+    var pubSub = host.Services.GetRequiredService<IPubSub>();
+    ```
+
+7. Publicamos un evento de dominio `UserCreatedEvent`.
+
+    ```csharp
+    var userCreatedEvent = new UserCreatedEvent(Guid.NewGuid(), "John Doe");
+
+    await pubSub.PublishAsync(userCreatedEvent, CancellationToken.None);
+    ```
+</Steps>
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.PubSub` proporciona una serie de métodos de extensión para facilitar la integración de la librería en aplicaciones .NET. Estos métodos permiten registrar automáticamente los servicios necesarios en el sistema de inyección de dependencias de .NET. A continuación se listan los métodos de extensión disponibles:
+
+### ServiceCollectionExtensions
+
+    Esta clase proporciona métodos de extensión para registrar los servicios de `CodeDesignPlus.Net.PubSub` en el sistema de inyección de dependencias de .NET.
+
+    <LinkCard title="Explora ServiceCollectionExtensions" href="/libs/pubsub/extensions/service-collection" />
+
+### PubSubExtensions
+
+    Esta clase proporciona métodos de extensión para facilitar las operaciones relacionadas con la publicación y suscripción de eventos.
+
+    <LinkCard title="Explora PubSubExtensions" href="/libs/pubsub/extensions/pub-sub" />
+
+## Opciones de configuración
+---
+
+`CodeDesignPlus.Net.PubSub` proporciona una clase de opciones de configuración para personalizar el comportamiento de la librería. Estas opciones permiten a los desarrolladores configurar parámetros como el uso de un sistema de queue en memoria, el tiempo de espera para procesar eventos y el tiempo de espera para publicar eventos. A continuación se listan las opciones de configuración disponibles:
+
+<LinkCard title="Explora PubSubOptions" href="/libs/pubsub/options" />
+
+## Servicios
+---
+
+`CodeDesignPlus.Net.PubSub` proporciona interfaces e implementaciones esenciales para implementar patrones de publicación y suscripción en aplicaciones .NET. A continuación se listan los servicios disponibles en la librería:
+
+### IPubSub
+
+    Esta interfaz define el contrato para la publicación de eventos de dominio.
+
+    <LinkCard title="Explora IPubSub" href="/libs/pubsub/services/pub-sub" />
+
+### IMessage
+
+    Esta interfaz define el contrato para los servicios de mensajería que se utilizan para publicar eventos a un broker externo como RabbitMQ, Kafka o Redis Pub/Sub.
+
+    <LinkCard title="Explora IMessage" href="/libs/pubsub/services/message" />
+
+### IEventHandler\<TEvent>
+
+    Esta interfaz define el contrato para los manejadores
+
+    <LinkCard title="Explora IEventHandler" href="/libs/pubsub/services/event-handler" />
+
+### IEventQueueService
+
+    Esta interfaz define el contrato para el servicio de cola de eventos. Este servicio se utiliza para almacenar eventos en una cola en memoria antes de ser procesados.
+
+    <LinkCard title="Explora IEventQueueService" href="/libs/pubsub/services/event-queue" />
+
+### IActivityService
+
+    Esta interfaz define el contrato para el servicio de actividad. Este servicio se utiliza para registrar y rastrear actividades dentro del sistema que seran expuestas usando OpenTelemetry.
+
+    <LinkCard title="Explora IActivityService" href="/libs/pubsub/services/activity" />
+
+## Conclusiones
+---
+
+La librería `CodeDesignPlus.Net.PubSub` es una herramienta poderosa para los desarrolladores que buscan implementar aplicaciones robustas, escalables y mantenibles, alineadas con las mejores prácticas de desarrollo. Esta librería facilita la implementación de un sistema de publicación y suscripción (Pub/Sub) en aplicaciones .NET, permitiendo a los desarrolladores crear aplicaciones desacopladas mediante el uso de eventos y manejadores de eventos.
+
+## Referencias
+---
+
+- [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.PubSub)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample)
+- [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven)
+- [Pub/Sub Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
+- [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.PubSub)

@@ -1,0 +1,41 @@
+---
+title: Models
+---
+
+Los modelos proporcionados por la biblioteca `CodeDesignPlus.Net.Exceptions` se utilizan para estructurar y devolver información sobre errores en la aplicación. Estos modelos son útiles para estandarizar la forma en que se manejan y devuelven errores en la aplicación, proporcionando información detallada sobre los errores ocurridos.
+
+## ErrorResponse
+---
+La clase `ErrorResponse` estandariza las respuestas de error en la aplicación, proporcionando información estructurada sobre los errores ocurridos. Es útil en middlewares o interceptores para gestionar y devolver errores de forma consistente.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Models/ErrorResponse.cs"
+```
+
+### Propiedades
+- TraceId (string): Identificador de rastreo único para la respuesta de error, útil para depuración y seguimiento.
+- Layer (Layer): Representa la capa del sistema donde ocurrió el error (por ejemplo, Aplicación, Dominio, Infraestructura).
+- Errors (List\<ErrorDetail\>): Lista de detalles de error asociados con la respuesta. Inicializada como una lista vacía.
+
+### Métodos
+- `AddError`: Agrega un detalle de error a la lista de errores.
+
+    Ejemplo:
+
+    ```csharp
+    var errorResponse = new ErrorResponse("12345", Layer.Application);
+    errorResponse.AddError("400", "Invalid input", "Name");
+    ```
+
+## ErrorDetail
+---
+
+La clase `ErrorDetail` encapsula información detallada sobre un error específico, proporcionando claridad sobre la causa del fallo.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Models/ErrorDetail.cs"
+```
+
+### Propiedades
+- `Code` (string): Código único que identifica el error (por ejemplo, códigos HTTP o personalizados).
+- `Field` (string): Campo o propiedad del objeto afectado por el error (opcional).
+- `Message` (string): Mensaje descriptivo del error.
+

@@ -1,0 +1,120 @@
+---
+title: Dto Generator
+---
+
+import { LinkCard, Steps, FileTree } from '@astrojs/starlight/components';
+
+La clase `DtoGenerator.cs` es una parte esencial del proyecto `CodeDesignPlus.Net.Generator`. Su propósito principal es automatizar la generación de clases DTO (Data Transfer Object) basadas en `comandos` decorados con el atributo `DtoGeneratorAttribute`. Este generador de código se ejecuta durante la compilación del proyecto y crea clases DTO automáticamente, reduciendo el esfuerzo manual y minimizando errores.
+
+```csharp url="packages/CodeDesignPlus.Net.Generator/src/CodeDesignPlus.Net.Generator/DtoGenerator.cs"
+```
+
+## Métodos
+---
+
+La clase `DtoGenerator` contiene los siguientes métodos:
+
+### Initialize
+**Type:** `public void Initialize(GeneratorInitializationContext context)`
+
+Este método inicializa el generador registrando notificaciones de sintaxis. Es el punto de entrada del generador y se llama una vez durante la inicialización.
+
+### Execute
+**Type:** `public void Execute(GeneratorExecutionContext context)`
+
+Este método se ejecuta durante la compilación. Su función principal es buscar todos los tipos en el ensamblado que están decorados con el atributo `DtoGeneratorAttribute` y generar las clases DTO correspondientes.
+
+### GenerateDtos
+**Type:** `private static void GenerateDtos(GeneratorExecutionContext context, List<INamedTypeSymbol> commands)`
+
+Este método genera las clases DTO para los comandos especificados.
+
+Pasos:
+- Crea un `StringBuilder` para construir el código fuente de las clases DTO.
+- Itera sobre cada comando y genera el nombre del DTO.
+- Añade el código fuente de la clase DTO al `StringBuilder`.
+- Llama al método AddProperties para añadir las propiedades a la clase DTO.
+- Añade el código fuente generado al contexto de compilación.
+- Limpia el `StringBuilder` para el siguiente comando.
+
+### AddProperties
+**Type:** `private static void AddProperties(StringBuilder codeBuilder, INamedTypeSymbol command)`
+
+Este método añade las propiedades a la clase DTO basada en las propiedades públicas del comando.
+
+Pasos:
+- Itera sobre las propiedades públicas del comando.
+- Añade cada propiedad al StringBuilder.
+
+## DtoGeneratorAttribute
+---
+
+El atributo `DtoGeneratorAttribute` se utiliza para marcar las clases que deben tener un DTO generado. Es un atributo personalizado que se aplica a las clases para indicar que se debe generar un DTO para ellas.
+
+```csharp url="packages/CodeDesignPlus.Net.Generator/src/CodeDesignPlus.Net.Generator/Attributes/DtoGeneratorAttribute.cs"
+```
+
+## TargetTypeTracker
+---
+La clase `TargetTypeTracker` rastrea los tipos que necesitan generación de DTO. Se utiliza en el método Initialize del `DtoGenerator` para registrar notificaciones de sintaxis.
+
+```csharp url="packages/CodeDesignPlus.Net.Generator/src/CodeDesignPlus.Net.Generator/Core/TargetTypeTracker.cs"
+```
+### Métodos
+
+La clase `TargetTypeTracker` contiene los siguientes métodos:
+
+#### OnVisitSyntaxNode
+**Type:** `public void OnVisitSyntaxNode(GeneratorSyntaxContext context)`
+
+Este método se llama cuando se visita un nodo de sintaxis. Agrega tipos que están decorados con el atributo `DtoGeneratorAttribute` a la lista de tipos que necesitan generación de DTO.
+
+## Ejemplo de Uso
+---
+
+A continuación, se muestra un ejemplo de cómo utilizar el generador de DTOs en una aplicación .NET Core:
+
+```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
+```
+
+<Steps>
+1. Crear la librería que corresponde a la capa de aplicación con respecto a la arquitectura hexagonal.
+
+    <FileTree>
+    - CodeDesignPlus.Net.Generator.Sample.sln
+    - src
+    - CodeDesignPlus.Net.Generator.Application
+        - CodeDesignPlus.Net.Generator.Application.csproj
+        - CreateUserCommand.cs
+        - CreateUserCommandHandler.cs
+    - CodeDesignPlus.Net.Generator.Sample
+        - CodeDesignPlus.Net.Generator.Sample.csproj
+        - Program.cs
+    </FileTree>
+
+2. Instalar la ultima versión del paquete `CodeDesignPlus.Net.Generator` en la capa de aplicación.
+
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Generator --version 0.5.0-beta.14
+    ```
+
+    ```xml url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CodeDesignPlus.Net.Generator.Application.csproj"
+    ```
+
+3. Crear un comando que representa la acción de crear un usuario en la aplicación y decorarlo con el atributo `DtoGeneratorAttribute`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CreateUserCommand.cs"
+    ```
+
+    4. Compilar el proyecto y verificar que se generó la clase DTO correspondiente al comando.
+
+    ```bash
+    dotnet build
+    ```
+
+5. Verificar que se generó la clase `CreateUserDto` en el proyecto. Este se encuentra disponible en el namespace `CodeDesignPlus.Microservice.Api.Dtos`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
+    ```
+
+</Steps>

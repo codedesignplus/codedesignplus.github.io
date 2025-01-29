@@ -1,0 +1,128 @@
+---
+title: CriteriaExtensions
+---
+
+La clase **CriteriaExtensions** proporciona métodos de extensión que simplifican el trabajo con objetos de criterio, permitiendo la conversión de criterios a expresiones que pueden ser utilizadas en consultas LINQ. Estos métodos facilitan la creación de filtros y ordenamientos basados en criterios definidos por el usuario.
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+
+## Escenarios de uso
+---
+
+Este conjunto de métodos de extensión es particularmente útil en aplicaciones que:
+
+- Trabajan con grandes cantidades de datos y necesitan filtrar o ordenar dinámicamente.
+- Implementan patrones de diseño como Repositorios y Specification.
+- Requieren construir expresiones lógicas basadas en cadenas de texto configuradas.
+
+## Beneficios
+---
+
+- Simplifica la creación de expresiones de filtro y ordenamiento.
+- Mejora la legibilidad del código al encapsular la lógica compleja.
+- Facilita la validación y manipulación de criterios en aplicaciones escalables.
+
+## Ejemplo Práctico
+---
+
+El siguiente ejemplo ilustra cómo utilizar los métodos de extensión de CriteriaExtensions para filtrar y ordenar una colección de objetos en función de criterios definidos por el usuario.
+
+```csharp
+using CodeDesignPlus.Net.Criteria;
+using CodeDesignPlus.Net.Criteria.Extensions;
+using System;
+using System.Linq;
+using System.Linq.Expressions;
+
+public class Order
+{
+    public int Id { get; set; }
+    public decimal Total { get; set; }
+    public DateTime DateCreated { get; set; }
+}
+
+public class Program
+{
+    public static void Main()
+    {
+        var orders = new[]
+        {
+            new Order { Id = 1, Total = 100, DateCreated = DateTime.Now },
+            new Order { Id = 2, Total = 200, DateCreated = DateTime.Now.AddDays(-1) },
+            new Order { Id = 3, Total = 300, DateCreated = DateTime.Now.AddDays(-2) }
+        };
+
+        var criteria = new MC.Criteria { Filters = "Total > 100", OrderBy = "DateCreated" };
+
+        var filterExpression = criteria.GetFilterExpression<Order>();
+        var sortExpression = criteria.GetSortByExpression<Order>();
+
+        var filteredOrders = orders.AsQueryable().Where(filterExpression);
+        var sortedOrders = orders.AsQueryable().OrderBy(sortExpression);
+
+        Console.WriteLine("Filtered Orders:");
+        foreach (var order in filteredOrders)
+        {
+            Console.WriteLine($"Id: {order.Id}, Total: {order.Total}, DateCreated: {order.DateCreated}");
+        }
+
+        Console.WriteLine("\nSorted Orders:");
+        foreach (var order in sortedOrders)
+        {
+            Console.WriteLine($"Id: {order.Id}, Total: {order.Total}, DateCreated: {order.DateCreated}");
+        }
+    }
+}
+```
+
+## Métodos de extensión
+---
+
+`CriteriaExtensions` proporciona los siguientes métodos de extensión para trabajar con objetos de criterio:
+
+### GetFilterExpression
+**Type:** `public static Expression<Func<T, bool>> GetFilterExpression<T>(this MC.Criteria criteria)`
+
+Genera una expresión de filtrado basada en los criterios especificados. Esta expresión puede ser utilizada en consultas LINQ para filtrar datos dinámicamente.
+
+- **Parámetros**
+    - `criteria`: Objeto de tipo `MC.Criteria` que contiene la lógica de filtrado. No puede ser nulo.
+
+- **Retorno**
+    - `Expression<Func<T, bool>>`: Una expresión lambda que representa el filtro.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si criteria es nulo.
+
+### GetSortByExpression
+**Type:** `public static Expression<Func<T, object>> GetSortByExpression<T>(this MC.Criteria criteria)`
+
+Genera una expresión de ordenamiento basada en los criterios especificados. Permite ordenar dinámicamente las consultas.
+
+- **Parámetros**
+    - `criteria`: Objeto de tipo `MC.Criteria` que contiene la lógica de filtrado. No puede ser nulo.
+
+- **Retorno**
+    - `Expression<Func<T, bool>>`: Una expresión lambda que representa el filtro.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si criteria es nulo.
+
+## Conclusiones
+---
+
+La clase `CriteriaExtensions` proporciona métodos de extensión que simplifican la creación de expresiones de filtro y ordenamiento basadas en criterios. Estos métodos son útiles para aplicaciones que necesitan filtrar y ordenar datos de forma dinámica, mejorando la legibilidad y mantenibilidad del código.
+
+
+## Referencias
+---
+
+- [.Net dependency injection](https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)
+- [Documentación oficial de `IServiceCollection`](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection.iservicecollection?view=net-9.0-pp)
+- [Documentación oficial de LINQ](https://learn.microsoft.com/en-us/dotnet/csharp/linq/)
+- [Expresiones lambda en C#](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-expressions)

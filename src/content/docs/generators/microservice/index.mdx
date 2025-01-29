@@ -1,0 +1,328 @@
+---
+title: Generador para Microservicios
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+Este documento detalla el uso del generador `codedesignplus:microservice`, una herramienta para la creación y gestión de microservicios basados en el arquetipo [`CodeDesignPlus.Net.Microservice`](../archetypes/) que implementa el SDK [`CodeDesignPlus.Net.SDK`](../libs/introduction). Aprenderás a utilizar cada comando, los cuales están relacionados con los conceptos de DDD y patrones de diseño subyacentes.
+
+<Image src="/images/generators/microservices/Generator.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Arquitectura y Patrones Clave
+---
+
+Antes de sumergirnos en los comandos, es crucial entender los principios que guían este generador:
+
+*   **Domain-Driven Design (DDD):**  Enfatiza el modelado del software alrededor del dominio del negocio. Conceptos clave incluyen:
+    *   **Entidades:** Objetos con identidad única y ciclo de vida (ej. un Usuario).
+    *   **Objetos de Valor:** Objetos inmutables que describen aspectos del dominio (ej. un Email).
+    *   **Agregados:** Colecciones de entidades y objetos de valor que se tratan como una unidad.
+    *   **Eventos de Dominio:** Representan algo que sucedió en el dominio del negocio.
+*   **Command Query Responsibility Segregation (CQRS):** Separa las operaciones de lectura (Queries) y escritura (Commands), lo que permite optimizar cada lado de forma independiente.
+*   **Arquitectura Orientada a Eventos (Event-Driven):**  Permite que los componentes del sistema se comuniquen mediante la emisión y suscripción a eventos, mejorando el desacoplamiento.
+*   **Ports & Adapters:**  Este patrón desacopla la lógica de la aplicación de los detalles de infraestructura (como bases de datos, APIs externas, etc.). Utiliza puertos (interfaces) y adaptadores para interactuar con el mundo exterior, permitiendo que la aplicación se adapte a diferentes tecnologías y entornos sin afectar su lógica central.
+
+## ¿Qué es CodeDesignPlus.Net.Microservice?
+---
+
+El arquetipo `CodeDesignPlus.Net.Microservice` es un punto de partida para la construcción de microservicios .NET modernos. Promueve la separación de responsabilidades, la mantenibilidad y la escalabilidad. Incluye una estructura de proyecto bien definida, configuraciones predeterminadas y bibliotecas de utilidad, permitiendo a los desarrolladores centrarse en la lógica de negocio. Este arquetipo ofrece una base sólida que incorpora buenas prácticas y facilita el desarrollo rápido de microservicios robustos.
+
+<Image src="/images/generators/microservices/Archetype.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Uso
+---
+
+Para utilizar el generador `codedesignplus:microservice`, sigue estos pasos:
+
+1.  **Instala Yeoman y el generador:**
+
+    Asegúrate de tener instalado Node.js y npm (Node Package Manager). Luego, instala Yeoman y el generador `codedesignplus` globalmente utilizando npm:
+
+    ```bash
+    npm install -g yo
+    npm install -g generator-codedesignplus
+    ```
+
+    *   `yo`: Es el ejecutor de Yeoman, la herramienta que gestiona y ejecuta los generadores.
+    *   `generator-codedesignplus`: Es el generador específico que contiene los comandos para crear microservicios.
+
+2.  **Crea o accede a tu directorio de proyecto:**
+
+    Navega a la carpeta donde deseas crear tu microservicio o a la raíz de un proyecto existente en el que quieras agregar componentes:
+
+    ```bash
+    cd path/to/your/project
+    ```
+
+3.  **Ejecuta los comandos del generador:**
+
+    Dentro de tu directorio de proyecto, ejecuta el comando `yo codedesignplus:microservice` seguido del comando específico que deseas utilizar y sus opciones. Por ejemplo, para crear un nuevo microservicio:
+
+    ```bash
+    yo codedesignplus:microservice microservice --organization "acme" --microservice "users" ... (otras opciones)
+    ```
+
+    Consulta la sección "Comandos del Generador" para conocer la sintaxis específica y las opciones disponibles para cada comando.
+
+**Consideraciones:**
+
+- Asegúrate de tener Node.js y npm instalados correctamente en tu sistema.
+- Los comandos del generador se ejecutan en la línea de comandos o terminal.
+- Cada comando puede tener diferentes opciones que puedes consultar en esta documentación.
+
+## Comandos del Generador
+---
+A continuación, se detallan los comandos disponibles en el generador `codedesignplus:microservice`. Cada comando se presenta como un subtítulo con su descripción y ejemplo de uso.
+
+### 1. Creación de Microservicio
+**Command:** `yo codedesignplus:microservice microservice`
+
+Este comando es el punto de partida para generar la estructura de un nuevo microservicio. Puedes optar por un microservicio **CRUD** o uno **Custom**, cada uno con sus propias características y patrones de diseño, para adaptarse mejor a las necesidades de tu proyecto.
+
+#### Microservicio CRUD
+
+Un microservicio CRUD (Create, Read, Update, Delete) se centra en la gestión de datos. Es adecuado para escenarios donde las operaciones principales son crear, leer, actualizar y eliminar entidades. Se enfoca principalmente en la persistencia de datos.
+
+```bash
+yo codedesignplus:microservice microservice \
+    --organization "acme" \
+    --microservice "users" \
+    --description "Microservicio para gestionar usuarios de la plataforma." \
+    --contact-name "Jane Doe" \
+    --contact-email "jane.doe@example.com" \
+    --vault "vault-acme" \
+    --is-crud \
+    --aggregate "user" \    
+    --enable-grpc \
+    --enable-async-worker \
+    --consumer-name "userRegistered" \
+    --consumer-aggregate "user" \
+    --consumer-action "send-welcome-email"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/microservice-crud" />
+
+#### Microservicio Custom
+
+Un microservicio custom se enfoca en la lógica de negocio compleja y eventos, en lugar de simples operaciones CRUD. Es ideal para escenarios donde el flujo de trabajo es más importante que el almacenamiento de datos, permitiendo mayor flexibilidad y personalización.
+
+```bash
+yo codedesignplus:microservice microservice \
+    --organization "acme" \
+    --microservice inventory \
+    --description "Microservicio para gestionar el inventario de productos." \
+    --contact-name "John Smith" \
+    --contact-email "john.smith@example.com" \
+    --vault "vault-acme" \
+    --aggregate "product" \    
+    --enable-grpc \
+    --enable-async-worker \
+    --consumer-name "orderCreated" \
+    --consumer-aggregate "order" \
+    --consumer-action "update-stock" \
+    --domain-events "ProductCreated,ProductUpdated,ProductRemoved" \
+    --entities "Product,Category" \
+    --commands CreateProduct,UpdateProduct,RemoveProduct \
+    --queries "FindProductById,FindProductsByCategory"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/microservice-custom" />
+
+<Aside type="tip">
+1. Al crear un microservicio con el comando `yo codedesignplus:microservice microservice`, este creará un archivo de metadatos con el nombre `archetype.json` que contiene la información transversal para facilitar la ejecución de los otros comandos. Por ende no sera necesario volver a pasar los siguientes flags:
+
+    ```txt
+    --organization <organization> 
+    --microservice <microservice>
+    --description <description>
+    --contact-name <contact-name>
+    --contact-email <contact-email>
+    --vault <vault>
+    ```
+
+2. El microservicio siempre sera creado por lo menos con el entrypoint REST
+</Aside>
+
+### 2. Creación de un Agregado
+**Command:** `yo codedesignplus:microservice aggregate`
+
+Crea un nuevo agregado en el microservicio. Los agregados son bloques de construcción clave en DDD, que garantizan la consistencia de las entidades dentro de sus límites.
+
+```bash
+yo codedesignplus:microservice aggregate \
+    --organization "acme" \
+    --microservice "users" \
+    --aggregate "user"Profile
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/aggregate" />
+
+### 3. Creación de Entidad
+**Command:** `yo codedesignplus:microservice entity`
+
+Crea una o más entidades. Las entidades son objetos con identidad que pueden cambiar de estado a lo largo de su ciclo de vida.
+
+```bash
+yo codedesignplus:microservice entity \
+    --organization "acme" \
+    --microservice "inventory" \
+    --entities "Product,Category"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/entity" />
+
+### 4. Creación de Value Object
+**Command:** `yo codedesignplus:microservice valueObject`
+
+Crea uno o más objetos de valor. Estos son objetos inmutables definidos por sus atributos y no tienen identidad propia.
+
+```bash
+yo codedesignplus:microservice valueObject \
+    --organization "acme" \
+    --microservice "users" \
+    --valueObjects "Email,Address"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/value-object" />
+
+### 5. Creación de Evento de Dominio
+**Command:** `yo codedesignplus:microservice domainEvent`
+
+Crea uno o más eventos de dominio, que son representaciones de algo que ha ocurrido en el dominio.
+
+```bash
+yo codedesignplus:microservice domainEvent \
+    --organization "acme" \
+    --microservice "orders" \
+    --aggregate "Order" \
+    --domainEvents "OrderCreated,OrderShipped"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/domain-events" />
+
+### 6. Creación de Repositorio
+**Command:** `yo codedesignplus:microservice repository`
+
+Crea un repositorio para un agregado específico, proporcionando una interfaz para acceder a los datos persistentes del agregado.
+
+```bash
+yo codedesignplus:microservice repository \
+    --organization "acme" \
+    --microservice "products" \
+    --repository "Product"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/repository" />
+
+### 7. Creación de Controlador
+**Command:** `yo codedesignplus:microservice controller`
+
+Crea un controlador que gestiona las peticiones entrantes (HTTP o gRPC) para el microservicio.
+
+```bash
+yo codedesignplus:microservice controller \
+    --organization "acme" \
+    --microservice "users" \
+    --controller "UserProfileController"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/controller" />
+
+### 8. Creación de Proto
+**Command:** `yo codedesignplus:microservice proto`
+
+Crea un archivo `.proto` para un servicio gRPC, que define los mensajes y servicios para la comunicación.
+
+```bash
+yo codedesignplus:microservice proto \
+    --organization "acme" \
+    --microservice "products" \
+    --proto-name "ProductService"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/grpc-service" />
+
+### 9. Creación de Consumer de Eventos
+**Command:** `yo codedesignplus:microservice consumer`
+
+Crea un consumer que reacciona a eventos publicados por otros microservicios, realizando una acción específica.
+
+```bash
+yo codedesignplus:microservice consumer \
+    --organization "acme" \
+    --microservice "notifications" \
+    --consumer-name "orderCreated" \
+    --consumer-aggregate "order" \
+    --consumer-action "send-order-confirmation"
+```
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/consumer" />
+
+### 10. Creación de Query
+**Command:** `yo codedesignplus:microservice query`
+
+Crea una o más queries para obtener información del sistema, sin modificar su estado.
+
+```bash
+yo codedesignplus:microservice query \
+    --organization "acme" \
+    --microservice "products" \
+    --aggregate "product" \
+    --repository "Product" \
+    --queries "FindProductById,FindProductsByName"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/query" />
+
+### 11. Creación de Comando
+**Command:** `yo codedesignplus:microservice command`
+
+Crea uno o más comandos para realizar acciones que cambian el estado del sistema.
+
+```bash
+yo codedesignplus:microservice command \
+    --organization "acme" \
+    --microservice "orders" \
+    --aggregate "Order" \
+    --repository "Order" \
+    --commands "CreateOrder,CancelOrder"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/command" />
+
+### 12. Creación de Data Transfer Objects
+**Command:** `yo codedesignplus:microservice dto`
+
+Crea uno o más Data Transfer Objects (DTOs) para transferir datos entre capas o microservicios, permitiendo definir la forma de los datos según las necesidades del consumidor.
+
+```bash
+yo codedesignplus:microservice dto \
+    --organization "acme" \
+    --microservice "orders" \
+    --aggregate "Order" \
+    --dataTransferObject "OrderDto,OrderSummaryDto"
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/dto" />
+
+### 13. Creación de un Proyecto gRPC
+**Command:** `yo codedesignplus:microservice grpc`
+
+Crea un proyecto gRPC que actúa como servidor. Este comando es muy util cuando el microservicio creado fue creado en su momento sin un proyecto gRPC.
+
+```bash
+yo codedesignplus:microservice grpc 
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/grpc" />
+
+### 14. Creación de un Proyecto AsyncWorker
+**Command:** `yo codedesignplus:microservice asyncWorker`
+
+Crea un proyecto AsyncWorker que actúa como un worker para procesar eventos de forma asíncrona.
+
+```bash
+yo codedesignplus:microservice asyncWorker
+```
+
+<LinkCard title="Aprender más sobre este comando" href="/generators/microservice/commands/async-worker" />

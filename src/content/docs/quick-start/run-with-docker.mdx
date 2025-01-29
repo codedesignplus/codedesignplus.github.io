@@ -1,0 +1,201 @@
+---
+title: Ejecutar con Docker
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo construir y ejecutar los microservicios de CodeDesignPlus utilizando Docker. Veremos cómo crear imágenes Docker para cada uno de los entry points del microservicio **Clients** (REST, gRPC y AsyncWorker) y cómo ejecutarlos en contenedores. Esto nos permitirá desplegar y gestionar los microservicios de manera eficiente y consistente.
+
+## ¿Por qué Docker?
+
+Docker es una plataforma de contenedores que permite empaquetar aplicaciones y sus dependencias en unidades portables llamadas contenedores. El uso de Docker ofrece numerosas ventajas en el desarrollo y despliegue de microservicios:
+
+*   **Portabilidad:** Los contenedores se ejecutan de forma consistente en cualquier entorno que tenga Docker instalado, lo que evita problemas de incompatibilidad entre diferentes sistemas operativos y configuraciones.
+*   **Aislamiento:** Los contenedores se ejecutan de forma aislada, evitando conflictos entre diferentes aplicaciones y sus dependencias.
+*   **Consistencia:** Asegura que todos los desarrolladores y entornos de despliegue utilicen la misma versión del microservicio y sus dependencias.
+*   **Escalabilidad:** Permite gestionar y escalar los microservicios de forma más fácil y eficiente.
+
+## ¿Qué Aprenderás?
+
+1. Cómo crear imágenes Docker para los entry points REST, gRPC y AsyncWorker de un microservicio.
+2. Cómo ejecutar los microservicios en contenedores Docker.
+3. Cómo configurar las variables de entorno para los contenedores Docker.
+4. Cómo crear una red Docker para la comunicación entre los contenedores.
+
+## Requisitos Previos
+
+Para seguir este tutorial, necesitarás tener instalado lo siguiente:
+
+- Ejecutar el entorno de desarrollo de CodeDesignPlus con Docker Compose que se explicó en el [siguiente artículo](/quick-start/dev-environment).
+- Haber completado el tutorial de [Creación de un Microservicio](/quick-start/create-microservice) para crear el microservicio **Clients**.
+- Haber completado el tutorial de [Soporte para gRPC](/quick-start/add-support-grpc)
+- Haber completado el tutorial de [Soporte para Eventos de Dominio](/quick-start/suscribe-events)
+
+## Configuración
+
+Los microservicios de **CodeDesignPlus** hacen uso del archivo `appsettings.Docker.json` cuando la variable de entorno `ASPNETCORE_ENVIRONMENT` es establecida en `Docker`. En este archivo, se definen las configuraciones para la conexión a la base de datos, Redis, RabbitMQ, entre otros recursos de la infraestructura.
+
+A continuación se muestra la configuración por defecto del archivo `appsettings.Docker.json`:
+
+```json
+{
+  "Redis": {
+    "Instances": {
+      "Core": {
+        "ConnectionString": "host.docker.internal:6379"
+      }
+    }
+  },
+  "RabbitMQ": {
+    "Host": "host.docker.internal"
+  },
+  "Logger": {
+    "OTelEndpoint": "http://host.docker.internal:4317"
+  },
+  "Observability": {
+    "ServerOtel": "http://host.docker.internal:4317"
+  },
+  "Vault": {
+    "Address": "http://host.docker.internal:8200",
+    "Mongo": {
+      "TemplateConnectionString": "mongodb://{0}:{1}@host.docker.internal:27017"
+    }
+  }
+}
+```
+
+<Aside>
+  Es importante tener en cuenta que `host.docker.internal` hace referencia al host de la máquina donde se está ejecutando el contenedor. Esto es útil para conectar los microservicios a recursos que se encuentran fuera del contenedor como las bases de datos.
+</Aside>
+
+## Creación de Imágenes Docker
+
+Para poder ejecutar los microservicios en contenedores, primero debemos crear las imágenes Docker. Cada entry point (REST, gRPC y AsyncWorker) tiene un archivo `Dockerfile` que describe cómo crear la imagen.
+
+<Steps>
+
+1. **Entorno Desarrollo:** Asegúrate de que el entorno de desarrollo de CodeDesignPlus esté en ejecución. 
+
+    <Image src="/images/quick-start/docker/docker_compose_ps.png" alt="Docker Compose ps" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. **Crea la Imagen Docker para REST:** Utiliza el siguiente comando para crear la imagen Docker del entry point REST.
+
+    ```bash
+    docker build -t ms-clients-rest . -f src/entrypoints/Acme.Net.Microservice.Clients.Rest/Dockerfile
+    ```
+
+    <Aside>
+        - `docker build`: Comando para construir la imagen Docker.
+        - `-t ms-clients-rest`:  Indica el nombre de la imagen (`ms-clients-rest`).
+        - `.` : Indica que el contexto de construcción es el directorio actual.
+        - `-f src/entrypoints/Acme.Net.Microservice.Clients.Rest/Dockerfile`: Indica la ruta al archivo Dockerfile del entry point REST.
+    </Aside>
+    
+    <Image src="/images/quick-start/docker/build_rest.png" alt="Docker build REST" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. **Crea la Imagen Docker para gRPC:** Utiliza el siguiente comando para crear la imagen Docker del entry point gRPC.
+
+    ```bash
+    docker build -t ms-clients-grpc . -f src/entrypoints/Acme.Net.Microservice.Clients.gRpc/Dockerfile
+    ```
+
+    <Aside>
+         - `-t ms-clients-grpc`: Indica el nombre de la imagen (`ms-clients-grpc`).
+          - `-f src/entrypoints/Acme.Net.Microservice.Clients.gRpc/Dockerfile`: Indica la ruta al archivo Dockerfile del entry point gRPC.
+    </Aside>
+
+     <Image src="/images/quick-start/docker/build_grpc.png" alt="Docker build gRPC" width="1600" height="900" decoding="async" loading="lazy" />
+
+5. **Crea la Imagen Docker para el Async Worker:** Utiliza el siguiente comando para crear la imagen Docker del entry point AsyncWorker.
+
+     ```bash
+    docker build -t ms-clients-worker . -f src/entrypoints/Acme.Net.Microservice.Clients.AsyncWorker/Dockerfile
+    ```
+
+    <Aside>
+        - `-t ms-clients-worker`:  Indica el nombre de la imagen (`ms-clients-worker`).
+        - `-f src/entrypoints/Acme.Net.Microservice.Clients.AsyncWorker/Dockerfile`: Indica la ruta al archivo Dockerfile del entry point AsyncWorker.
+    </Aside>
+
+    <Image src="/images/quick-start/docker/build_worker.png" alt="Docker build Worker" width="1600" height="900" decoding="async" loading="lazy" />
+
+</Steps>
+
+## Ejecución de Contenedores Docker
+
+Una vez que tenemos las imágenes Docker creadas, podemos ejecutar los microservicios en contenedores Docker.
+
+<Steps>
+
+1. **Ejecuta el Contenedor REST:** Utiliza el siguiente comando para ejecutar el microservicio REST en un contenedor.
+
+    ```bash
+    docker run -d -p 5000:5000 --network=backend -e ASPNETCORE_ENVIRONMENT=Docker --name ms-clients-rest ms-clients-rest
+    ```
+
+    <Aside>
+        - `docker run`: Comando para ejecutar un contenedor Docker.
+        - `-d`: Indica que el contenedor se ejecutará en modo detached (en segundo plano).
+        - `-p 5000:5000`: Asigna el puerto 5000 del host al puerto 5000 del contenedor (para la API REST).
+        - `--network=backend`: Indica que el contenedor se unirá a la red Docker llamada `backend`.
+        - `-e ASPNETCORE_ENVIRONMENT=Docker`: Establece la variable de entorno `ASPNETCORE_ENVIRONMENT` en `Docker` para que se use el archivo de configuración `appsettings.Docker.json`.
+        - `--name ms-clients-rest`: Indica el nombre del contenedor (`ms-clients-rest`).
+        - `ms-clients-rest`: Indica el nombre de la imagen Docker a utilizar.
+    </Aside>
+
+     <Image src="/images/quick-start/docker/run_rest.png" alt="Docker run REST" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. **Ejecuta el Contenedor gRPC:** Utiliza el siguiente comando para ejecutar el microservicio gRPC en un contenedor.
+
+    ```bash
+    docker run -d -p 5001:5001 --network=backend -e ASPNETCORE_ENVIRONMENT=Docker --name ms-clients-grpc ms-clients-grpc
+    ```
+
+     <Aside>
+        - `-p 5001:5001`: Asigna el puerto 5001 del host al puerto 5001 del contenedor (para la API gRPC).
+        - `--name ms-clients-grpc`: Indica el nombre del contenedor (`ms-clients-grpc`).
+        - `ms-clients-grpc`: Indica el nombre de la imagen Docker a utilizar.
+    </Aside>
+
+     <Image src="/images/quick-start/docker/run_grpc.png" alt="Docker run gRPC" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. **Ejecuta el Contenedor AsyncWorker:** Utiliza el siguiente comando para ejecutar el microservicio AsyncWorker en un contenedor.
+
+     ```bash
+    docker run -d -p 5002:5002 --network=backend -e ASPNETCORE_ENVIRONMENT=Docker --name ms-clients-worker ms-clients-worker
+    ```
+
+     <Aside>
+         - `-p 5002:5002`: Asigna el puerto 5002 del host al puerto 5002 del contenedor (para el servicio AsyncWorker).
+        - `--name ms-clients-worker`: Indica el nombre del contenedor (`ms-clients-worker`).
+        - `ms-clients-worker`: Indica el nombre de la imagen Docker a utilizar.
+     </Aside>
+
+      <Image src="/images/quick-start/docker/run_worker.png" alt="Docker run Worker" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+## Verificación de Contenedores
+
+Una vez que los contenedores están en ejecución, podemos verificar que todo funciona correctamente.
+
+<Steps>
+1.  **Lista los Contenedores:** Utiliza el siguiente comando para listar los contenedores en ejecución o abrir Docker Desktop y seleccionar la pestaña `Containers`.
+
+    ```bash
+    docker ps
+    ```
+
+    <Image src="/images/quick-start/docker/docker_ps.png" alt="Docker ps" width="1600" height="900" decoding="async" loading="lazy" />
+
+    Debes ver los contenedores `ms-clients-rest`, `ms-clients-grpc` y `ms-clients-worker` en la lista.
+
+2.  **Prueba las APIs:** Utiliza Postman para probar las APIs REST y gRPC (como se describe en el [artículo anterior](/quick-start/testing-microservice)) o realiza peticiones al microservicio en la dirección  `http://localhost:5000` para REST, `http://localhost:5001` para gRPC y observa la salida en la consola del contenedor.
+
+</Steps>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo utilizar Docker para construir y ejecutar los microservicios de CodeDesignPlus. Hemos visto cómo crear imágenes Docker para cada entry point (REST, gRPC y AsyncWorker) del microservicio **Clients**, cómo ejecutarlos en contenedores, cómo configurar las variables de entorno y cómo crear una red Docker para la comunicación entre los contenedores.
+
+Ahora, puedes desplegar tus microservicios de forma más fácil, consistente y portable en cualquier entorno que tenga Docker instalado.

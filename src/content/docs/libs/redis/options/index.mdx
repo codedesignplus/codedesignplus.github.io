@@ -1,0 +1,127 @@
+---
+title: Opciones de configuración
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En el contexto de la librería CodeDesignPlus.Net.Redis, se utiliza para definir cómo se conectará la aplicación a las instancias de Redis y cómo se configurarán estas conexiones.
+
+## RedisOptions
+---
+
+La clase `RedisOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir cómo la librería `CodeDesignPlus.Net.Redis` se conectará y operará con las diferentes instancias de Redis.
+
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis/Options/RedisOptions.cs"
+```
+
+### Propiedades
+
+- **Section**
+    - Tipo: `string`
+    - Descripción: El nombre de la sección de configuración en `appsettings.json` donde se encuentran las opciones de Redis.
+    - Valor Predeterminado: `"Redis"`
+
+- **Instances**
+    - Tipo: `Dictionary<string, Instance>`
+    - Descripción: Un diccionario que contiene la configuración para cada instancia de Redis. Cada entrada en el diccionario tiene una clave que representa el nombre de la instancia y un valor que representa la configuración de la instancia (`Instance`).
+    - Valor Predeterminado: `new Dictionary<string, Instance>()` (diccionario vacío)
+
+### Validación
+
+La clase `RedisOptions` implementa `IValidatableObject` para realizar validaciones adicionales al inicializar las opciones. En este ejemplo, se asegura de que la lista `Instances` no esté vacía y que, si se requiere SSL, el certificado se especifique.
+
+```csharp
+public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+{
+    var result = new List<ValidationResult>();
+
+    if (Instances.Count == 0)
+        result.Add(new ValidationResult("The Instances list must not be empty.", new[] { nameof(this.Instances) }));
+
+    foreach (var instance in this.Instances.Where(x => x.Value.CreateConfiguration().Ssl && string.IsNullOrEmpty(x.Value.Certificate)))
+    {
+        result.Add(new ValidationResult("The Certificate is required.", new[] { nameof(Instance.Certificate) }));
+    }
+
+    return result;
+}
+```
+## Instance
+---
+
+La clase `Instance` define la configuración específica para una instancia de Redis dentro del diccionario `Instances` en `RedisOptions`.
+
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/Instance.cs"
+```
+
+### Propiedades
+
+- **ConnectionString**
+    - Tipo: `string`
+    - Descripción: La cadena de conexión utilizada para conectarse al servidor Redis. Puede incluir varios parámetros como endpoints, contraseñas y más. Debe seguir el formato `clave=valor,clave=valor,...`
+    - Valor Predeterminado: Ninguno (es requerido)
+    - Validación:  Se valida que cumpla con el formato de string esperado usando una expresión regular.
+
+- **HighPrioritySocketThreads**
+    - Tipo: `bool`
+    - Descripción: Indica si se debe usar `ThreadPriority.AboveNormal` para los hilos del SocketManager. Si es `false`, se usará `ThreadPriority.Normal`.
+    - Valor Predeterminado: `true`
+
+- **Certificate**
+    - Tipo: `string`
+    - Descripción: La ruta del archivo PFX del certificado usado para conexiones SSL.
+    - Valor Predeterminado: `null` (opcional a menos que SSL esté habilitado)
+
+- **PasswordCertificate**
+    - Tipo: `string`
+    - Descripción: La contraseña para el certificado PFX.
+    - Valor Predeterminado: `null` (opcional)
+
+### Métodos
+
+#### CreateConfiguration()
+
+Crea una instancia de `ConfigurationOptions` de `StackExchange.Redis` basado en las propiedades actuales de `Instance` retornando un objeto `ConfigurationOptions` que se utiliza para configurar la conexión a Redis.
+
+```csharp
+public ConfigurationOptions CreateConfiguration()
+{
+    var configuration = ConfigurationOptions.Parse(this.ConnectionString);
+
+    configuration.SocketManager = new SocketManager("RedisInstance", this.HighPrioritySocketThreads);
+
+    return configuration;
+}
+```
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones de Redis:
+
+
+    <Tabs>
+        <TabItem label="Standalone">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Standalone + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+    </Tabs>
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación de StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)

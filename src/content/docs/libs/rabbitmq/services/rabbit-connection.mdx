@@ -1,0 +1,84 @@
+---
+title: Connection
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+Este documento describe el servicio `IRabbitConnection` y `RabbitConnection`, que proporcionan una abstracción para manejar la conexión a un servidor RabbitMQ. El servicio `RabbitConnection` implementa la interfaz `IRabbitConnection` y se encarga de crear, gestionar y liberar la conexión a RabbitMQ, incluyendo el manejo de reintentos en caso de fallo inicial.
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ.Abstractions/IRabbitConnection.cs"
+
+```
+
+## ¿Cómo Funciona?
+---
+
+El servicio `RabbitConnection` funciona como un singleton que mantiene una conexión activa a RabbitMQ. Al instanciarse, lee la configuración necesaria (host, puerto, usuario, contraseña, etc.) desde la configuración de la aplicación. Intenta conectarse al servidor RabbitMQ, utilizando un mecanismo de reintentos configurable. Una vez establecida la conexión, la mantiene activa y la pone a disposición a través de la propiedad `Connection`. Si la conexión falla después de un número máximo de intentos, lanza una excepción. Además, se asegura de liberar los recursos de la conexión al ser descartado, implementando el patrón `IDisposable`.
+
+## Propiedades
+---
+
+La interfaz `IRabbitConnection` define una única propiedad y un método que deben ser implementados por cualquier clase que desee proporcionar una conexión a RabbitMQ de forma abstraída.
+
+### Connection
+
+Propiedad de solo lectura que proporciona acceso a la conexión activa a RabbitMQ. Es de tipo `IConnection` de la biblioteca RabbitMQ .NET, que permite interactuar con el servidor RabbitMQ a través de canales.
+
+## Métodos
+---
+
+RabbitConnection implementa la interfaz `IRabbitConnection`, que define los siguientes miembros:
+
+### Dispose
+
+Este método, implementado de la interfaz `IDisposable`, libera los recursos utilizados por la conexión RabbitMQ, asegurando que la conexión se cierre correctamente al finalizar su uso, lo que evita fugas de recursos.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/RabbitConnection.cs"
+```
+
+El servicio `RabbitConnection` se implementa como una clase que hereda de `IRabbitConnection` y se encarga de:
+
+1.  **Recibir configuración:** Lee la configuración de RabbitMQ desde las opciones de la aplicación (`IOptions<RabbitMQOptions>`).
+2.  **Crear la conexión:** Utiliza la clase `ConnectionFactory` de la biblioteca RabbitMQ .NET para crear una conexión.
+3.  **Manejo de reintentos:** Implementa un mecanismo de reintentos con un número máximo de intentos y un intervalo entre ellos, para manejar posibles fallos de conexión al inicio.
+4.  **Implementación de `IDisposable`:** Se asegura de cerrar y liberar correctamente los recursos de la conexión.
+
+Las dependencias del servicio son:
+- `IOptions<RabbitMQOptions>`: Para la configuración específica de RabbitMQ.
+- `IOptions<CoreOptions>`: Para la configuración general de la aplicación.
+- `ILogger<RabbitConnection>`: Para registrar los eventos relacionados con la conexión.
+
+La clase `RabbitMQOptions` contendría al menos las siguientes propiedades:
+- `Host` (string): Dirección del servidor RabbitMQ.
+- `Port` (int): Puerto del servidor RabbitMQ.
+- `UserName` (string): Nombre de usuario para la autenticación.
+- `Password` (string): Contraseña para la autenticación.
+- `MaxRetry` (int): Número máximo de intentos de conexión.
+- `RetryInterval` (int): Intervalo en milisegundos entre intentos de conexión.
+
+Y `CoreOptions` al menos la siguiente:
+- `AppName` (string): Nombre de la aplicación, usado para la configuración de la conexión.
+
+## Ejemplo de Uso
+---
+
+En este ejemplo, se inyecta `IRabbitConnection` en el constructor de `ChannelProvider` para obtener la conexión a RabbitMQ. Luego, se utilizan los métodos de `ChannelProvider` para declarar intercambios y obtener canales para publicar y consumir eventos de dominio. La clase `ChannelProvider` se encarga de gestionar los canales y los intercambios asociados a los eventos de dominio, utilizando la conexión a RabbitMQ proporcionada por `IRabbitConnection`.
+
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/ChannelProvider.cs"
+```
+
+## Conclusiones
+---
+
+El servicio `IRabbitConnection` y su implementación `RabbitConnection` proporcionan una forma centralizada, confiable y fácil de usar para gestionar la conexión a RabbitMQ en una aplicación .NET. Permite la configuración de las opciones de conexión, el manejo de reintentos y la liberación adecuada de recursos. Es recomendable usar la inyección de dependencias para obtener la instancia de `IRabbitConnection` y no instanciar directamente `RabbitConnection`.
+
+## Referencias Adicionales
+---
+
+*   [Documentación oficial de RabbitMQ .NET](https://www.rabbitmq.com/dotnet.html)
+*   [Patrón Disposable](https://docs.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose)
+*   [Inyección de dependencias en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)

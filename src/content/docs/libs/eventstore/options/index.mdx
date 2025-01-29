@@ -1,0 +1,80 @@
+---
+title: Configuración
+---
+
+import { Aside, LinkCard, Steps } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En `CodeDesignPlus.Net.Event.Store`, utilizamos este patrón para ofrecer opciones de configuración estructuradas y fácilmente accesibles.
+
+## EventStoreOptions 
+---
+
+La clase `EventStoreOptions` se utiliza para configurar y validar las opciones de Event Store en una aplicación .NET. Esta clase hereda de `EventSourcingOptions` e implementa la interfaz `IValidatableObject`
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore/src/CodeDesignPlus.Net.EventStore.Abstractions/Options/EventStoreOptions.cs"
+```
+
+### Propiedades
+1. **Section**: Nombre de la sección usada en el archivo de configuración appsettings. Es una propiedad estática y de solo lectura.
+
+```csharp
+public static readonly string Section = "EventStore";
+```
+
+2. **Servers**: Colección de servidores de Event Store (nodos) a los que la aplicación puede conectarse. Cada servidor está representado por un par clave-valor, donde la clave es un identificador único o nombre para el servidor, y el valor contiene los detalles de conexión del servidor.
+
+```csharp
+public Dictionary<string, Server> Servers { get; set; } = new Dictionary<string, Server>();
+```
+
+<Aside type='caution' >
+Las opciones de configuración del Event Store, embeben las opciones de configuración de Event Sourcing. Para conocer sobre las configuraciones de Event Sourcing (`SnapshotSuffix`, `FrequencySnapshot`), visita la sección de [EventSourcingOptions](/docs/libs/eventstore/options/event-sourcing).
+</Aside>
+
+## Server
+---
+
+La clase `Server` representa los detalles necesarios para conectarse a un servidor o nodo de EventStore.
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore/src/CodeDesignPlus.Net.EventStore.Abstractions/Server.cs"
+```
+
+### Propiedades
+1. **ConnectionString**: URI que apunta al servidor o nodo de EventStore, típicamente utilizado para definir la dirección y el puerto de la instancia de EventStore.
+
+```csharp
+public Uri ConnectionString { get; set; }
+```
+
+2. **User**: Nombre de usuario para conectarse al servidor de EventStore.
+
+```csharp
+public string User { get; set; }
+```
+
+3. **Password**: Contraseña para conectarse al servidor de EventStore.
+
+```csharp
+public string Password { get; set; }
+```
+
+## Ejemplo de configuración
+---
+
+Para configurar las opciones de EventSourcing, agregue la siguiente sección a su archivo `appsettings.json`.
+
+```json
+{
+  "EventStore": {
+    "Servers": {
+      "Core": {
+        "ConnectionString": "tcp://localhost:1113",
+        "User": "admin",
+        "Password": "12345678"
+      }
+    },
+    "SnapshotSuffix": "snapshot",
+    "FrequencySnapshot": 20
+  }
+}
+```

@@ -1,0 +1,115 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Container from '../components/Container.astro';
+---
+
+<Layout title="Contacto - CodeDesignPlus">
+    <Container>
+        <div class="py-16 lg:py-20">
+            <div class="max-w-4xl mx-auto">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-8">
+                    Contacto
+                </h1>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-800 dark:text-white mb-4">
+                            Ponte en contacto
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-300 mb-6">
+                            ¿Tienes preguntas sobre CodeDesignPlus? Estamos aquí para ayudarte. Completa el formulario y nos pondremos en contacto contigo lo antes posible.
+                        </p>
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white">Email</h3>
+                                    <p class="text-gray-600 dark:text-gray-300">soporte@codedesignplus.com</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 dark:text-white">Documentación</h3>
+                                    <p class="text-gray-600 dark:text-gray-300">Consulta nuestra documentación completa</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-lg p-8 shadow-lg">
+                        <form id="contact-form" class="space-y-6">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Nombre</label>
+                                <input type="text" id="name" name="name" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                                <input type="email" id="email" name="email" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="subject" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Asunto</label>
+                                <input type="text" id="subject" name="subject" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white">
+                            </div>
+                            <div>
+                                <label for="message" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mensaje</label>
+                                <textarea id="message" name="message" rows="4" required
+                                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-primary focus:border-primary dark:bg-gray-700 dark:text-white"></textarea>
+                            </div>
+                            
+                            <div class="g-recaptcha mb-4" 
+                                data-sitekey={import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY}
+                                data-callback="onRecaptchaSuccess"
+                                data-expired-callback="onRecaptchaExpired">
+                            </div>
+
+                            <button type="submit"
+                                id="submit-button"
+                                disabled
+                                class="w-full bg-primary text-white py-2 px-4 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50">
+                                Enviar mensaje
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Container>
+</Layout>
+
+<script is:inline src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<script>
+    // const form = document.getElementById('contact-form');
+    // const submitButton = document.getElementById('submit-button');
+
+    // // Callback cuando el captcha es completado
+    // window.onRecaptchaSuccess = function() {
+    //     submitButton.disabled = false;
+    // };
+
+    // // Callback cuando el captcha expira
+    // window.onRecaptchaExpired = function() {
+    //     submitButton.disabled = true;
+    // };
+
+    // form?.addEventListener('submit', async (e) => {
+    //     e.preventDefault();
+    //     const recaptchaResponse = grecaptcha.getResponse();
+        
+    //     if (!recaptchaResponse) {
+    //         alert('Por favor complete el captcha');
+    //         return;
+    //     }
+
+    //     // Aquí irá la lógica para enviar el formulario
+    //     // Incluir el token del recaptcha en la petición
+    // });
+</script>

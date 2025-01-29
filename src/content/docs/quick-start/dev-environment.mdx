@@ -1,0 +1,947 @@
+---
+title: Entorno de desarrollo
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+Este documento detalla la configuración del entorno de desarrollo proporcionado por **CodeDesignPlus**. Su objetivo principal es simplificar y acelerar la configuración inicial, permitiendo a los desarrolladores centrarse en la lógica de negocio y reducir las tareas repetitivas.
+
+<Image src="/images/quick-start/dev-environment/dev-environment.svg" alt="Entorno de Desarrollo" width="1600" height="900" decoding="async" loading="lazy" />
+
+El entorno de desarrollo de **CodeDesignPlus** esta disponible en el repositorio de GitHub [CodeDesignPlus.Environment.Dev](https://github.com/codedesignplus/CodeDesignPlus.Environment.Dev)
+
+## Requisitos Previos
+
+Para desarrollar microservicios con **CodeDesignPlus**, necesitas tener instaladas las siguientes herramientas en tu máquina:
+
+1. Tener instaladas las herramientas de desarrollo descritas en el artículo [Herramientas de Desarrollo](/quick-start/dev-environment).
+2. Clona el repositorio de GitHub [CodeDesignPlus.Environment.Dev](https://github.com/codedesignplus/CodeDesignPlus.Environment.Dev) en tu máquina local.
+
+## Docker Compose
+
+El archivo `docker-compose.yaml` define un entorno de desarrollo completo utilizando contenedores Docker.  Este entorno proporciona las siguientes ventajas:
+
+- **Consistencia:** Asegura que todos los desarrolladores trabajen con las mismas versiones de dependencias y servicios, evitando problemas de "funciona en mi máquina".
+- **Aislamiento:**  Los servicios se ejecutan en contenedores aislados, previniendo conflictos y simplificando la gestión de dependencias.
+- **Rápida Configuración:** Permite levantar rápidamente un entorno de desarrollo con un solo comando.
+- **Simulación de Producción:** El entorno se asemeja a una configuración de producción, facilitando la detección temprana de problemas.
+
+
+**Cómo Utilizar `docker-compose.yaml`** 
+
+1.  Asegúrate de tener Docker y Docker Compose instalados.
+2.  Navega a la carpeta `resources` en el proyecto.
+3.  Ejecuta el siguiente comando para levantar todos los servicios:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+4.  Para detener los servicios:
+
+    ```bash
+    docker-compose down
+    ```
+
+### Vault (HashiCorp)
+
+Vault es una herramienta para gestionar secretos, como contraseñas, tokens, claves API y certificados. Proporciona un almacenamiento seguro y un acceso controlado a estos secretos, evitando que se almacenen directamente en el código o archivos de configuración.
+
+Vault se integra con múltiples sistemas de autenticación y motores de secretos, como base de datos, AWS, Azure y otros. Permite la rotación automática de claves y la generación de credenciales temporales para mejorar la seguridad y la gestión de secretos.
+
+<Image src="/images/quick-start/dev-environment/vault/vault.svg" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+- **Key Vault:** Almacena y gestiona claves y secretos sensibles.
+- **Database:** Almacena credenciales de bases de datos y genera credenciales temporales.
+- **Transient:** Almacena secretos temporales y de corta duración.
+- **RabbitMQ:** Almacena credenciales de RabbitMQ y genera credenciales temporales.
+
+**Convenciones de Nombres:**
+
+Muchas de las convenciones que se deben implementar en HashiCorp Vault, son con base a la configuración del microservicio, especialmente en la sección `Core` y `Vault`:
+
+```json
+{
+    "Core": {
+        "AppName": "ms-archetype",
+        "Version": "v1",
+        "Description": "Microservice Archetype Template",
+        "Business": "CodeDesignPlus",
+        "Contact": {
+            "Name": "CodeDesignPlus",
+            "Email": "codedesignplus@outlook.com"
+        }
+    },
+    "Vault": {
+        "Enable": true,
+        "Address": "http://127.0.0.1:8200",
+        "AppName": "ms-archetype",
+        "Solution": "archetype",
+        "Token": "root",
+        "Mongo": {
+        "Enable": true,
+        "TemplateConnectionString": "mongodb://{0}:{1}@localhost:27017"
+        },
+        "RabbitMQ": {
+        "Enable": true
+        }
+    }
+}
+```
+
+De acuerdo a la configuración anterior, es importante tener en cuenta los siguientes conceptos:
+
+- **Solution**: Nombre de la solución o proyecto como por ejemplo Jira, Trello, Management, etc. En este caso, se ha definido como `archetype`
+- **Microservice**: Nombre del microservicio o componente como por ejemplo Auth, Gateway, Users, Organization, etc. En este caso, se ha definido como `ms-archetype`
+
+Ahora profundicemos en las convenciones de nombres para cada uno de los motores de secretos:
+
+<Tabs>
+<TabItem label='Key Vault'>
+
+El motor de secretos `Key Vault` se encarga de almacenar y gestionar claves y secretos sensibles.
+
+<Image src="/images/quick-start/dev-environment/vault/keyvault_hc.svg" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Steps>
+1. El administrador crea un `App Role` con el nombre de la solución y la política de acceso para la autenticación del microservicio con ayuda de la librearía `CodeDesignPlus.Net.Vault`.
+
+    Ejemplo: 
+    - archetype-approle
+    - jira-approle
+    - trello-approle
+    - management-approle
+
+    ```bash
+    vault write auth/approle/role/archetype-approle policies="full-access"
+    ```
+
+2. El administrador habilita el motor de secretos `Key Vault`
+
+    Ejemplo: 
+    - ms-archetype
+    - ms-organization
+    - ms-products
+    - ms-orders
+
+    ```bash
+    vault secrets enable -path=archetype-keyvalue kv-v2
+    ```
+
+3. El administrador crea los secretos sensibles del microservicio con base al archivo `appsettings.json`.
+
+    Ejemplo: 
+    Supongamos que el `appsettings.json` tiene las siguientes claves:
+
+    ```json
+    {
+        "Redis": {
+            "Instances": {
+                "Core": {
+                    "ConnectionString": "localhost:6379"
+                }
+            }
+        }
+    }
+
+    ```
+
+    El administrador almacena los siguientes secretos en el `Key Vault`:
+
+    ```bash
+    vault kv put -mount=archetype-keyvalue ms-archetype Redis:Instances:Core:ConnectionString=localhost:6379
+    ```
+
+4. Para visualizar los secretos almacenados en el `Key Vault`, el administrador pudede ejecutar el siguiente comando:
+
+    ```bash
+    vault kv get -mount=archetype-keyvalue ms-archetype
+    ```
+
+    Pero tambien puede ingresar a la plataforma de `Vault` y visualizar los secretos almacenados en el `Key Vault`.
+
+    - Ingresar a la plataforma de `Vault` en la URL `http://localhost:8200`.
+
+        <Image src="/images/quick-start/dev-environment/vault/home.png" alt="Home" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - Ingresar a la sección de `Secrets` y seleccionar el `Key Vault` del microservicio.
+
+        <Image src="/images/quick-start/dev-environment/vault/secrets_microservice.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - Visualizar los secretos almacenados en el `Key Vault`.
+
+        <Image src="/images/quick-start/dev-environment/vault/keyvault.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+
+
+</Steps>
+
+</TabItem>
+<TabItem label='Database'>
+
+El motor de secretos `Database` se encarga de almacenar credenciales de administración de la base de datos y generar credenciales temporales para acceder a las bases de datos de los microservicios. La libreriá `CodeDesignPlus.Net.Vault` facilita la gestión de las credenciales y la rotación de claves.
+
+<Image src="/images/quick-start/dev-environment/vault/database_hc.svg" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Steps>
+1. El administrador crea un `App Role` con el nombre de la solución y la política de acceso para la autenticación del microservicio con ayuda de la librearía `CodeDesignPlus.Net.Vault`.
+
+    Ejemplo: 
+    - archetype-approle
+    - jira-approle
+    - trello-approle
+    - management-approle
+
+    ```bash
+    vault write auth/approle/role/archetype-approle policies="full-access"
+    ```
+2. El administrador habilita el motor de secretos `Database`
+
+    Ejemplo: 
+    - ms-archetype
+    - ms-organization
+    - ms-products
+    - ms-orders
+
+    ```bash
+    vault secrets enable -path=archetype-database database
+    ```
+
+3. El administrador crea la conexión a la base de datos para el microservicio
+
+    Ejemplo:
+    - db-ms-archetype
+    - db-ms-organization
+    - db-ms-products
+    - db-ms-orders
+
+    ```bash
+    vault write archetype-database/config/db-ms-archetype \
+    plugin_name=mongodb-database-plugin \
+    allowed_roles="ms-archetype-mongo-role" \
+    connection_href="mongodb://{{username}}:{{password}}@mongo:27017/admin?ssl=false" \
+    username="admin" \
+    password="password"
+    ```
+
+    <Aside type="tip">
+    Es importante especificar el role en el vault que usara el microserivicio para obtener las credenciales de la base de datos. En este caso `ms-archetype-mongo-role`.
+    </Aside>
+
+4. El administrador crea el rol de acceso para obtener las credenciales dinamicas de la base de datos.
+
+    Ejemplo:
+    - ms-archetype-mongo-role
+    - ms-organization-mongo-role
+    - ms-products-mongo-role
+    - ms-orders-mysql-role
+
+    ```bash
+    vault write archetype-database/roles/ms-archetype-mongo-role \
+    db_name=db-ms-archetype \
+    creation_statements='{ "db": "admin", "roles": [{ "role": "readWrite", "db": "db-ms-archetype" }] }' \
+    default_ttl="1h" \
+    max_ttl="24h"
+    ```
+
+5. Para obtener las conexiones creadas en el `Vault` el administrador puede ejecutar el siguiente comando:
+
+    ```bash
+    vault read archetype-database/creds/ms-archetype-mongo-role
+    ```
+
+    Pero tambien puede ingresar a la plataforma de `Vault` y visualizar las conexiones creadas en el `Database`.
+
+    - Ingresar a la plataforma de `Vault` en la URL `http://localhost:8200`.
+
+        <Image src="/images/quick-start/dev-environment/vault/home.png" alt="Home" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - Ingresar a la sección de `Database` y seleccionar el `Database` del microservicio.
+
+        <Image src="/images/quick-start/dev-environment/vault/database_microservice.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - Visualizar las conexiones creadas en el `Database`.
+
+        <Image src="/images/quick-start/dev-environment/vault/database.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+</TabItem>
+
+<TabItem label='Transient'>
+
+El motor de secretos `Transit` se encarga de almacenar secretos temporales y de corta duración. Es útil para almacenar secretos que deben ser eliminados después de un corto período de tiempo, como tokens de acceso o claves temporales.
+
+<Image src="/images/quick-start/dev-environment/vault/transit_hc.svg" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Steps>
+1. El administrador crea un `App Role` con el nombre de la solución y la política de acceso para la autenticación del microservicio con ayuda de la librearía `CodeDesignPlus.Net.Vault`.
+
+    Ejemplo: 
+    - archetype-approle
+    - jira-approle
+    - trello-approle
+    - management-approle
+
+    ```bash
+    vault write auth/approle/role/archetype-approle policies="full-access"
+    ```
+2. El administrador habilita el motor de secretos `Transit`
+
+    Ejemplo: 
+    - ms-archetype
+    - ms-organization
+    - ms-products
+    - ms-orders
+
+    ```bash
+    vault secrets enable -path=archetype-transit transit
+    ```
+
+3. El desarrollador crea un secreto temporal con la ayuda de la librearía `CodeDesignPlus.Net.Vault` y el servicio `IVaultTransit`.
+
+    ```csharp
+     var transit = serviceProvider.GetRequiredService<IVaultTransit>();
+
+    var context = Guid.NewGuid().ToString();
+
+    var (key, ciphertext) = await transit.EncryptAsync("Custom Value", context);
+
+    var decrypt = await transit.DecryptAsync(key, ciphertext, context);
+    ```
+
+    <Aside type="tip">
+    El contexto es un valor único que se debe generar para cada operación de cifrado y descifrado. Este valor se utiliza para garantizar la integridad de los datos y evitar ataques de repetición.
+    </Aside>
+
+4. Para visualizar los secretos almacenados en el `Transit`, el administrador puede ingresar a la plataforma de `Vault` y visualizar los secretos almacenados en el `Transit`.
+
+    - Ingresar a la plataforma de `Vault` en la URL `http://localhost:8200`.
+
+        <Image src="/images/quick-start/dev-environment/vault/home.png" alt="Home" width="1600" height="900" decoding="async" loading="lazy" />
+
+    - Visualizar los secretos almacenados en el `Transit`.
+
+        <Image src="/images/quick-start/dev-environment/vault/transient.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+</TabItem>
+<TabItem label='RabbitMQ'>
+
+El motor de secretos `RabbitMQ` se encarga de almacenar credenciales de RabbitMQ y generar credenciales temporales para cada microservicio. La libreriá `CodeDesignPlus.Net.Vault` facilita la gestión de las credenciales y la rotación de claves.
+
+<Image src="/images/quick-start/dev-environment/vault/rabbitmq_hc.svg" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+<Steps>
+1. El administrador crea un `App Role` con el nombre de la solución y la política de acceso para la autenticación del microservicio con ayuda de la librearía `CodeDesignPlus.Net.Vault`.
+
+    Ejemplo: 
+    - archetype-approle
+    - jira-approle
+    - trello-approle
+    - management-approle
+
+    ```bash
+    vault write auth/approle/role/archetype-approle policies="full-access"
+    ```
+2. El administrador habilita el motor de secretos `Transit`
+
+    Ejemplo: 
+    - ms-archetype
+    - ms-organization
+    - ms-products
+    - ms-orders
+
+    ```bash
+    vault secrets enable -path=archetype-rabbitmq rabbitmq
+    ```
+3. El administrador crea la conexión a RabbitMQ para la solución
+
+    Ejemplo:
+    - archetype-rabbitmq
+    - jira-rabbitmq
+    - trello-rabbitmq
+    - management-rabbitmq
+
+    ```bash
+    vault write archetype-rabbitmq/config/connection \
+    connection_uri="http://rabbitmq:15672" \
+    username="admin" \
+    password="password"
+    ```
+
+4. El administrador crea el rol de acceso para obtener las credenciales dinamicas de RabbitMQ que usara el microservicio.
+
+    Ejemplo:
+    - ms-archetype-rabbitmq-role
+    - ms-organization-rabbitmq-role
+    - ms-products-rabbitmq-role
+    - ms-orders-rabbitmq-role
+
+    ```bash
+    vault write archetype-rabbitmq/roles/ms-archetype-rabbitmq-role \
+    vhosts='{"/":{"write": ".*", "read": ".*", "configure": ".*"}}'
+    ```
+
+5. Para visualizar las conexiones creadas en el `RabbitMQ`, el administrador puede ejecutar el siguiente comando:
+
+    ```bash
+    vault read archetype-rabbitmq/creds/ms-archetype-rabbitmq-role
+    ```
+
+</Steps>
+</TabItem>
+</Tabs>
+
+
+**Beneficios:** 
+- Permite almacenar y acceder de forma segura a credenciales, claves API y otros datos sensibles.
+- Mejora la seguridad al evitar el almacenamiento de secretos en archivos de configuración o código fuente.
+- Facilita la rotación de claves y la gestión de secretos en entornos de desarrollo, pruebas y producción.
+
+
+**Acceso:** 
+
+Para acceder a la interfaz de usuario de Vault, visita [`http://localhost:8200`](http://localhost:8200) (usando el token `root` para el entorno de desarrollo).
+
+<Tabs>
+<TabItem label='Access Token'>
+
+Para ingresar a la plataforma de `Vault` se debe ingresar el token de acceso `root` en el campo `Token` y presionar el botón `Sign in`.
+
+<Image src="/images/quick-start/dev-environment/vault/token.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Aside>
+El token `root` es utilizado para el entorno de desarrollo, en producción se debe utilizar un token de acceso seguro.
+</Aside>
+</TabItem>
+<TabItem label='Home'>
+
+Una vez ingresado el token de acceso, se visualiza la página principal de `Vault` con los motores de secretos habilitados que se habilitaron desde el archivo [`config-vault.sh`](https://github.com/codedesignplus/CodeDesignPlus.Net.Microservice/blob/feature/package/tools/vault/config-vault.sh) o [`config-vault.ps1`](https://github.com/codedesignplus/CodeDesignPlus.Net.Microservice/blob/feature/package/tools/vault/config-vault.ps1).
+
+<Image src="/images/quick-start/dev-environment/vault/home.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Key Vault'>
+
+El motor de secretos `Key Vault` se encarga de almacenar y gestionar claves y secretos sensibles.
+
+<Image src="/images/quick-start/dev-environment/vault/keyvault.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Database'>
+
+El motor de secretos `Database` se encarga de almacenar credenciales de administración de la base de datos y generar credenciales temporales para acceder a las bases de datos de los microservicios.
+
+<Image src="/images/quick-start/dev-environment/vault/database.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Transient'>
+
+El motor de secretos `Transit` se encarga de almacenar secretos temporales y de corta duración.
+
+<Image src="/images/quick-start/dev-environment/vault/transient.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='RabbitMQ'>
+
+El motor de secretos `RabbitMQ` se encarga de almacenar credenciales de RabbitMQ y generar credenciales temporales para cada microservicio.
+
+<Image src="/images/quick-start/dev-environment/vault/rabbitmq.png" alt="Vault" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+</Tabs>
+
+**Configuración:**
+
+El archivo `docker-compose.yaml` incluye un servicio de Vault sin ninguna configuración adicional. Para configurar Vault con métodos de autenticación, motores de secretos, políticas y roles, y escribir los secretos iniciales, el [arquetipo](/archetypes/) de CodeDesignPlus proporciona dos scripts de configuración (Windows y Linux) que se pueden ejecutar en el entorno de desarrollo. Estos scripts se encuentran en la carpeta `tools/vault` del microservicio creado con el [generador](/generators/) de CodeDesignPlus.
+<Tabs>
+
+<TabItem label="config-vault.sh">
+Configura Vault con métodos de autenticación, motores de secretos, políticas y roles, y escribe los secretos iniciales.
+
+```sh repository="Archetype" url="tools/vault/config-vault.sh"
+```
+</TabItem>
+
+<TabItem label="config-vault.ps1">
+Configura Vault con métodos de autenticación, motores de secretos, políticas y roles, y escribe los secretos iniciales.
+
+```powershell repository="Archetype" url="tools/vault/config-vault.ps1"
+```
+</TabItem>
+
+</Tabs>
+
+<LinkCard title="Documentación Oficial" href="https://developer.hashicorp.com/vault/install" />
+
+
+
+### RabbitMQ 
+
+RabbitMQ es un broker de mensajes de código abierto que implementa el protocolo AMQP (Advanced Message Queuing Protocol). Permite la comunicación asíncrona entre servicios, desacoplando las aplicaciones y facilitando la escalabilidad y resiliencia.
+
+Se basa en el patrón de diseño **Publicar/Suscribir (Publish/Subscribe)** y se utiliza en arquitecturas **Orientadas a Eventos (Event-Driven Architecture)**. Los servicios publican mensajes en un exchange, y otros servicios se suscriben a las colas para recibir mensajes de interés.
+
+<Image src="/images/quick-start/dev-environment/rabbitmq/rabbitmq.svg" alt="RabbitMQ" width="1600" height="900" decoding="async" loading="lazy" />
+
+**Convenciones de Nombres:**
+
+El SDK de CodeDesignPlus implementa una serie de convenciones para los exchanges, colas y rutas de RabbitMQ. Estas convenciones se basan en la configuración del microservicio, especialmente en la sección `Core` :
+
+```json
+{
+    "Core": {
+        "AppName": "ms-archetype",
+        "Version": "v1",
+        "Description": "Microservice Archetype Template",
+        "Business": "CodeDesignPlus",
+        "Contact": {
+            "Name": "CodeDesignPlus",
+            "Email": "codedesignplus@outlook.com"
+        }
+    }
+}
+```
+
+- Exchange: `[bussiness].[appname].v[number-version].[aggregate|entity].[event]`
+- Queue: `[bussiness].[appname].v[number-version].[aggregate|entity].[event]`
+- Exchange Dlx: `[bussiness].[appname].v[number-version].[aggregate|entity].[event].dlx`
+- Queue Dlx: `[bussiness].[appname].v[number-version].[aggregate|entity].[event].dlx`
+
+**Beneficios:** 
+- Permite la comunicación asíncrona entre servicios, mejorando la escalabilidad y desacoplamiento.
+- Facilita la implementación de arquitecturas orientadas a eventos y patrones de diseño de mensajería.
+- Proporciona mecanismos de colas, exchanges y enrutamiento para gestionar mensajes de forma eficiente.
+
+**Acceso:** 
+
+El entorno de desarrollo incluye un servicio de RabbitMQ con las siguientes credenciales y accesos:
+
+- **UI:** `http://localhost:15672` (con usuario `admin` y contraseña `password`).
+- **AMQP:** `amqp://localhost:5672` (conexión para aplicaciones).
+
+        
+<LinkCard title="Documentación Oficial" href="https://www.rabbitmq.com/tutorials" />
+
+### MongoDB
+
+MongoDB es una base de datos NoSQL orientada a documentos. Almacena datos en formato JSON-like (BSON), lo que permite una gran flexibilidad en el esquema de datos. Es ideal para aplicaciones con requisitos de datos variados y que necesitan una alta escalabilidad horizontal.
+
+Es común en microservicios que necesitan flexibilidad de datos. Al no tener un esquema rígido como las bases de datos relacionales, permite evolucionar fácilmente los datos de cada microservicio.
+
+<Image src="/images/quick-start/dev-environment/mongo/record.png" alt="MongoDB" width="1600" height="900" decoding="async" loading="lazy" />
+
+**Convenciones de Nombres:**
+
+El SDK de CodeDesignPlus implementa una serie de convenciones para el nombre de las bases de datos y las colecciones de MongoDB. Estas convenciones se basan en la configuración del microservicio, especialmente en la sección `Core`:
+
+```json
+{
+    "Core": {
+        "AppName": "ms-archetype",
+        "Version": "v1",
+        "Description": "Microservice Archetype Template",
+        "Business": "CodeDesignPlus",
+        "Contact": {
+            "Name": "CodeDesignPlus",
+            "Email": "codedesignplus@outlook.com"
+        }
+    }
+}
+```
+
+- Base de Datos: `db-[appname]`
+- Colección: `[aggregate|entity]`
+
+**Beneficios:** 
+- Almacenamiento flexible de datos, ideal para aplicaciones con requisitos de datos variados.
+- Escalabilidad horizontal, permitiendo manejar grandes volúmenes de datos y tráfico.
+- Facilidad de uso y mantenimiento, con una sintaxis similar a JSON y una comunidad activa.
+
+**Acceso:** 
+
+El servicio de MongoDB se encuentra disponible en `mongodb://localhost:27017` (con usuario `admin` y contraseña `password`). Sin embargo, el servicio de Vault se encarga de gestionar las credenciales para los microserviciosa partir de la siguiente configuración:
+
+```sh
+# ...
+# Write database configuration
+echo "7. Writing database configuration..."
+vault write archetype-database/config/db-ms-archetype \
+    plugin_name=mongodb-database-plugin \
+    allowed_roles="ms-archetype-mongo-role" \
+    connection_href="mongodb://{{username}}:{{password}}@mongo:27017/admin?ssl=false" \
+    username="admin" \
+    password="password"
+
+vault write archetype-database/roles/ms-archetype-mongo-role \
+    db_name=db-ms-archetype \
+    creation_statements='{ "db": "admin", "roles": [{ "role": "readWrite", "db": "db-ms-archetype" }] }' \
+    default_ttl="1h" \
+    max_ttl="24h"
+
+vault read archetype-database/creds/ms-archetype-mongo-role
+# ...
+```
+
+Este script de configuración de Vault es responsable de escribir la configuración de la base de datos y los roles de acceso, y de generar credenciales temporales para acceder a la base de datos.
+
+<LinkCard title="Documentación Oficial" href="https://docs.mongodb.com/" />
+
+### Redis
+Redis es una base de datos en memoria de tipo clave-valor que puede usarse como cache, broker de mensajes y base de datos. Su principal fortaleza es su velocidad y baja latencia, ideal para aplicaciones que requieren respuestas rápidas y manejo de sesiones.
+
+Se usa como cache para datos que no cambian frecuentemente o como un almacenamiento rápido de datos volátiles que se requiere que sean accedidos muy rápidamente por la aplicación.
+
+**Convenciones de Nombres:**
+
+El SDK de CodeDesignPlus implementa una serie de convenciones para los nombres de las bases de datos y las claves de Redis. Estas convenciones se basan en la configuración del microservicio, especialmente en la sección `Core`:
+
+```json
+{
+    "Core": {
+        "AppName": "ms-archetype",
+        "Version": "v1",
+        "Description": "Microservice Archetype Template",
+        "Business": "CodeDesignPlus",
+        "Contact": {
+            "Name": "CodeDesignPlus",
+            "Email": "codedesignplus@outlook.com"
+        }
+    }
+}
+```
+
+- Key: `[bussiness]:[appname]:[key]`
+
+<Image src="/images/quick-start/dev-environment/redis/record.png" alt="Redis" width="1600" height="900" decoding="async" loading="lazy" />
+
+**Beneficios:**  
+- Cache de alto rendimiento y broker de mensajes, ideal para aplicaciones que requieren respuestas rápidas.
+- Almacenamiento en memoria, lo que permite una baja latencia y alta velocidad de acceso a los datos.
+- Persistencia de datos, permitiendo almacenar datos en disco para recuperarlos en caso de fallo.
+
+**Acceso:** 
+- Disponible en `redis://localhost:6379` para clientes instalados en la máquina local o `redis://redis:6379` para clientes en contenedores como Redis Insight aal que se puede acceder en [`http://localhost:5540/`](http://localhost:5540/).
+
+    <Image src="/images/quick-start/dev-environment/redis/connection.png" alt="Redis" width="1600" height="900" decoding="async" loading="lazy" />
+
+    <Image src="/images/quick-start/dev-environment/redis/connection_success.png" alt="Redis" width="1600" height="900" decoding="async" loading="lazy" />
+
+    
+<LinkCard title="Documentación Oficial" href="https://redis.io/documentation" />
+
+### Grafana
+Grafana es una plataforma de código abierto para visualización y análisis de datos. Permite crear dashboards personalizados con gráficos, tablas y paneles para monitorear métricas de la aplicación y la infraestructura. Se integra con múltiples fuentes de datos como Prometheus, Loki y otros.
+
+Es esencial para observar la salud y el rendimiento de los microservicios. Facilita la detección temprana de problemas y la optimización de recursos.
+
+**Beneficios:**  
+
+- Permite crear dashboards para visualizar métricas de la aplicación y la infraestructura.
+- Integración con múltiples fuentes de datos como Prometheus, Loki y otros.
+- Alertas y notificaciones para detectar problemas y optimizar recursos.
+
+**Acceso:** 
+
+Para acceder a Grafana, visita [`http://localhost:3000`](http://localhost:3000).
+
+<Tabs>
+<TabItem label='Home'>
+La pagina de inicio de Grafana muestra los dashboards y las fuentes de datos disponibles.
+
+<Image src="/images/quick-start/dev-environment/grafana/home.png" alt="Grafana" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Dashboards'>
+
+La sección de Dashboards permite crear, editar y visualizar dashboards personalizados con gráficos, tablas y paneles.
+
+<Image src="/images/quick-start/dev-environment/grafana/dashboards.png" alt="Grafana" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Data Sources'>
+
+La sección de Data Sources permite configurar y administrar las fuentes de datos para los dashboards.
+
+<Image src="/images/quick-start/dev-environment/grafana/datasources.png" alt="Grafana" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+</Tabs>
+
+**Configuración:**  
+
+El archivo `docker-compose.yaml` incluye configuraciones para Grafana, como fuentes de datos y dashboards predefinidos.
+
+<Tabs>
+<TabItem label="Datasources">
+Configuración de las fuentes de datos para Grafana, incluyendo Prometheus y Loki.
+
+```yaml repository="DevEnv" url="resources/shared/grafana-datasources.yaml"
+```
+</TabItem>
+<TabItem label="Dashboards">
+Configura el proveedor de dashboards para que cargue los dashboards desde el directorio `/var/lib/grafana/dashboards`.
+
+```yaml repository="DevEnv" url="resources/shared/grafana-dashboards.yaml"
+```
+</TabItem>
+</Tabs>
+    
+<LinkCard title="Documentación Oficial" href="https://grafana.com/docs/grafana/latest/" />
+
+### OpenTelemetry Collector
+
+El OpenTelemetry Collector es un componente que recibe datos de telemetría (métricas, logs y trazas) generados por las aplicaciones y los envía a los sistemas de back-end de monitoreo. Es un componente flexible y configurable que simplifica la recolección y envío de datos de telemetría.
+
+**Beneficios:** 
+- Recolecta, procesa y exporta datos de telemetría (métricas, logs y trazas) hacia los diferentes backends.
+- Simplifica la configuración y recolección de datos de telemetría, reduciendo la complejidad de la instrumentación.
+- Permite la integración con múltiples sistemas de monitoreo como Prometheus, Loki y Jaeger.
+
+**Acceso:** 
+
+Para enviar datos de telemetría al OpenTelemetry Collector, las aplicaciones deben configurar los puertos de recolección definidos en el archivo de configuración `otel-config.yaml`:
+
+- **OTLP gRPC:** `localhost:4317`
+- **OTLP HTTP:** `localhost:4318`
+
+Pero el componente de OpenTelemetry Collector al no tener una interfaz gráfica. Sin embargo, se puede visualizar el estado del mismo en los paneles de grafana Grafana como `processors`, `receivers`, `exporters` y el estado del OTEL en el panel `Collector`. Estos pueden o no mostrar información dependiendo de la interacción con el OTEL.
+
+<Tabs>
+
+<TabItem label='Receivers'>
+El panel de `Receivers` muestra el comportamiento de los receptores de datos del OTEL.
+
+<Image src="/images/quick-start/dev-environment/otel/receivers.png" alt="OpenTelemetry Collector" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+
+<TabItem label='Processors'>
+El panel de `Processors` muestra el comportamiento de los procesadores de datos del OTEL.
+
+<Image src="/images/quick-start/dev-environment/otel/processors.png" alt="OpenTelemetry Collector" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+<TabItem label='Exporters'>
+El panel de `Exporters` muestra el comportamiento de los exportadores de datos del OTEL.
+
+<Image src="/images/quick-start/dev-environment/otel/exporters.png" alt="OpenTelemetry Collector" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+<TabItem label='Collector'>
+
+El panel de `Collector` muestra el estado general del OTEL.
+
+<Image src="/images/quick-start/dev-environment/otel/collector.png" alt="OpenTelemetry Collector" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+</Tabs>
+
+**Configuración:**
+
+El archivo `docker-compose.yaml` incluye configuraciones para el OpenTelemetry Collector, como el archivo de configuración `otel-config.yaml`.
+
+```yaml repository="DevEnv" url="resources/shared/otel-config.yaml"
+```
+
+<LinkCard title="Documentación Oficial" href="https://opentelemetry.io/docs/collector/" />
+
+### Loki
+Loki es un sistema de agregación de logs de código abierto. Está diseñado para ser rentable y fácil de operar, lo que lo hace ideal para el monitoreo de logs en microservicios. Es especialmente efectivo en combinación con Grafana para la visualización y el análisis de logs.
+
+**Beneficios:** 
+- Almacenamiento de logs en texto plano y agregacion de forma simple.
+- Integración con Grafana para visualización y análisis de logs.
+- Bajo costo y fácil operación, ideal para microservicios y aplicaciones distribuidas.
+
+**Acceso:** 
+
+El componente de Loki no tiene una interfaz gráfica. Sin embargo, el servicio expone un puerto para la recolección de datos en `3100` que es usado por Open Telemetry Collector para enviar los logs y por Grafana para visualizarlos.
+
+Para visualizar los logs en Grafana, se debe configurar una fuente de datos de Loki y proceder al panel de logs en Grafana.
+
+<Tabs>
+<TabItem label='Explore'>
+
+El panel de `Explore` en Grafana permite realizar consultas y visualizar logs de Loki.
+
+<Image src="/images/quick-start/dev-environment/loki/loki_explore.png" alt="Loki" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+<TabItem label='Logs'>
+
+Las ultimas versiones de Grafana permiten visualizar los logs en un panel dedicado.
+
+<Image src="/images/quick-start/dev-environment/loki/logs.png" alt="Loki" width="1600" height="900" decoding="async" loading="lazy" />
+
+</TabItem>
+
+</Tabs>
+
+**Configuración:**
+
+El archivo `docker-compose.yaml` incluye configuraciones para Loki, como el archivo de configuración `loki-config.yaml` que configura el servidor con almacenamiento en filesystem y habilitación de la API.
+
+```yaml repository="DevEnv" url="resources/shared/loki-config.yaml"
+```
+
+<LinkCard title="Documentación Oficial" href="https://grafana.com/docs/loki/latest/" />
+
+### Tempo
+Tempo es un sistema de código abierto para el almacenamiento de trazas. Permite realizar un seguimiento de las peticiones a través de los distintos servicios de una arquitectura de microservicios, lo que facilita el diagnóstico de problemas y la optimización de la aplicación.
+
+Es esencial para el seguimiento y la observabilidad en entornos de microservicios. Facilita la identificación de bottlenecks y errores en las solicitudes que atraviesan varios servicios.
+
+**Beneficios:** 
+- Almacenamiento de trazas.
+- Seguimiento de peticiones a través de los servicios.
+- Diagnóstico de problemas y optimización de la aplicación.
+
+**Acceso:** 
+
+El servicio de Tempo no cuenta con una interfaz gráfica. Sin embargo, se exponen los siguientes puertos:
+
+- `5317`: Puerto de recepción de trazas OTLP gRPC.
+- `5318`: Puerto de recepción de trazas OTLP HTTP.
+- `3200`: Puerto de la API de Tempo y metricas.
+
+Para visualizar las trazas en Grafana, se debe configurar una fuente de datos de Tempo y proceder al panel de trazas en Grafana.
+
+<Image src="/images/quick-start/dev-environment/tempo/trace.png" alt="Tempo" width="1600" height="900" decoding="async" loading="lazy" />
+
+**Configuración:**
+
+El archivo `docker-compose.yaml` incluye configuraciones para Tempo, como el archivo de configuración `tempo-config.yaml` encargado de configurar el servidor con el backend local y el recolector de métricas.
+
+```yaml repository="DevEnv" url="resources/shared/tempo-config.yaml"
+```
+
+<LinkCard title="Documentación Oficial" href="https://grafana.com/docs/tempo/latest/" />
+
+### Prometheus
+
+Prometheus es un sistema de monitoreo y alertas de código abierto. Recopila métricas de las aplicaciones y los servicios y las almacena en una base de datos de series temporales. Permite realizar consultas y crear alertas basadas en estas métricas. De esta forma se puede monitorear la salud y el rendimiento de la aplicación y la infraestructura.
+
+**Beneficios:** 
+- Recolección y consulta de métricas para monitorear la salud y el rendimiento de la aplicación.
+- Almacenamiento de métricas en una base de datos de series temporales.
+- Creación de alertas para detectar problemas y optimizar recursos.
+
+**Acceso:** 
+A diferencia de los otros servicios, Prometheus cuenta con una interfaz gráfica que se puede acceder en [`http://localhost:9090`](http://localhost:9090). 
+
+<Image src="/images/quick-start/dev-environment/prometheus/home.png" alt="Prometheus" width="1600" height="900" decoding="async" loading="lazy" />
+
+En este punto, vemos que Prometheus realiza scraping de los datos de telemetría del OpenTelemetry Collector y los almacena en su base de datos de series temporales.
+
+Para interactuar de una mejor manera con Prometheus, se puede configurar Grafana para que muestre las métricas de Prometheus en dashboards personalizados, lo que facilita la visualización y el análisis de las métricas. Los dashboards disponibles son:
+
+- **15983:** Dashboard de métricas de OpenTelemetry Collector.
+- **17781:** Dashboard de métricas de Loki.
+- **19924:** ASP.NET Core metrics from OpenTelemetry
+- **19925:** ASP.NET Core endpoint metrics from OpenTelemetry
+
+<Tabs>
+<TabItem label='Open Telemetry'>
+El dashboard de métricas de OpenTelemetry Collector muestra información sobre los procesadores, receptores y exportadores de datos.
+
+<Image src="/images/quick-start/dev-environment/prometheus/15983.png" alt="Prometheus" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+<TabItem label='Loki'>
+El dashboard de métricas de Loki muestra información sobre las métricas de logs y el estado del servicio.
+
+<Image src="/images/quick-start/dev-environment/prometheus/17781.png" alt="Prometheus" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+
+<TabItem label='ASP.NET Core'>
+El dashboard de métricas de ASP.NET Core muestra información sobre las métricas de la aplicación ASP.NET Core.
+
+<Image src="/images/quick-start/dev-environment/prometheus/19924.png" alt="Prometheus" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+
+<TabItem label='ASP.NET Core Endpoint'>
+El dashboard de métricas de ASP.NET Core muestra información sobre las métricas de los endpoints de la aplicación ASP.NET Core.
+
+<Image src="/images/quick-start/dev-environment/prometheus/19925.png" alt="Prometheus" width="1600" height="900" decoding="async" loading="lazy" />
+</TabItem>
+</Tabs>
+
+**Configuración:**
+
+El archivo `docker-compose.yaml` incluye configuraciones para Prometheus, como el archivo de configuración `prometheus-config.yaml` que define las reglas de alerta, los targets y los jobs para realizar scraping del otel collector.
+
+```yaml repository="DevEnv" url="resources/shared/prometheus-config.yaml"
+```
+
+<LinkCard title="Documentación Oficial" href="https://prometheus.io/docs/" />
+
+
+
+
+
+### SonarQube
+
+SonarQube es una plataforma de análisis estático de código que identifica problemas de calidad, vulnerabilidades y errores en el código fuente. Es esencial para mantener la calidad del código y prevenir problemas en producción.
+
+**Beneficios:** 
+- Identifica problemas de calidad, vulnerabilidades y errores en el código fuente.
+- Mejora la calidad del código y reduce los errores y vulnerabilidades.
+- Facilita la revisión del código y la detección temprana de problemas.
+
+**Cómo usar:**
+
+El arquetipo de CodeDesignPlus incluye scripts para ejecutar los análisis de SonarQube en el código fuente. Estos scripts se encuentran en la carpeta `tools/sonarqube` del microservicio creado con el [generador](/generators/) de CodeDesignPlus.
+
+<Steps>
+
+1. Navegar a [`http://localhost:9000`](http://localhost:9000) y loguearse con las credenciales `admin` y `admin`.
+
+    <Image src="/images/quick-start/dev-environment/sonarqube/login.png" alt="SonarQube" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Creamos el token de acceso para el análisis de código, para eso navegamos a `My Account` -> `Security` -> `Generate Tokens`. Ingresamos el nombre y seleccionamos Global Analysis Token.
+
+    <Image src="/images/quick-start/dev-environment/sonarqube/token.png" alt="SonarQube" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Asignamos el token a los scripts `sonarqube/sonar.ps1` o `sonarqube/sonar.sh` en la variable `token`.
+
+
+    <Tabs>
+        <TabItem label="sonar.ps1">
+        ```powershell
+        $token = "sqa_12f3d20d51de2b4c9639db0035d1c68dc4f2fff1"
+        ```
+        </TabItem>
+
+        <TabItem label="sonar.sh">
+        ```sh
+        token="sqa_12f3d20d51de2b4c9639db0035d1c68dc4f2fff1"
+        ```
+        </TabItem>
+    </Tabs>
+
+5. Ejecuta el script `sonarqube/sonar.ps1` (Windows) o `sonarqube/sonar.sh` (Linux).
+
+    <Tabs>
+        <TabItem label="sonar.ps1">
+        ```powershell repository="Archetype" url="tools/sonarqube/sonar.ps1"
+        ```
+        </TabItem>
+
+        <TabItem label="sonar.sh">
+        ```sh  url="tools/sonarqube/sonar.sh"
+        ```
+        </TabItem>
+    </Tabs>
+
+6. El script ejecuta pruebas, genera reportes de cobertura, inicia un análisis de SonarQube, compila el código y finaliza el análisis.
+
+    <Image src="/images/quick-start/dev-environment/sonarqube/results.png" alt="SonarQube" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+<Aside>
+La instancia de SonarQube que se integra en el arquetipo es para entornos de desarrollo. Para entornos de producción, se recomienda utilizar SonarCloud o una instancia de SonarQube en un servidor seguro y realizar el análisis de código de forma automatizada en pipelines de CI/CD.
+</Aside>
+
+## Beneficios Clave para el Desarrollador
+
+- **Reducción del tiempo de configuración:**  El entorno Docker Compose reduce drásticamente el tiempo necesario para configurar un entorno de desarrollo, permitiendo que los desarrolladores empiecen a trabajar en la lógica de negocio rápidamente.
+- **Mayor calidad de código:** El análisis de código estático con SonarQube/SonarCloud mejora la calidad del código, reduciendo errores y vulnerabilidades.
+- **Enfoque en el negocio:** Al automatizar las tareas repetitivas, los desarrolladores pueden centrarse en el desarrollo de la lógica de negocio, aumentando la productividad y reduciendo la frustración.
+- **Consistencia en el equipo:** El uso de Docker garantiza que todos los miembros del equipo trabajen con el mismo entorno, reduciendo las diferencias entre entornos de desarrollo y producción.
+
+Con estas herramientas, CodeDesignPlus busca ofrecer una experiencia de desarrollo más eficiente, estable y agradable, acelerando la entrega de microservicios de alta calidad.

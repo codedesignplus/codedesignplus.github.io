@@ -1,0 +1,82 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Esta clase proporciona métodos de extensión para configurar e integrar fácilmente los servicios de Apache Kafka en una aplicación .NET utilizando `IServiceCollection`. Facilita la configuración, validación y registro de los servicios necesarios para utilizar Kafka como mecanismo de mensajería.
+
+```csharp url="packages/CodeDesignPlus.Net.Kafka/src/CodeDesignPlus.Net.Kafka/Extensions/ServiceCollectionExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `Confluent.Kafka`: Necesario para la interacción con Kafka.
+- `CodeDesignPlus.Net.PubSub`: Necesario para agregar los servicios de Pub/Sub.
+- `CodeDesignPlus.Net.Serialization`: Necesario para serializar los eventos.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+
+- Utilizan Kafka como plataforma de mensajería para la comunicación entre microservicios o componentes.
+- Requieren alta escalabilidad y tolerancia a fallos en su sistema de mensajería.
+- Buscan una forma sencilla y estandarizada de configurar Kafka a través de la configuración.
+- Necesitan registrar automáticamente los handlers de mensajes para los eventos de dominio.
+
+## Beneficios
+---
+
+- **Configuración Centralizada:** Permite configurar Kafka a través del archivo `appsettings.json`, centralizando la configuración y facilitando su gestión.
+- **Facilidad de Integración:** Simplifica la incorporación de Kafka en la aplicación con una única llamada al método de extensión.
+- **Validación de Configuración:** Valida automáticamente la configuración de Kafka al inicio de la aplicación, reduciendo errores en tiempo de ejecución.
+- **Registro de Servicios:** Registra los servicios necesarios para el uso de Kafka, incluyendo el productor con configuración y serializador.
+- **Integración con Pub/Sub:** Integra Kafka con un patrón pub/sub, permitiendo a los componentes de la aplicación suscribirse y publicar eventos.
+
+
+## Métodos de extensión
+---
+
+La clase `ServiceCollectionExtensions` proporciona un único método de extensión para configurar Kafka en una aplicación .NET. Este método agrega los servicios necesarios para utilizar Kafka y valida la configuración de la aplicación.
+
+### AddKafka
+**Type:** `public static IServiceCollection AddKafka(this IServiceCollection services, IConfiguration configuration)`
+
+Agrega los servicios de Kafka al `IServiceCollection` especificado.
+
+- **Parámetros**
+    -   `services`: El `IServiceCollection` al que se agregarán los servicios.
+    -   `configuration`: La configuración utilizada para enlazar las opciones de Kafka.
+
+- **Tipo de retorno**
+    -   `IServiceCollection`: El `IServiceCollection` modificado, permitiendo el encadenamiento de llamadas a otros métodos de configuración.
+
+- **Excepciones**
+    -   `ArgumentNullException`: Se lanza si `services` o `configuration` son `null`.
+    -   `KafkaException`: Se lanza si la sección de configuración `Kafka` no existe.
+
+- **Ejemplo de uso**
+
+    ```csharp
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services.AddKafka(builder.Configuration);
+    ```
+
+## Conclusiones
+---
+
+El método de extensión `AddKafka` es una herramienta esencial para simplificar la integración de Apache Kafka en aplicaciones .NET. Proporciona una forma clara y concisa de configurar y registrar los servicios necesarios, además de manejar la configuración a través del archivo `appsettings.json`.
+
+## Referencias
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación de Apache Kafka](https://kafka.apache.org/documentation/)
+- [Confluent .NET Client for Apache Kafka](https://github.com/confluentinc/confluent-kafka-dotnet)
+- [CodeDesignPlus.Net.PubSub library](https://github.com/CodeDesignPlus/Net.PubSub)
+- [CodeDesignPlus.Net.Serialization library](https://github.com/CodeDesignPlus/Net.Serialization)

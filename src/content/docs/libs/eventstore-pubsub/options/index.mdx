@@ -1,0 +1,44 @@
+---
+title: Options
+---
+
+import { Aside, LinkCard, Steps } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En `CodeDesignPlus.Net.EventStore.PubSub`, utilizamos este patrón para ofrecer opciones de configuración estructuradas y fácilmente accesibles.
+
+## EventStorePubSubOptions
+---
+
+La clase `EventStorePubSubOptions` está diseñada para representar las opciones de configuración para el sistema de publicación/suscripción de EventStore. Esta clase hereda de la clase base `PubSubOptions`, lo que significa que adquiere todas las propiedades de `PubSubOptions` además de sus propias propiedades específicas.
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore.PubSub/src/CodeDesignPlus.Net.EventStore.PubSub.Abstractions/Options/EventStorePubSubOptions.cs"
+```
+
+### Propiedades
+
+- `Section`: Es una propiedad estática y de sólo lectura que define el nombre de la sección de configuración específica para EventStore Pub/Sub en los archivos de configuración (e.g., appsettings.json).
+- `Enabled`: Es una propiedad booleana que indica si EventStore Pub/Sub está habilitado o no.
+- `Group`: Es una propiedad que representa el nombre del grupo para la suscripción de EventStore Pub/Sub. Esta propiedad es obligatoria, como se indica con el atributo `[Required]`.
+
+- `UseQueue`: Es una propiedad booleana que indica si se debe usar una queue en memoria para la publicación de eventos. Por defecto está habilitada (true).
+- `SecondsWaitQueue`: Es una propiedad que define el número de segundos a esperar para la queue cuando se encuentra vacia. Debe estar en el rango de 1 a 10, con un valor por defecto de 2.
+- `EnableDiagnostic`: Es una propiedad booleana que indica si los diagnósticos están habilitados. Por defecto está deshabilitada (false).
+- `RegisterAutomaticHandlers`: Es una propiedad booleana que indica si se deben registrar event handlers automáticos. Por defecto está habilitada (true).
+
+## Ejemplo de configuración
+---
+
+A continuación se muestra un ejemplo de configuración de EventStore Pub/Sub en un archivo `appsettings.json`:
+
+```json
+{
+  "EventStorePubSub": {
+    "Enabled": true,
+    "Group": "my-group",
+    "UseQueue": true,
+    "SecondsWaitQueue": 2,
+    "EnableDiagnostic": false,
+    "RegisterAutomaticHandlers": true
+  }
+}
+```

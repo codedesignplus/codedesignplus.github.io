@@ -1,0 +1,138 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería **CodeDesignPlus.Net.Security** proporciona un marco robusto y coherente de interfaces y clases base, junto con métodos de extensión, que están diseñados para estandarizar y simplificar las funcionalidades esenciales de seguridad en aplicaciones .NET. A través de estas abstracciones, la librería permite a los desarrolladores implementar de manera consistente la autenticación y autorización basadas en JWT (JSON Web Tokens), además de proporcionar acceso fácil a la información del usuario autenticado.
+
+## Propósito y alcance
+---
+
+El propósito principal de esta librería es facilitar la implementación de la seguridad en aplicaciones .NET, proporcionando un conjunto de herramientas y extensiones para manejar la autenticación y la autorización basadas en JWT. Su alcance incluye la configuración de la autenticación JWT, el manejo de excepciones de tokens, y la gestión del contexto de usuario.
+
+## Principales características
+---
+
+-   **Configuración simplificada:** Utiliza el patrón de opciones para la configuración centralizada de la seguridad.
+-   **Autenticación basada en JWT:** Facilita la autenticación de usuarios utilizando JWTs.
+-   **Manejo de excepciones de tokens:** Proporciona un mecanismo para manejar excepciones relacionadas con tokens de seguridad.
+-   **Contexto de usuario:** Ofrece acceso fácil a la información del usuario autenticado, incluyendo claims y headers.
+-   **Extensibilidad:** Permite la personalización de la configuración mediante acciones opcionales.
+-  **Integración con ASP.NET Core:** Se integra fácilmente con los servicios de autenticación y autorización de ASP.NET Core.
+
+## Casos de uso típicos
+---
+
+-   Autenticación de usuarios en APIs REST y microservicios utilizando JWTs.
+-   Autorización de usuarios basada en roles o claims.
+-   Manejo centralizado de la configuración de seguridad en aplicaciones .NET.
+-   Acceso fácil a la información del usuario autenticado en diferentes partes de la aplicación.
+-   Manejo de excepciones relacionadas con tokens de seguridad, como tokens expirados o inválidos.
+
+## Componentes Principales
+---
+
+-   **`AuthenticationFailedContextExtensions`**: Proporciona métodos de extensión para manejar excepciones de autenticación relacionadas con tokens.
+-   **`ServiceCollectionExtensions`**: Ofrece métodos de extensión para configurar los servicios de seguridad en `IServiceCollection` y `IApplicationBuilder`.
+-   **`UserContext`**: Implementa `IUserContext` y proporciona acceso a la información del usuario autenticado actual, incluyendo claims y headers.
+- **`SecurityOptions`**: Define las opciones de configuración de la seguridad.
+- **`IUserContext`**: Define una interfaz para acceder al contexto del usuario.
+
+<FileTree>
+- src 
+    - CodeDesignPlus.Net.Security
+        - Extensions
+            - AuthenticationFailedContextExtensions.cs
+            - ServiceCollectionExtensions.cs
+        - Services
+            - UserContext.cs
+    - CodeDesignPlus.Net.Security.Abstractions
+        - Options
+            - SecurityOptions.cs
+        - IUserContext.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Security` en tu proyecto de .NET. Además, explorarás los servicios, métodos de extensión y excepciones que proporciona la librería para implementar la seguridad en tu aplicación.
+
+### Requisitos previos
+
+-   .NET 8 o superior.
+-   Un proyecto de ASP.NET Core.
+-   Comprensión básica de JWT y autenticación basada en tokens.
+-  Un servidor de autenticación compatible con OpenID Connect.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Security`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Security
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Security
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```xml
+    <PackageReference Include="CodeDesignPlus.Net.Security" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+---
+
+La solución [CodeDesignPlus.Net.Security.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Security.Sample/src/CodeDesignPlus.Net.Security.Sample/Program.cs) muestra cómo configurar la seguridad en una aplicación .NET Core. A continuación, se muestra un ejemplo de cómo configurar la seguridad en tu proyecto:
+
+```csharp url="examples/CodeDesignPlus.Net.Security.Sample/src/CodeDesignPlus.Net.Security.Sample/Program.cs"
+```
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Security` proporciona los siguientes métodos de extensión para configurar la seguridad en aplicaciones .NET:
+
+### ServiceCollectionExtensions 
+---
+
+La clase `ServiceCollectionExtensions` contiene métodos de extensión para configurar los servicios de seguridad en `IServiceCollection` y `IApplicationBuilder`. 
+
+<LinkCard title="Explora la clase ServiceCollectionExtensions" href="/libs/security/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+`SecurityOptions` define las opciones de configuración de la seguridad, incluyendo la URI de la autoridad de autenticación, el emisor válido de los tokens JWT, las audiencias válidas, y otras configuraciones relacionadas con la autenticación y la autorización.
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/security/options" />
+
+## Servicios
+---
+
+La librería `CodeDesignPlus.Net.Security` proporciona los siguientes servicios para implementar la seguridad en aplicaciones .NET:
+
+### UserContext
+
+`UserContext` implementa `IUserContext` y proporciona acceso a la información del usuario autenticado actual, incluyendo claims y headers.
+
+<LinkCard title="Explora el servicio UserContext" href="/libs/security/services/user-context" />
+
+## Conclusiones
+---
+
+La librería `CodeDesignPlus.Net.Security` ofrece una solución completa y flexible para implementar la seguridad en aplicaciones .NET. Facilita la configuración de la autenticación JWT, el manejo de excepciones y el acceso a la información del usuario, mejorando la seguridad y la mantenibilidad de las aplicaciones.
+
+## Recursos externos
+---
+
+-   [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+-   [Autenticación y autorización en ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/security/authentication)
+-   [JWT (JSON Web Tokens)](https://jwt.io/)

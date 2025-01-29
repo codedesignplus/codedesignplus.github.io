@@ -1,0 +1,158 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+import { FileTree } from '@astrojs/starlight/components';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería **CodeDesignPlus.Net.Logger** proporciona un marco robusto para la gestión centralizada de logs en aplicaciones .NET Core, utilizando Serilog como motor principal y ofreciendo la capacidad de exportar logs a OpenTelemetry (OTel) para un análisis más profundo. Esta librería facilita la configuración de logs enriquecidos con información contextual, mejorando la capacidad de depuración y monitoreo de aplicaciones.
+
+## Propósito y alcance
+---
+
+El objetivo principal de `CodeDesignPlus.Net.Logger` es simplificar la configuración y gestión de logs en aplicaciones .NET Core. Permite a los desarrolladores configurar fácilmente Serilog con enriquecimientos predefinidos, como el nombre de la aplicación, el entorno, el nombre del usuario, entre otros. Además, ofrece la flexibilidad de enviar estos logs a un sistema de telemetría como OTel, facilitando el análisis y la observación del comportamiento de la aplicación.
+
+## Principales características
+---
+
+- **Integración con Serilog:** Utiliza Serilog como motor principal para logs, proporcionando todas sus capacidades y flexibilidad.
+- **Enriquecimiento de logs:** Agrega automáticamente información contextual a los logs, como el nombre de la aplicación, la máquina, el ID del proceso, etc.
+- **Exportación a OpenTelemetry (OTel):** Facilita la exportación de logs a un colector OTel, si está configurado, para análisis y monitoreo avanzados.
+- **Configuración simplificada:** Ofrece métodos de extensión para configurar los logs fácilmente en `IServiceCollection` e `IHostBuilder`.
+- **Personalización:** Permite la configuración personalizada de Serilog mediante acciones adicionales.
+- **Detección de errores:** Incluye destructores personalizados para excepciones de base de datos.
+
+## Casos de uso típicos
+---
+
+- Centralización de logs en aplicaciones distribuidas.
+- Monitoreo y análisis de rendimiento de microservicios.
+- Depuración y diagnóstico de problemas en aplicaciones .NET Core.
+- Estandarización del formato de logs en múltiples proyectos.
+- Integración de logs con herramientas de observabilidad (e.g., Prometheus, Grafana).
+
+## Componentes Principales
+---
+
+- **`ServiceCollectionExtension`:** Clase con métodos de extensión para configurar el logging en `IServiceCollection`.
+- **`AddLogger`:** Método de extensión que agrega los servicios de logging y las opciones de configuración a `IServiceCollection`.
+- **`UseSerilog`:** Método de extensión que configura Serilog para el `IHostBuilder`.
+- **`LoggerOptions`:** Clase que representa las opciones de configuración del logger, incluyendo la configuración de OTel.
+- **`Exceptions.LoggerException`:** Excepción que se lanza cuando la configuración del logger no es válida.
+
+<FileTree>
+  - src
+    - CodeDesignPlus.Net.Logger
+        - Exceptions
+            - LoggerException.cs
+        - Extensions
+            - ServiceCollectionExtension.cs
+        - Options
+            - LoggerOptions.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Logger` en tu proyecto de .NET.
+
+### Requisitos previos
+
+*   .NET 8 o superior.
+*   Un IDE compatible con .NET (Visual Studio, Visual Studio Code, etc.)
+*   Conocimiento básico de desarrollo en .NET Core.
+*   Una instancia de OTel si se desea exportar los logs.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Logger`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Logger
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Logger
+    ```
+    </TabItem>
+     <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Logger" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+---
+
+El ejemplo [CodeDesignPlus.Net.Logger.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Logger.Sample) muestra cómo configurar el logger en una aplicación .NET Core. A continuación, se muestra un ejemplo de cómo configurar el logger en tu proyecto:
+
+```csharp url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/Program.cs"
+```
+
+<Steps>
+1. Agregar configuración en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/appsettings.json"
+    ```	
+2. Ejecutar Docker Compose para levantar el contenedor de OTel:
+
+    ```yaml url="examples/CodeDesignPlus.Net.Logger.Sample/docker-compose.yaml"
+    ```
+
+3. Creamos el servicio `FakeBackgroundService` que escribira logs cuando se inicie el programa.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/FakeBackgroundService.cs"
+    ```
+
+4. Regisrramos los servicios del log en el host
+
+    ```csharp
+    //...
+    .ConfigureServices((context, services) =>
+    {
+        services.AddLogging();
+        services.AddLogger(context.Configuration);
+    })
+    .UseSerilog();
+    ```
+
+5. En la contenedor de OTel, podemos ver los logs generados por la aplicación.
+
+    ```txt url="examples/CodeDesignPlus.Net.Logger.Sample/output.otel"
+    ```
+</Steps>
+
+## Métodos de extensión
+---
+
+`CodeDesignPlus.Net.Logger` proporciona métodos de extensión para configurar los logs en `IServiceCollection` e `IHostBuilder`. A continuación, se muestran los métodos de extensión más importantes:
+
+### Service Collection
+---
+
+`ServiceCollectionExtensions` contiene los métodos de extensión para registrar los servicios necesarios en el contenedor de dependencias.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/logger/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+`CodeDesignPlus.Net.Logger` utiliza la clase `LoggerOptions` para personalizar la configuración del logger y la exportación de logs a OTel.
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/logger/options" />
+
+## Conclusiones
+---
+
+`CodeDesignPlus.Net.Logger` ofrece una solución eficiente y flexible para la gestión de logs en aplicaciones .NET Core. Facilita la configuración de Serilog con enriquecimientos automáticos y la posibilidad de exportar logs a OpenTelemetry, mejorando la observabilidad y la capacidad de diagnóstico de las aplicaciones.
+
+## Recursos externos
+---
+
+*   [Documentación oficial de Serilog](https://serilog.net/)
+*   [Documentación oficial de OpenTelemetry](https://opentelemetry.io/)

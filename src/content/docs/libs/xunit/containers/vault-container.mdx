@@ -1,0 +1,67 @@
+---
+title: Vault
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+El `VaultContainer` es un componente de la librería **CodeDesignPlus.Net.xUnit** que proporciona un contenedor Docker para ejecutar HashiCorp Vault, una herramienta para gestionar secretos y proteger información sensible. Este componente facilita la creación de pruebas unitarias que requieren una instancia de Vault, ofreciendo un entorno de pruebas aislado y reproducible.
+
+## ¿Cómo Funciona?
+---
+
+El `VaultContainer` utiliza `Docker Compose` para definir y gestionar el contenedor Vault. Al inicializar una instancia de esta clase, se genera un archivo `docker-compose.yml` temporal con la configuración necesaria para ejecutar el contenedor. Luego, el contenedor se inicia y se detiene automáticamente al final de la ejecución de las pruebas.
+
+El proceso general de funcionamiento es el siguiente:
+1.  **Configuración del Contenedor:** El método `Build()` define la configuración específica del contenedor Vault, incluyendo la ruta al archivo `docker-compose.yml`, opciones de reinicio forzado, eliminación de contenedores huérfanos, parada al finalizar y un nombre de servicio alternativo generado dinámicamente para evitar conflictos. También se genera un identificador unico para el archivo de configuración.
+2.  **Creación del Contenedor:** Se crea una instancia de `DockerComposeCompositeService` usando la configuración definida.
+3.  **Inicio y Detención del Contenedor:** El contenedor se inicia cuando se crea una instancia de la clase `VaultContainer` y se detiene automáticamente cuando la instancia se elimina, asegurando la limpieza del entorno.
+4.  **Obtención de Credenciales:** Una vez el contenedor esta inicializado se procede a la lectura del archivo generado con las credenciales de Vault.
+5.  **Deserialización de Credenciales:** Las credenciales son deserializadas a la clase `VaultCredentials` para su uso posterior.
+
+## Container
+---
+
+El `VaultContainer` hereda de la clase `DockerCompose`, la cual proporciona la lógica base para interactuar con Docker Compose. La clase utiliza la clase `DockerComposeCompositeService` de la librería `Testcontainers` para iniciar y detener contenedores docker. La configuración del contenedor se define en el método `Build()` que crea un archivo `docker-compose.yml` con los parámetros necesarios para la ejecución del contenedor Vault. El archivo `docker-compose.yml` se encuentra dentro del directorio `Containers/VaultContainer`.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/VaultContainer/VaultContainer.cs"
+```
+
+La clase `VaultCollectionFixture` se utiliza como un *fixture* de xUnit, que proporciona una forma de compartir el contenedor entre las pruebas de una colección.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/VaultContainer/VaultCollectionFixture.cs"
+```
+
+## Ejemplo de Uso
+---
+
+Este ejemplo es una prueba unitaria en C# utilizando xUnit para verificar la conexión a un servidor Vault y la correcta recuperación de secretos. La prueba configura un cliente de Vault usando AppRoleAuthMethodInfo para la autenticación, lee un secreto específico y verifica que contiene una clave y un valor esperados.
+
+<Tabs>
+    <TabItem label="VaultContainerTest">         
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/VaultContainerTest.cs"
+    ```
+    </TabItem>
+    <TabItem label="VaultCollectionFixture">
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/Definitions/VaultContainerDefinition.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+
+## Conclusiones
+---
+
+-   El `VaultContainer` facilita la creación de pruebas unitarias que requieren una instancia de HashiCorp Vault.
+-   Utiliza Docker Compose para la gestión del contenedor, proporcionando una forma sencilla de definir la configuración.
+-   Proporciona las credenciales de Vault a través de la propiedad `Credentials`.
+-   La clase `VaultCollectionFixture` permite compartir un contenedor entre todas las pruebas de una misma colección.
+-   El uso del `VaultContainer` mejora la reproducibilidad y el aislamiento de las pruebas unitarias.
+-  El contenedor Vault se inicia automaticamente al comienzo de cada prueba y se detiene una vez termina, esto permite un ambiente de pruebas limpio.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de Docker](https://docs.docker.com/)
+-   [Documentación de Docker Compose](https://docs.docker.com/compose/)
+-   [Documentación de HashiCorp Vault](https://www.vaultproject.io/docs)
+-   [Documentación de xUnit](https://xunit.net/)

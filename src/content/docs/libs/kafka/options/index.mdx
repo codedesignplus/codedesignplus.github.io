@@ -1,0 +1,103 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. En este caso, la clase `KafkaOptions` proporciona la configuración necesaria para la interacción con Apache Kafka.
+
+## KafkaOptions
+---
+
+La clase `KafkaOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir el comportamiento y la configuración de la conexión a Kafka, tanto para productores como consumidores y clientes administrativos.
+
+```csharp url="packages/CodeDesignPlus.Net.Kafka/src/CodeDesignPlus.Net.Kafka/Options/KafkaOptions.cs"
+```
+
+<Aside>
+La clase `KafkaOptions`, hereda de [`PubSubOptions`](/libs/pubsub/options). Consulta la configuración base para conocer las propiedades que comparten todas las opciones de Pub/Sub.
+</Aside>
+
+
+### Propiedades
+
+- **Section**
+    - Tipo: `string`
+    - Descripción: El nombre de la sección en el archivo `appsettings.json` donde se encuentran estas opciones.
+    - Valor edeterminado:** `"Kafka"`
+
+- **Enable**
+    - Tipo: `bool`
+    - Descripción:  Indica si la funcionalidad de Kafka está habilitada.
+    - Valor edeterminado:** `false` (heredado de `PubSubOptions`)
+
+- **BootstrapServers**
+    - Tipo: `string`
+    - Descripción:  La lista de servidores de Kafka a los que se conectará.
+    - Valor edeterminado:** `null`
+
+- **Acks**
+    - Tipo: `Acks` (enum)
+    - Descripción: Nivel de reconocimiento que debe recibir el productor de Kafka.
+    - Valor edeterminado:** `Acks.All`
+
+- **BatchSize**
+    - Tipo: `int`
+    - Descripción: Tamaño del lote de mensajes que se enviarán a Kafka.
+    - Valor edeterminado:** `0` (valor predeterminado implícito de int)
+
+- **LingerMs**
+    - Tipo: `int`
+    - Descripción: Tiempo máximo en milisegundos que el productor esperará para acumular mensajes antes de enviarlos.
+    - Valor edeterminado:** `0` (valor predeterminado implícito de int)
+
+- **CompressionType**
+    - Tipo: `CompressionType` (enum)
+    - Descripción: Tipo de compresión que se utilizará para los mensajes enviados a Kafka.
+    - Valor edeterminado:** `CompressionType.Snappy`
+
+- **NameMicroservice**
+    - Tipo: `string`
+    - Descripción: Nombre del microservicio actual. Este valor es requerido.
+    - Valor edeterminado:** `null`
+
+- **SecurityProtocol**
+    - Tipo: `SecurityProtocol` (enum)
+    - Descripción: Protocolo de seguridad que se utilizará para la conexión con Kafka.
+    - Valor edeterminado:** `SecurityProtocol.Plaintext`
+
+- **ProducerConfig**
+    - Tipo: `ProducerConfig`
+    - Descripción: Configuración del productor de Kafka, generada a partir de las opciones de `KafkaOptions`.
+    - Valor edeterminado:**  Objeto `ProducerConfig` generado dinámicamente.
+
+- **ConsumerConfig**
+    - Tipo: `ConsumerConfig`
+    - Descripción:  Configuración del consumidor de Kafka, generada a partir de las opciones de `KafkaOptions`.
+    - Valor edeterminado:** Objeto `ConsumerConfig` generado dinámicamente.
+
+- **AdminClientConfig**
+    - Tipo: `AdminClientConfig`
+    - Descripción:  Configuración del cliente administrativo de Kafka, generada a partir de las opciones de `KafkaOptions`.
+    - Valor edeterminado:** Objeto `AdminClientConfig` generado dinámicamente.
+
+- **MaxAttempts**
+    - Tipo: `int`
+    - Descripción:  Máximo número de intentos para realizar una operación con Kafka (ej: reintento de envio).
+    - Valor edeterminado:** `60`
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones requeridas:
+
+```json url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/appsettings.json"
+```
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación de Apache Kafka](https://kafka.apache.org/documentation/)
+- [Confluent .NET Client for Apache Kafka](https://github.com/confluentinc/confluent-kafka-dotnet)

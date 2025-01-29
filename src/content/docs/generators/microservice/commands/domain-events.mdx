@@ -1,0 +1,160 @@
+---
+title: "Creación de Evento de Dominio"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice domainEvent`
+
+Este comando se utiliza para crear uno o más eventos de dominio dentro de un microservicio existente. En el contexto de Domain-Driven Design (DDD), los eventos de dominio son representaciones de algo que ha ocurrido en el dominio del negocio. Estos eventos son importantes para la comunicación entre diferentes partes del sistema y para la implementación de patrones como la arquitectura orientada a eventos. Este comando facilita la generación de la estructura básica para definir eventos de dominio en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Evento de Dominio (Domain Event):** En DDD, un evento de dominio es un registro de algo significativo que ha ocurrido en el dominio del negocio.
+*   **Inmutabilidad:** Los eventos de dominio son inmutables, lo que significa que una vez que se han producido, no se pueden cambiar.
+*  **Comunicación:** Los eventos de dominio se utilizan para comunicar cambios de estado entre diferentes agregados o microservicios.
+*   **Arquitectura Orientada a Eventos:** Los eventos de dominio son un componente clave de la arquitectura orientada a eventos, permitiendo que los sistemas reaccionen a los cambios de estado.
+*   **DDD:** Domain-Driven Design es un enfoque de desarrollo de software que modela el software alrededor del dominio del negocio. Los eventos de dominio son un concepto central en DDD.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice domainEvent` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice domainEvent \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --aggregate "<aggregate_name>" \
+        --domainEvents "<domain_event_names>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice domainEvent `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --aggregate "<aggregate_name>" `
+        --domainEvents "<domain_event_names>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se crearán los eventos de dominio.
+
+### `--aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado al que pertenecen los eventos de dominio.
+
+### `--domainEvents`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una lista de nombres de eventos de dominio separados por comas que se crearán.
+
+## Ejemplos de Uso
+
+Este ejemplo crea tres eventos de dominio, `UserAccountCreated`, `UserAccountUpdated` y `UserPreferenceUpdated`, asociados al agregado `User` en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice domainEvent \
+        --organization "Acme" \
+        --microservice "User" \
+        --aggregate "User" \
+        --domainEvents "UserAccountCreated,UserAccountUpdated,UserPreferenceUpdated"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice domainEvent `
+        --organization "Acme" `
+        --microservice "User" `
+        --aggregate "User" `
+        --domainEvents "UserAccountCreated,UserAccountUpdated,UserPreferenceUpdated"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generarán las estructuras base para los eventos de dominio `UserAccountCreated`, `UserAccountUpdated` y `UserPreferenceUpdated` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/domain-event/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para los nuevos eventos de dominio:
+
+<Image src="/images/generators/microservices/domain-event/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para uno o más eventos de dominio en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para los eventos de dominio.
+
+    <Image src="/images/generators/microservices/domain-event/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se crearán los eventos de dominio, reflejándose en los namespaces y ubicaciones de los archivos.
+
+     <Image src="/images/generators/microservices/domain-event/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--aggregate`
+**Flag:** `--aggregate "User"`
+
+1.  Este parámetro define el nombre del agregado al que pertenecen los eventos de dominio, reflejándose en la ubicación de los archivos generados.
+
+    <Image src="/images/generators/microservices/domain-event/1-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--domainEvents`
+**Flag:** `--domainEvents "UserAccountCreated,UserAccountUpdated,UserPreferenceUpdated"`
+
+1.  Este parámetro define los nombres de los eventos de dominio que se crearán, generando los archivos correspondientes en la capa de dominio.
+
+    <Image src="/images/generators/microservices/domain-event/1-domainevents-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente y un agregado definido antes de utilizar este comando.
+*   Utiliza nombres descriptivos para tus eventos de dominio, reflejando lo que ha ocurrido en el dominio.
+*   Los eventos de dominio deben ser inmutables y representar un hecho que ya ha ocurrido.
+* Los eventos de dominio deben ser asociados a un agregado.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD](https://martinfowler.com/bliki/DomainDrivenDesign.html)
+*   [Eventos de Dominio en DDD](https://martinfowler.com/eaaDev/DomainEvent.html)
+*   [Arquitectura Orientada a Eventos](https://martinfowler.com/articles/201701-event-driven.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice domainEvent` facilita la creación de nuevos eventos de dominio en tu microservicio, asegurando que la estructura y los patrones DDD se apliquen correctamente. Utiliza este comando para modelar tu dominio de manera coherente y mantenible.

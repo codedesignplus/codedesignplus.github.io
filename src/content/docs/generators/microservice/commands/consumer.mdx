@@ -1,0 +1,205 @@
+---
+title: "Creación de Consumer de Eventos"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice consumer`
+
+Este comando se utiliza para crear un consumer de eventos dentro de un microservicio existente. Los consumers de eventos son componentes que reaccionan a eventos publicados por otros microservicios o componentes dentro del mismo microservicio, realizando una acción específica en respuesta a dichos eventos. Este comando facilita la generación de la estructura básica para definir un consumer de eventos en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+- Tener un evento de dominio que se consumirá.
+
+## Conceptos Clave
+
+*   **Consumer de Eventos:** Un componente que se suscribe a eventos y realiza una acción específica en respuesta a dichos eventos.
+*   **Arquitectura Orientada a Eventos:** Los consumers de eventos son un componente clave en la arquitectura orientada a eventos, permitiendo que los sistemas reaccionen a los cambios de estado de manera asíncrona y desacoplada.
+*   **Desacoplamiento:** Los consumers de eventos reducen el acoplamiento entre los componentes de un sistema, ya que los componentes no necesitan conocer los detalles de implementación de los productores de eventos.
+*   **Asincronía:** Los consumers de eventos suelen ejecutar sus acciones de manera asíncrona, permitiendo que los componentes que publican los eventos no se bloqueen.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice consumer` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice consumer \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --consumer-name "<consumer_name>" \
+        --consumer-aggregate "<aggregate_name>" \
+        --consumer-action "<consumer_action>" \
+        --consumer-microservice "<consumer_microservice>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice consumer `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --consumer-name "<consumer_name>" `
+        --consumer-aggregate "<aggregate_name>" `
+        --consumer-action "<consumer_action>" `
+        --consumer-microservice "<consumer_microservice>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se creará el consumer de eventos.
+
+### `--consumer-name`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del evento que se consumirá.
+
+### `--consumer-aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado al que pertenece el evento que se consumirá.
+
+### `--consumer-action`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: La acción que realizará el consumer en respuesta al evento.
+
+### `--consumer-microservice`
+     - **Tipo**: `string`
+     - **Obligatorio**: No
+     - **Descripción**: El nombre del microservicio que publica el evento que se consumirá.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un consumer de eventos que reacciona al evento `EmailVerified` del microservicio `ms-security` para enviar un correo de bienvenida en el microservicio `user` de la organización `Acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice consumer \
+        --organization "Acme" \
+        --microservice "User" \
+        --consumer-name "EmailVerified" \
+        --consumer-aggregate "User" \
+        --consumer-action "send-welcome-email" \
+        --consumer-microservice "ms-security"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice consumer `
+        --organization "Acme" `
+        --microservice "User" `
+        --consumer-name "EmailVerified" `
+        --consumer-aggregate "User" `
+        --consumer-action "send-welcome-email" `
+        --consumer-microservice "ms-security"
+    ```
+    </TabItem>
+</Tabs>
+
+yo codedesignplus:microservice asyncWorker `
+--organization "Acme" `
+--microservice "user" `
+--consumer-name "EmailVerified" `
+--consumer-aggregate "User" `
+--consumer-action "send-welcome-email" `
+--consumer-microservice "ms-security"
+
+yo codedesignplus:microservice asyncWorker \
+    --organization "Acme" \
+    --microservice "Notifications" \
+    --consumer-name "OrderCreated" \
+    --consumer-aggregate "Order" \
+    --consumer-action "send-notification" \
+    --consumer-microservice "ms-order"
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base para el consumer de eventos `EmailVerified` en el microservicio `user`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/consumer/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo consumer de eventos:
+
+<Image src="/images/generators/microservices/consumer/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para un consumer de eventos en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1. Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el consumer.
+
+   <Image src="/images/generators/microservices/consumer/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "user"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se creará el consumer, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/consumer/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-name`
+**Flag:** `--consumer-name "EmailVerified"`
+
+1.  Este parámetro define el nombre del evento que consumirá el consumer, reflejándose en el nombre de los archivos y clases generados.
+
+    <Image src="/images/generators/microservices/consumer/1-consumer-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-aggregate`
+**Flag:** `--consumer-aggregate "User"`
+
+1. Este parámetro define el nombre del agregado al que pertenece el evento que se consume, reflejándose en la ubicación de los archivos generados.
+
+    <Image src="/images/generators/microservices/consumer/1-consumer-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-action`
+**Flag:** `--consumer-action "send-welcome-email"`
+
+1. Este parámetro define la acción que realizará el consumer en respuesta al evento, reflejándose en la creación de un comando específico para la acción.
+
+    <Image src="/images/generators/microservices/consumer/1-consumer-action-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-microservice`
+**Flag:** `--consumer-microservice "user"`
+
+1. Este parámetro define el nombre del microservicio que publica el evento que se consumirá, reflejándose en la lógica de consumo de eventos.
+
+    <Image src="/images/generators/microservices/consumer/1-consumer-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   El nombre del evento y la acción del consumer deben ser descriptivos.
+*   Los consumers deben encargarse de realizar una acción en respuesta a un evento, sin modificar el estado de otros agregados directamente.
+*  Los consumers deben ser idempotentes, es decir, deben poder procesar el mismo evento varias veces sin generar efectos no deseados.
+
+## Enlaces Relacionados
+
+*  [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*  [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*  [Arquitectura Orientada a Eventos](https://martinfowler.com/articles/201701-event-driven.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice consumer` facilita la creación de consumers de eventos en tu microservicio, asegurando que la estructura y los patrones de la arquitectura orientada a eventos se apliquen correctamente. Utiliza este comando para definir la forma en que tu microservicio reacciona a los eventos publicados por otros componentes del sistema.

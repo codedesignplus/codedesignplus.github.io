@@ -1,0 +1,67 @@
+---
+title: Observability
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+El `ObservabilityContainer` es un componente de la librería **CodeDesignPlus.Net.xUnit** que proporciona un conjunto de contenedores Docker para ejecutar servicios de observabilidad, como Loki (para logs), Grafana (para dashboards), Prometheus (para métricas) y Tempo (para trazas). Este componente facilita la creación de pruebas unitarias que requieren herramientas de observabilidad, ofreciendo un entorno de pruebas aislado y reproducible.
+
+## ¿Cómo Funciona?
+---
+
+El `ObservabilityContainer` utiliza `Docker Compose` para definir y gestionar los contenedores de observabilidad. Al inicializar una instancia de esta clase, se genera un archivo `docker-compose.yml` temporal con la configuración necesaria para ejecutar los contenedores. Luego, los contenedores se inician y se detienen automáticamente al final de la ejecución de las pruebas.
+
+El proceso general de funcionamiento es el siguiente:
+1.  **Configuración del Contenedor:** El método `Build()` define la configuración específica de los contenedores de observabilidad, incluyendo la ruta al archivo `docker-compose.yml`, opciones de reinicio forzado, eliminación de contenedores huérfanos, parada al finalizar y un nombre de servicio alternativo generado dinámicamente para evitar conflictos.
+2.  **Creación del Contenedor:** Se crea una instancia de `DockerComposeCompositeService` usando la configuración definida.
+3.  **Inicio y Detención del Contenedor:** Los contenedores se inician cuando se crea una instancia de la clase `ObservabilityContainer` y se detienen automáticamente cuando la instancia se elimina, asegurando la limpieza del entorno.
+
+## Container
+---
+
+El `ObservabilityContainer` hereda de la clase `DockerCompose`, la cual proporciona la lógica base para interactuar con Docker Compose.  La clase utiliza la clase `DockerComposeCompositeService` de la librería `Testcontainers` para iniciar y detener contenedores docker. La configuración de los contenedores se define en el método `Build()` que crea un archivo `docker-compose.yml` con los parámetros necesarios para la ejecución de los contenedores de observabilidad. El archivo `docker-compose.yml` se encuentra dentro del directorio `Containers/ObservabilityContainer`.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/ObservabilityContainer/ObservabilityContainer.cs"
+```
+
+La clase `ObservabilityCollectionFixture` se utiliza como un *fixture* de xUnit, que proporciona una forma de compartir los contenedores entre las pruebas de una colección.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Containers/ObservabilityContainer/ObservabilityCollectionFixture.cs"
+```
+
+## Ejemplo de Uso
+---
+
+Este ejemplo demuestra cómo usar `ObservabilityContainer` para realizar pruebas de integración con los servicios de observabilidad. La prueba verifica que los contenedores de observabilidad (Loki, Grafana, Prometheus, Tempo) se han iniciado correctamente utilizando la propiedad `IsRunning` del contenedor. Este ejemplo muestra la configuración básica para asegurar que los servicios estén operativos para su uso en pruebas más complejas.
+
+<Tabs>
+    <TabItem label="ObservabilityContainerTest">         
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/ObservabilityContainerTest.cs"
+    ```
+    </TabItem>
+    <TabItem label="ObservabilityCollectionDefinition">
+    ```csharp url="packages/CodeDesignPlus.Net.xUnit/tests/CodeDesignPlus.Net.xUnit.Test/Definitions/ObservabilityCollectionDefinition.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+
+## Conclusiones
+---
+
+-  El `ObservabilityContainer` facilita la creación de pruebas unitarias que requieren servicios de observabilidad como Loki, Grafana, Prometheus y Tempo.
+-  Utiliza Docker Compose para la gestión de los contenedores, proporcionando una forma sencilla de definir la configuración.
+-  La clase `ObservabilityCollectionFixture` permite compartir los contenedores entre todas las pruebas de una misma colección.
+-  El uso del `ObservabilityContainer` mejora la reproducibilidad y el aislamiento de las pruebas unitarias.
+-  Los contenedores de observabilidad se inician automaticamente al comienzo de cada prueba y se detienen una vez termina, esto permite un ambiente de pruebas limpio.
+
+## Referencias Adicionales
+---
+
+- [Documentación de Docker](https://docs.docker.com/)
+- [Documentación de Docker Compose](https://docs.docker.com/compose/)
+- [Documentación de Loki](https://grafana.com/docs/loki/latest/)
+- [Documentación de Grafana](https://grafana.com/docs/grafana/)
+- [Documentación de Prometheus](https://prometheus.io/docs/introduction/overview/)
+- [Documentación de Tempo](https://grafana.com/docs/tempo/latest/)
+- [Documentación de xUnit](https://xunit.net/)

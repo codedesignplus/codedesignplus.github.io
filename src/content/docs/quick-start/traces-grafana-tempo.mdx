@@ -1,0 +1,84 @@
+---
+title: Visualizando Trazas de Microservicios en Grafana
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, aprenderemos cómo visualizar las trazas generadas por los microservicios de CodeDesignPlus utilizando Grafana. Explicaremos el flujo de trazas desde los microservicios, a través de OpenTelemetry y Tempo, hasta la visualización en Grafana. Esto nos permitirá realizar un seguimiento de las peticiones a través de los distintos servicios de nuestra arquitectura de microservicios, lo que facilita el diagnóstico de problemas y la optimización del rendimiento.
+
+## ¿Por qué Visualizar Trazas en Grafana?
+
+La visualización de trazas es esencial para la observabilidad y el análisis de sistemas distribuidos como los microservicios. Las trazas nos permiten:
+
+*   **Seguimiento de peticiones:**  Ver cómo se propagan las peticiones a través de los distintos servicios y componentes del sistema.
+*   **Identificar cuellos de botella:**  Detectar cuellos de botella de rendimiento y latencia en los diferentes servicios.
+*   **Diagnosticar problemas:**  Investigar el origen de errores y problemas en las peticiones.
+*   **Analizar la dependencia:** Visualizar las dependencias entre microservicios y el flujo de datos entre ellos.
+
+Grafana, con su capacidad de crear dashboards y visualizar datos de diferentes fuentes, es una herramienta ideal para analizar las trazas de nuestros microservicios.
+
+## ¿Qué Aprenderás?
+
+1.  Cómo los microservicios exportan las trazas a OpenTelemetry usando gRPC.
+2.  Cómo OpenTelemetry direcciona las trazas a Tempo.
+3.  Cómo visualizar las trazas de los microservicios en Grafana.
+4.  Cómo analizar las trazas para identificar problemas y optimizar el rendimiento.
+
+## Arquitectura de Monitoreo de Trazas
+
+El flujo de trazas en nuestro entorno de microservicios sigue la siguiente arquitectura:
+
+1.  **Microservicios:** Los microservicios, construidos con el framework de CodeDesignPlus, generan trazas que son enviadas a través de gRPC al OpenTelemetry Collector.
+2.  **OpenTelemetry Collector:** Recibe las trazas de los microservicios y las direcciona a Tempo. El OpenTelemetry Collector implementa el protocolo [OTLP](https://opentelemetry.io/docs/specs/otlp/) (OpenTelemetry Protocol).
+3.  **Tempo:** Recibe y almacena las trazas del OpenTelemetry Collector, optimizadas para el almacenamiento de trazas a gran escala.
+4.  **Grafana:** Consulta las trazas almacenadas en Tempo y las visualiza en diagramas de Gantt, que muestran el flujo de la petición en el tiempo.
+
+<Image src="/images/quick-start/dev-environment/dev-environment.svg" alt="Entorno de Desarrollo" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Configuración
+
+CodeDesignPlus ya incluye la configuración necesaria para el monitoreo de trazas. La librería `CodeDesignPlus.Net.Observability` se encarga de exportar las trazas de los microservicios a OpenTelemetry, que a su vez las envía a Tempo.
+
+```csharp url="packages/CodeDesignPlus.Net.Observability/src/CodeDesignPlus.Net.Observability/Extensions/ServiceCollectionExtensions.cs"
+```
+
+## Pasos para la Visualización de Trazas en Grafana
+
+<Steps>
+
+1. **Asegúrate de que los Microservicios estén en Ejecución:** Verifica que los microservicios, OpenTelemetry Collector, Loki y Grafana estén en ejecución. El microservicio puede ser ejecutado de forma local o en un contenedor Docker.
+
+    <Image src="/images/quick-start/grafana-traces/running_services.png" alt="Docker ps" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. **Accede a Grafana:** Abre un navegador y ve a la URL [`http://localhost:3000`](http://localhost:3000) (o la dirección donde se está ejecutando Grafana).
+
+    <Image src="/images/quick-start/grafana-traces/grafana_home.png" alt="Grafana Home" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. **Explora las Trazas:** En la barra de navegación de Grafana, haz clic en `Explore` (icono de la brújula) y selecciona la fuente de datos de Tempo.
+
+    <Image src="/images/quick-start/grafana-traces/grafana_tempo_datasource.png" alt="Grafana Tempo Data Source" width="1600" height="900" decoding="async" loading="lazy" />
+    
+5. **Realiza una Consulta:** Puedes buscar trazas por `TraceId`. Los `TraceId` son generados automáticamente por la librería `CodeDesignPlus.Net.Observability` y son enviados en la cabecera de la petición con el nombre `traceparent` en el caso de REST y en el `Metadata` en el caso de gRPC.
+
+    <Image src="/images/quick-start/grafana-traces/grafana_tempo_trace.png" alt="Grafana Tempo Trace Id" width="1600" height="900" decoding="async" loading="lazy" />
+
+6. **Visualiza la Traza:** Una vez que seleccionas la traza, Grafana mostrará un diagrama de Gantt que representa el flujo de la petición a través de los diferentes microservicios.
+
+        <Image src="/images/quick-start/grafana-traces/grafana_tempo_response.png" alt="Grafana Tempo Response" width="1600" height="900" decoding="async" loading="lazy" />
+
+7. **Analiza la Traza:** Examina el diagrama de Gantt para identificar cuellos de botella, errores y latencia en la petición.  Puedes hacer clic en cada span (cada servicio en la traza) para ver información detallada como el tiempo de ejecución y los atributos asociados.
+
+8.  **Crea Dashboards:** Para un monitoreo continuo, puedes crear paneles en Grafana que muestren las trazas de forma permanente o con base a métricas. Crea un nuevo dashboard y añade un panel con la fuente de datos de Tempo y las queries que necesites.
+
+</Steps>
+
+<Aside>
+ Para generar `traceId`, asegúrate de enviar una petición a un endpoint REST o gRPC de la API. Al realizar esto, la librería `CodeDesignPlus.Net.Observability` generará de forma automática un `traceId` y lo enviará en la cabecera de la petición. Posteriormente, los servicios del microservicio también enviarán ese `traceId` para identificar el flujo de la petición.
+</Aside>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo visualizar las trazas de los microservicios de CodeDesignPlus utilizando Grafana. Hemos comprendido el flujo de trazas desde los microservicios, a través de OpenTelemetry y Tempo, hasta la visualización final en Grafana. Ahora, puedes utilizar Grafana para realizar un seguimiento de las peticiones a través de los diferentes servicios, lo que te permitirá diagnosticar problemas, optimizar el rendimiento y mejorar la observabilidad de tu sistema.
+
+Esta configuración proporciona una base sólida para la observabilidad de tus microservicios y facilita la gestión de tu sistema.

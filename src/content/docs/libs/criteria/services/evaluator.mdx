@@ -1,0 +1,78 @@
+---
+title: Evaluator
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `Evaluator` es un servicio interno que evalúa un Árbol de Sintaxis Abstracta (AST) y construye expresiones lambda para representar la evaluación. Estas expresiones se pueden usar para filtrar o procesar datos dinámicamente de manera eficiente.
+
+## ¿Cómo Funciona?
+
+El `Evaluator` toma como entrada un nodo AST y genera una expresión lambda que se puede utilizar para evaluar condiciones complejas o aplicar filtros sobre colecciones de datos. Utiliza expresiones de LINQ y árboles de expresiones para realizar este procesamiento.
+
+## Métodos
+---
+
+El `Evaluator` incluye métodos clave para interpretar los nodos del AST y convertirlos en expresiones funcionales.
+
+### Evaluate
+**Type:** `public static Expression<Func<T, bool>> Evaluate<T>(AstNode node)`
+
+Este método principal toma un nodo raíz del Abstract Syntax Tree (AST) como entrada y genera una expresión lambda del tipo `Func<T, bool>`. Esta expresión representa la lógica de filtrado definida en el AST, y puede ser aplicada a una colección de objetos del tipo `T`. El proceso implica la conversión del AST en código ejecutable.
+    
+### BuildExpression
+**Type:** `private static Expression BuildExpression(AstNode node, ParameterExpression parameter)`
+
+Este método, de uso interno del `Evaluator`, construye una expresión recursivamente basándose en el tipo del nodo del AST que se le proporciona.  Es el encargado de analizar el tipo del nodo actual (ya sea una expresión, una condición o un operador) y delega la generación de la expresión a métodos más específicos. Este método permite navegar a través del árbol del AST de manera recursiva, garantizando que cada parte del árbol se transforme correctamente en una expresión.
+
+### BuildConditionExpression
+**Type:** `private static Expression BuildConditionExpression(AstNode node, ParameterExpression parameter)`
+
+Este método, de uso interno del `Evaluator`, tiene como propósito específico convertir un nodo del AST de tipo `Condition` en una expresión.  Esta expresión realiza una comparación entre una propiedad de un objeto y un valor constante. El proceso implica la división de la condición en sus componentes básicos: la propiedad, el operador de comparación y el valor, y posteriormente, la construcción de la expresión de comparación correspondiente.
+
+### BuildLogicalExpression
+**Type:**  `private static BinaryExpression BuildLogicalExpression(AstNode node, ParameterExpression parameter)`
+
+Este método, de uso interno del `Evaluator`, se encarga de crear expresiones lógicas, ya sean de tipo `AND` (Y) o `OR` (O),  basándose en nodos de tipo `Operator` dentro del AST.  Combina las expresiones construidas de los nodos hijos del operador, utilizando el operador lógico definido en el nodo del árbol. Esto permite construir condiciones complejas con múltiples niveles.
+
+### SortBy
+**Type:** `public static Expression<Func<T, object>> SortBy<T>(string propertyName)`
+
+Este método genera una expresión lambda del tipo `Func<T, object>`, que se puede utilizar para ordenar una colección de objetos del tipo `T` por una propiedad específica.  Recibe el nombre de la propiedad como entrada y genera una expresión lambda que puede ser utilizada por LINQ u otras bibliotecas para realizar la operación de ordenamiento.
+
+## Implementación
+---
+
+El `Evaluator` se implementa en el espacio de nombres `CodeDesignPlus.Net.Criteria`. Utiliza expresiones lambda y árboles de expresiones para evaluar condiciones y construir filtros dinámicos.
+
+```csharp url="packages/CodeDesignPlus.Net.Criteria/src/CodeDesignPlus.Net.Criteria/Evaluator.cs" 
+```
+
+## Ejemplo de Uso
+---
+
+Supongamos que tienes una clase `User` con las propiedades `Age`, `Name` y `Status`. Puedes construir una expresión para filtrar usuarios dinámicamente:
+
+```csharp
+var tokens = Tokenizer.Tokenize("age>=30|name~=John|status=active");
+var parser = new Parser(tokens);
+
+AstNode ast = parser.Parse();
+var filter = Evaluator.Evaluate<User>(ast);
+
+var users = new List<User>
+{
+    new User { Age = 25, Name = "Alice", Status = "active" },
+    new User { Age = 35, Name = "John", Status = "active" },
+    new User { Age = 40, Name = "Bob", Status = "inactive" }
+};
+
+var filteredUsers = users.AsQueryable().Where(filter).ToList();
+
+// Resultado: lista con usuarios que cumplen las condiciones del filtro
+```
+
+## Conclusiones
+---
+
+El `Evaluator` es una herramienta poderosa para evaluar ASTs y construir expresiones dinámicas, ideal para sistemas con necesidades de filtrado flexible. Al abstraer la lógica de construcción de expresiones, facilita el mantenimiento y la extensibilidad del código.

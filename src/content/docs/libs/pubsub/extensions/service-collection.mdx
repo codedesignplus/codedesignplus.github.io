@@ -1,0 +1,157 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.PubSub` proporciona métodos de extensión para facilitar la configuración y el uso del patrón Pub/Sub en aplicaciones .NET. Estas extensiones simplifican el registro de servicios, la carga de opciones de configuración y el manejo de eventos de dominio mediante el uso de `IServiceCollection`.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `CodeDesignPlus.Net.PubSub`: La librería principal del Pub/Sub que contiene las abstracciones y clases necesarias.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Implementan el patrón de Pub/Sub para la comunicación entre componentes.
+- Necesitan una forma sencilla de configurar y registrar los servicios de Pub/Sub.
+- Desean utilizar la inyección de dependencias para gestionar la publicación y suscripción de eventos.
+- Requieren configurar opciones específicas del Pub/Sub, como el uso de colas y el tiempo de espera.
+- Quieren facilitar la detección automática de manejadores de eventos.
+- Utilizan eventos de dominio en su arquitectura y necesitan un sistema robusto de manejo.
+
+## Beneficios
+---
+- **Configuración Simplificada:** Facilita la configuración de los servicios de Pub/Sub con un solo método de extensión.
+- **Detección Automática de Handlers:** Registra automáticamente todos los manejadores de eventos.
+- **Flexibilidad:** Permite la configuración por medio de la configuración `appsettings.json` y la configuración personalizada por medio de un Action.
+- **Inyección de Dependencias:** Permite utilizar la inyección de dependencias para acceder a los servicios de Pub/Sub.
+- **Extensibilidad:** Permite la extensión mediante la adición de opciones para el uso de colas y diagnósticos.
+- **Coherencia:** Proporciona una forma estandarizada para la implementación de Pub/Sub.
+
+## Ejemplo Práctico
+---
+
+Supongamos que tienes un archivo `appsettings.json` con la siguiente configuración:
+
+```json url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/appsettings.json"
+```
+
+Y quieres configurar los servicios de Pub/Sub en tu aplicación. Así podrías hacerlo en tu clase `Startup` o `Program.cs`:
+
+```csharp
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using CodeDesignPlus.Net.PubSub.Extensions;
+
+public class Startup
+{
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Usando la configuración del archivo appsettings.json
+        services.AddPubSub(Configuration);
+
+       // Opcionalmente, puedes personalizar las opciones programáticamente
+        services.AddPubSub(Configuration, options =>
+        {
+            options.UseQueue = true;
+            options.SecondsWaitQueue = 10;
+        });
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        // ... Configuración de la aplicación ...
+    }
+}
+```
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.PubSub` proporciona dos métodos de extensión para configurar los servicios de Pub/Sub en una aplicación .NET. Ambos métodos permiten configurar los servicios de Pub/Sub a través de un archivo `appsettings.json` y personalizar las opciones programáticamente. A continuación se describen los métodos de extensión disponibles:
+
+### AddPubSub
+**Type:** `public static IServiceCollection AddPubSub(this IServiceCollection services, IConfiguration configuration)`
+
+Este método agrega los servicios de Pub/Sub a la colección de servicios especificada utilizando la configuración proporcionada.
+
+- **Parámetros**
+    - `services`: La colección de servicios (`IServiceCollection`) a la que se agregarán los servicios de Pub/Sub.
+    - `configuration`: La configuración (`IConfiguration`) que se utilizará para configurar los servicios de Pub/Sub. La sección "PubSub" debe existir en la configuración.
+
+- **Tipo de retorno**
+    - `IServiceCollection`: La colección de servicios modificada, lo que permite encadenar otras llamadas de extensión.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si `services` o `configuration` son nulos.
+    - `PubSubException`: Se lanza si la sección de configuración `PubSub` no existe.
+
+- **Ejemplo de Uso**
+    ```csharp
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddPubSub(configuration);
+    }
+    ```
+
+### AddPubSub (sobrecarga)
+**Type:** `public static IServiceCollection AddPubSub(this IServiceCollection services, IConfiguration configuration, Action<PubSubOptions> setupOptions)`
+
+Este método agrega los servicios de Pub/Sub a la colección de servicios especificada, utilizando la configuración proporcionada y una acción para personalizar las opciones.
+
+- **Parámetros**
+    - `services`: La colección de servicios (`IServiceCollection`) a la que se agregarán los servicios de Pub/Sub.
+    - `configuration`: La configuración (`IConfiguration`) que se utilizará para configurar los servicios de Pub/Sub.
+    - `setupOptions`: Una acción (`Action<PubSubOptions>`) para configurar las opciones de Pub/Sub de manera programática.
+
+- **Tipo de retorno**
+    - `IServiceCollection`: La colección de servicios modificada, lo que permite encadenar otras llamadas de extensión.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si `services`, `configuration` o `setupOptions` son nulos.
+
+- **Ejemplo de Uso**
+    ```csharp
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddPubSub(configuration, options =>
+        {
+            options.UseQueue = true;
+            options.SecondsWaitQueue = 10;
+        });
+    }
+    ```
+
+### AddEventsHandlers
+**Type:** `private static IServiceCollection AddEventsHandlers(this IServiceCollection services)`
+
+Este método registra automáticamente todos los manejadores de eventos (`IEventHandler<TEvent>`)  en el contenedor de dependencias.
+
+- Parámetros
+    - `services`: La colección de servicios (`IServiceCollection`) a la que se agregarán los manejadores de eventos.
+
+- Tipo de retorno
+    - `IServiceCollection`: La colección de servicios modificada, lo que permite encadenar otras llamadas de extensión.
+
+## Conclusiones
+---
+Los métodos de extensión `AddPubSub` y `AddEventsHandlers` simplifican significativamente la configuración de los servicios de Pub/Sub y el manejo de eventos en aplicaciones .NET. Permiten la configuración a través de archivos `appsettings.json` y personalización programática a través de un `Action`, además de la detección automática de manejadores de eventos. Se recomienda utilizar la configuración base en `appsettings.json` y la personalización programática solo si es necesario.
+
+## Referencias
+---
+- [Repositorio de CodeDesignPlus.Net.PubSub](https://github.com/codedesignplus/CodeDesignPlus.Net.PubSub): Para consultar el código fuente y ejemplos.
+- [Documentación de Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection): Para entender el funcionamiento del IServiceCollection.
+- [Documentación de Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration): Para trabajar con la configuración en .NET.
+- [Documentación de Microsoft.Extensions.Options](https://learn.microsoft.com/dotnet/api/microsoft.extensions.options): Para entender como se gestionan las configuraciones fuertemente tipadas.

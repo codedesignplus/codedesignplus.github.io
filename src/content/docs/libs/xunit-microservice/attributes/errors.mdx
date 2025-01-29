@@ -1,0 +1,70 @@
+---
+title: Errors
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `ErrorsAttribute` es un atributo personalizado diseñado para facilitar la creación de pruebas unitarias que validen el formato de los mensajes de error en tu aplicación. Este atributo automatiza la extracción de los mensajes de error definidos como campos estáticos en clases, permitiendo a los desarrolladores probar el formato de los errores de manera eficiente y consistente.
+
+## ¿Cómo Funciona?
+---
+
+El `ErrorsAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IErrorCodes`, que es un marcador típico para clases que definen códigos de error.
+2. **Extraer los campos de error:** Para cada clase de errores encontrada, extrae todos los campos estáticos de tipo `string` que representan los mensajes de error.
+3. **Proveer datos:** Suministra la información de cada campo (FieldInfo) y el valor del mensaje de error asociado a la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+
+Este método es el núcleo del `ErrorsAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Clases de Error:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+    - Implementan la interfaz `IErrorCodes`.
+    - Son una clase concreta (no abstracta).
+- **Extraer Mensajes de Error:** Para cada clase de error encontrada:
+  - Obtiene todos los campos estáticos (static) de la clase que son de tipo `string`.
+  - Extrae el valor de cada campo de tipo `string`, que representa el mensaje de error.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - La información del campo de tipo string (`FieldInfo`) que representa el mensaje de error.
+    - El valor del mensaje de error.
+
+## Implementación
+---
+
+El `ErrorsAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar las clases de errores.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/ErrorsAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `ErrorsAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/ErrorTests.cs"
+```
+
+En este ejemplo:
+
+- `[Errors<Errors>]` extrae todos los mensajes de error de las clases en el ensamblado donde se define `Errors` que implementan `IErrorCodes`.
+- El método de prueba recibe la información del campo del error `FieldInfo` y el valor del mensaje de error, lo que permite realizar aserciones sobre el formato del error.
+- La prueba verifica que cada mensaje de error coincide con un patrón específico (en este caso, un código de tres dígitos seguido de un espacio y dos puntos, y luego cualquier texto).
+
+---
+## Conclusiones
+
+El `ErrorsAttribute` simplifica la validación del formato de los mensajes de error en las pruebas unitarias. Al automatizar la extracción y provisión de los mensajes de error, este atributo permite a los desarrolladores garantizar que todos los errores sigan un formato consistente, mejorando la legibilidad y el mantenimiento del código.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)

@@ -1,0 +1,73 @@
+---
+title: Entity
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `EntityAttribute` es un atributo personalizado diseñado para facilitar la creación de pruebas unitarias que validen el comportamiento de las entidades en tu modelo de dominio. Este atributo automatiza la creación de instancias de entidades y la asignación de valores predeterminados a sus propiedades, lo que agiliza el proceso de prueba y asegura una cobertura exhaustiva de tus entidades.
+
+## ¿Cómo Funciona?
+---
+
+El `EntityAttribute` funciona como un proveedor de datos para las pruebas unitarias utilizando xUnit. Cuando se aplica a un método de prueba, este atributo realiza las siguientes acciones:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que implementan la interfaz `IEntityBase`, que es un marcador típico para entidades, y que no son agregados (no heredan de `AggregateRoot`).
+2. **Crear instancias:** Para cada entidad encontrada, se crea una instancia utilizando su constructor predeterminado.
+3. **Asignar valores a las propiedades:** Se utiliza el método de extensión `SetValueProperties` para asignar valores predeterminados a las propiedades de la instancia.
+4. **Proveer datos:** Suministra el tipo de la entidad y la instancia de la entidad con las propiedades asignadas a la prueba unitaria.
+
+## Métodos
+---
+
+### GetData
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+
+Este método es el núcleo del `EntityAttribute`. Se encarga de realizar las siguientes acciones:
+
+- **Localizar Entidades:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan` todas las clases que cumplen con las siguientes condiciones:
+    - Implementan la interfaz `IEntityBase`.
+    - No son una interfaz o clase abstracta.
+    - No heredan de `AggregateRoot`.
+- **Crear Instancias:** Para cada entidad encontrada:
+  - Crea una instancia de la entidad utilizando `Activator.CreateInstance`.
+  - Asigna valores predeterminados a las propiedades de la instancia utilizando el método de extensión `SetValueProperties`.
+- **Retornar Datos:** Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` de la entidad.
+    - La instancia de la entidad con sus propiedades asignadas.
+
+## Implementación
+---
+
+El `EntityAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit. Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar las entidades.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/EntityAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `EntityAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/EntityTest.cs"
+```
+
+En este ejemplo:
+
+-   `[Entity<Errors>]` crea instancias de todas las entidades en el ensamblado donde se define `Errors` que implementan `IEntityBase` y no heredan de `AggregateRoot`.
+- El método de prueba recibe el `Type` de la entidad y la `instancia` de la entidad con sus propiedades asignadas con valores no predeterminados, permitiendo realizar aserciones sobre el objeto creado.
+- La prueba verifica que todas las propiedades de la entidad tienen valores que no son los valores por defecto, asegurando que se asignan correctamente.
+
+## Conclusiones
+---
+
+El `EntityAttribute` simplifica la creación y validación de entidades en pruebas unitarias. Al automatizar la creación de instancias de entidades y la asignación de valores predeterminados a sus propiedades, este atributo permite a los desarrolladores asegurar que sus entidades están construidas correctamente y listas para su uso en la aplicación.
+
+## Referencias Adicionales
+---
+
+- [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+- [Domain-Driven Design - Entities](https://martinfowler.com/bliki/EvansClassification.html)

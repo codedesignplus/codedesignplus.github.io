@@ -1,0 +1,157 @@
+---
+title: "Creación de Data Transfer Objects (DTOs)"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice dto`
+
+Este comando se utiliza para crear uno o más Data Transfer Objects (DTOs) dentro de un microservicio existente. Los DTOs son objetos que se utilizan para transferir datos entre capas o microservicios. Permiten definir la forma de los datos según las necesidades del consumidor, evitando exponer directamente las entidades del dominio. Este comando facilita la generación de la estructura básica para definir DTOs en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Data Transfer Object (DTO):** Un objeto que se utiliza para transferir datos entre capas de la aplicación o entre microservicios.
+*   **Transferencia de Datos:** Los DTOs se utilizan para transferir datos de una manera eficiente y específica para el caso de uso, sin exponer la estructura interna de las entidades.
+*   **Desacoplamiento:** Los DTOs ayudan a desacoplar las capas de la aplicación, permitiendo que los cambios en la estructura de las entidades no afecten a las capas superiores o a los consumidores.
+*   **Adaptación:** Los DTOs permiten adaptar la forma de los datos a las necesidades de diferentes consumidores, ya sea una API REST, un servicio gRPC u otro microservicio.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice dto` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice dto \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --aggregate "<aggregate_name>" \
+        --dataTransferObject "<dto_names>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice dto `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --aggregate "<aggregate_name>" `
+        --dataTransferObject "<dto_names>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se crearán los DTOs.
+
+### `--aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado al que pertenecen los DTOs.
+
+### `--dataTransferObject`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una lista de nombres de DTOs separados por comas que se crearán.
+
+## Ejemplos de Uso
+
+Este ejemplo crea el DTOs `UserAccountDto`, asociado al agregado `User` en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice dto \
+        --organization "Acme" \
+        --microservice "User" \
+        --aggregate "User" \
+        --dataTransferObject "UserAccountDto"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice dto `
+        --organization "Acme" `
+        --microservice "User" `
+        --aggregate "User" `
+        --dataTransferObject "UserAccountDto"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generarán las estructuras base para el DTO `UserAccountDto` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/dto/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para los nuevos DTOs:
+
+<Image src="/images/generators/microservices/dto/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para uno o más DTOs en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1. Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para los DTOs.
+
+    <Image src="/images/generators/microservices/dto/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se crearán los DTOs, reflejándose en los namespaces y ubicaciones de los archivos.
+
+    <Image src="/images/generators/microservices/dto/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--aggregate`
+**Flag:** `--aggregate "User"`
+
+1.  Este parámetro define el nombre del agregado al que pertenecen los DTOs, reflejándose en la ubicación de los archivos generados.
+
+    <Image src="/images/generators/microservices/dto/1-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--dataTransferObject`
+**Flag:** `--dataTransferObject "UserAccountDto"`
+
+1.  Este parámetro define los nombres de los DTOs que se crearán, generando los archivos correspondientes en la capa de aplicación.
+
+    <Image src="/images/generators/microservices/dto/1-datatransferobject-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente y un agregado definido antes de utilizar este comando.
+*   Los nombres de los DTOs deben ser descriptivos y reflejar la información que transfieren.
+*   Los DTOs deben usarse para transferir datos entre capas o microservicios, adaptando la forma de los datos a las necesidades del consumidor.
+*   Los DTOs no deben contener lógica de negocio.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Patrón DTO](https://martinfowler.com/eaaCatalog/dataTransferObject.html)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice dto` facilita la creación de DTOs en tu microservicio, asegurando que la estructura y el principio de desacoplamiento se apliquen correctamente. Utiliza este comando para definir la forma en que tu microservicio transfiere datos, adaptándose a las necesidades de cada caso de uso.

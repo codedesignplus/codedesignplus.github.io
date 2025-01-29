@@ -1,0 +1,768 @@
+---
+title: Exploración Detallada de las Capas
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En esta sección, profundizaremos en cada una de las capas del arquetipo, describiendo sus componentes, responsabilidades y cómo interactúan entre sí.
+
+<Image src="/images/archetype/patterns.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Capa de Dominio (Domain)
+---
+
+La capa de Dominio es el corazón de la aplicación, donde se define y reside la lógica de negocio principal. Esta capa se encarga de modelar los conceptos y las reglas del dominio del problema, representando las entidades, agregados, objetos de valor y la lógica de negocio que rige el comportamiento del sistema. Una característica fundamental de la capa de Dominio es su independencia de cualquier tecnología o framework externo. No debe depender de detalles de implementación técnica como bases de datos, interfaces de usuario o servicios de terceros.
+
+
+<Image src="/images/archetype/patterns_domain.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+### Responsabilidades de la Capa de Dominio
+
+- **Modelado del Dominio:** Representa los conceptos y las reglas de negocio de manera clara y precisa a través de entidades, agregados y objetos de valor.
+- **Lógica de Negocio:** Contiene la lógica que define cómo se comportan los objetos del dominio y cómo se deben realizar las operaciones en el sistema.
+- **Validación de Invariantes:** Asegura que los objetos de dominio siempre se encuentren en un estado válido y consistente, aplicando reglas de validación y utilizando guard clauses para proteger la integridad de las entidades y agregados.
+- **Generación de Eventos de Dominio:** Define y genera eventos de dominio que representan cambios de estado significativos dentro del dominio, permitiendo que otras partes del sistema reaccionen a estos cambios.
+- **Definición de Interfaces:** Define las interfaces para los repositorios que permiten el acceso a la persistencia de los agregados. Estas interfaces actúan como "puertos" en el contexto del patrón Ports and Adapters.
+
+### Relación con Otras Capas
+
+La capa de Dominio es el centro de la aplicación, sin embargo, no tiene conocimiento de cómo se implementan las dependencias externas. La capa de Aplicación orquesta las operaciones de la capa de Dominio y define los casos de uso, y la capa de Infraestructura se encarga de la implementación de las dependencias externas (repositorios, servicios, etc.). Las capas superiores dependen de las abstracciones definidas en la capa de dominio, pero la capa de dominio no depende de las implementaciones de las capas superiores.
+
+### Beneficios de la Independencia de la Capa de Dominio
+
+- **Foco en el Negocio:** Al ser independiente de la tecnología, se facilita que el equipo de desarrollo se centre en la lógica de negocio y en las necesidades del usuario.
+- **Reutilización:** Al no depender de tecnologías específicas, el modelo del dominio es reutilizable en diferentes contextos y aplicaciones.
+- **Testabilidad:** Facilita la realización de pruebas unitarias enfocadas en la lógica de negocio sin depender de la infraestructura.
+- **Mantenibilidad:** Al estar aislada de los detalles de la implementación, la lógica de dominio es más fácil de entender y mantener a largo plazo.
+- **Evolución Ágil:** Permite que la lógica de negocio evolucione de manera independiente de las decisiones de implementación técnica
+
+
+### Agregado (`OrderAggregate`)
+
+El **Agregado** es un patrón de diseño fundamental en el contexto de Diseño Guiado por el Dominio (DDD). Representa un conjunto de entidades y objetos de valor que se agrupan para formar una unidad coherente y consistente. Los agregados son la principal forma de encapsular la lógica de negocio y asegurar la consistencia de los objetos dentro del dominio. 
+
+<Image src="/images/archetype/layer_domain_aggregate.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+#### ¿Por qué usar el patrón Aggregate?
+
+El patrón Aggregate se utiliza para encapsular la lógica de negocio alrededor de una entidad principal, asegurando la consistencia de las operaciones. En nuestro caso, `OrderAggregate` gestiona las operaciones sobre un pedido, manteniendo su estado y lógica de forma coherente.
+
+#### Rol en el Dominio
+
+El agregado `OrderAggregate` es el núcleo del dominio en este arquetipo. Representa un pedido en el sistema y encapsula toda la lógica y las reglas de negocio relacionadas con los pedidos. El agregado es responsable de mantener la coherencia del estado del pedido, asegurando que las operaciones sobre el pedido se realicen de forma correcta y consistente. El agregado `OrderAggregate` contiene las entidades `ProductEntity` y los objetos de valor `ClientValueObject` y `AddressValueObject`, que representan los componentes del pedido.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/OrderAggregate.cs"
+```
+
+### Entidades (`ProductEntity`)
+
+`ProductEntity` en el contexto de Diseño Guiado por el Dominio (DDD), `ProductEntity` es una **entidad**, lo que significa que es un objeto con una identidad única y persistente a través del tiempo dentro del dominio. A diferencia de los objetos de valor, las entidades tienen una identidad que las distingue, y esa identidad es lo que importa, no solo sus atributos.  En este caso, un `ProductEntity` representa un producto individual dentro de un pedido y es esencial para mantener el registro y la coherencia de los productos dentro del mismo. Aunque se almacena dentro de un agregado (`OrderAggregate`), cada instancia de `ProductEntity` mantiene su propia identidad única, lo que permite rastrear el producto específico aunque sus atributos cambien.
+
+<Image src="/images/archetype/layer_domain_entity.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+#### ¿Por qué usar Entidades?
+
+El uso de entidades en DDD permite modelar el dominio de manera más precisa, representando objetos que tienen identidad y un ciclo de vida dentro del sistema. A diferencia de los objetos de valor (que son inmutables y se identifican por sus atributos), las entidades se identifican por su identidad, lo que les permite cambiar de estado mientras conservan su identidad. Las entidades son fundamentales para modelar escenarios en los que los objetos tienen una existencia propia y requieren de un registro y seguimiento de sus cambios a lo largo del tiempo.
+
+#### Rol en el Dominio
+
+La entidad `ProductEntity` no existe de forma aislada, sino que su ciclo de vida está gestionado por el agregado `OrderAggregate`. La entidad es parte del estado del agregado, lo que significa que las operaciones sobre `ProductEntity` (como añadir, eliminar o actualizar la cantidad) se realizan a través de los métodos del `OrderAggregate`. Esto asegura que las reglas de negocio y la lógica del dominio se apliquen correctamente, manteniendo la consistencia del estado del agregado. La clave aquí es entender que, aunque `ProductEntity` tiene su propia identidad, su significado y funcionalidad se entienden mejor dentro del contexto de `OrderAggregate`.
+
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/Entities/ProductEntity.cs"
+```
+
+
+### Objetos de Valor (`Value Objects`)
+
+En el contexto de Diseño Guiado por el Dominio (DDD), los **Objetos de Valor** (Value Objects) son objetos inmutables que representan un concepto dentro del dominio, pero sin tener una identidad propia. A diferencia de las entidades, los objetos de valor se definen por sus atributos, y dos objetos de valor se consideran iguales si sus atributos son iguales. Los objetos de valor se crean para representar conceptos que no requieren tener un seguimiento individual, sino que su valor está definido por sus características. 
+
+<Image src="/images/archetype/layer_domain_value_object.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+#### Inmutabilidad y Uso 
+
+Una característica crucial de los objetos de valor es su **inmutabilidad**. Una vez que un objeto de valor se crea, sus atributos no pueden ser modificados. Esto garantiza la consistencia y la seguridad del dominio. Si se necesita modificar la información de un objeto de valor, se crea una nueva instancia con los valores modificados.
+
+#### ¿Por qué usar Objetos de Valor?
+Los objetos de valor en DDD promueven un diseño más claro y expresivo al definir explícitamente conceptos que no tienen una identidad propia. Su inmutabilidad facilita la razón sobre el dominio y ayuda a evitar inconsistencias y errores. Los value objects permiten que las entidades encapsulen mejor los conceptos del negocio que no son entidades por sí mismas.
+
+#### Rol en el Dominio
+
+Los objetos de valor son utilizados por las entidades y los agregados para representar conceptos o características. En este ejemplo, `ClientValueObject` y `AddressValueObject` son utilizados por el `OrderAggregate` como parte de su estado, lo que demuestra que los value objects son un componente de un agregado. A pesar de que son parte de un agregado, mantienen sus propias reglas de negocio (que suelen ser reglas de validación y creación).
+
+
+<Tabs>
+<TabItem label="ClientValueObject">
+Representa la información esencial de un cliente asociado a un pedido. Los objetos `ClientValueObject` se utilizan cuando no se requiere un seguimiento individual del cliente a través de la aplicación, sino que solo se necesita representar sus datos dentro del contexto de una orden. La información del cliente se considera como un todo, y dos clientes son iguales si tienen los mismos valores en sus propiedades.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/ValueObjects/ClientValueObject.cs"
+```
+
+**Atributos**:
+    - `Id`: El identificador del cliente, aunque no define su identidad dentro del dominio, es importante para identificar al cliente en otros contextos (aunque el valor en sí mismo no sea suficiente para definir la igualdad del objeto de valor).
+    - `Name`: El nombre del cliente.
+    -  `Document`: El documento del cliente.
+    - `TypeDocument`: El tipo de documento del cliente.
+
+</TabItem>
+<TabItem label="AddressValueObject">
+Representa una dirección postal asociada a un pedido. Este objeto de valor se utiliza para encapsular los datos de una dirección, y dos direcciones se consideran iguales si sus atributos (país, estado, ciudad, dirección y código postal) son idénticos. La dirección es un concepto que se utiliza como un todo, y su valor se define por la combinación de todos sus atributos, no por su identidad individual.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/ValueObjects/AddressValueObject.cs"
+```
+
+**Atributos**:
+    - `Country`: El país de la dirección.
+    - `State`: El estado o provincia de la dirección.
+    - `City`: La ciudad de la dirección.
+    - `Address`: La dirección detallada.
+    - `CodePostal`: El código postal de la dirección.
+
+</TabItem>
+</Tabs>
+
+
+### Eventos de Dominio (`DomainEvents`)
+
+En el contexto de Diseño Guiado por el Dominio (DDD), los **Eventos de Dominio** son representaciones de algo que ha sucedido en el dominio y que es relevante para otras partes del sistema. A diferencia de los comandos, que representan intenciones de realizar acciones, los eventos representan hechos que ya han ocurrido. Un evento de dominio es un registro de un cambio de estado significativo en el dominio. Los eventos de dominio se utilizan para desacoplar diferentes partes del sistema y permitir la comunicación asíncrona entre ellas. Estos eventos son inmutables, ya que representan un hecho histórico que no puede cambiar.
+
+<Image src="/images/archetype/layer_domain_domain_events.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+#### ¿Por qué usar Eventos de Dominio? 
+
+Los eventos de dominio son fundamentales en DDD para lograr el desacoplamiento, la escalabilidad y la mantenibilidad. Permiten que diferentes partes del sistema reaccionen a los cambios en el dominio sin tener dependencias directas entre ellas. Además, los eventos de dominio se pueden utilizar como registros de cambios en el dominio, lo que facilita la auditoría y el seguimiento de los cambios en el sistema.
+
+#### Propósito
+
+Los eventos de dominio se utilizan como una forma de notificar otros componentes de la aplicación sobre cambios importantes en el dominio sin crear dependencias directas entre ellos. Esto permite construir un sistema más flexible y mantenible, ya que los componentes pueden reaccionar a los cambios de forma independiente.
+
+#### Cómo se Usan
+
+En este arquetipo, los eventos de dominio se generan dentro de los agregados cuando se producen cambios de estado relevantes. Por ejemplo, cuando se crea una nueva orden o se añade un producto, el agregado (`OrderAggregate`) genera un evento que notifica a otros componentes sobre el cambio.
+
+#### Características Clave
+
+- **Inmutabilidad**: Una vez que se crea un evento de dominio, su información no puede cambiar. Esto asegura que el registro del evento sea consistente.
+- **Representación de Hechos Pasados**: Los eventos de dominio representan algo que ha ocurrido, no una intención de acción.
+- **Desacoplamiento**: Permiten que diferentes partes del sistema reaccionen a los cambios sin conocerse directamente.
+- **Persistencia** Los eventos generalmente se persisten para auditar y rastrear los cambios en el dominio.
+- **Publicación**: Los eventos se publican en un bus de eventos para que otros componentes puedan suscribirse y reaccionar ante ellos.
+
+
+#### Rol en el Dominio
+
+Los eventos de dominio sirven para que el agregado comunique los cambios relevantes en su estado a otras partes del sistema que no necesitan estar acopladas directamente al agregado. Es decir,  los eventos permiten que otras capas de la aplicación reaccionen a los cambios en el dominio sin conocer los detalles de la lógica interna del agregado.
+
+<Tabs>
+<TabItem label="OrderCreatedDomainEvent">
+Se emite cuando se crea una nueva orden. Representa el hecho de que una nueva orden se ha creado con su información asociada (cliente, dirección de envío, etc.).
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/OrderCreatedDomainEvent.cs"
+```
+</TabItem>
+<TabItem label="ProductAddedToOrderDomainEvent">
+Se emite cuando se añade un producto a un pedido. Representa el hecho de que un producto específico se ha agregado a una orden y, por lo tanto, cambia el estado del agregado `OrderAggregate`.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/ProductAddedToOrderDomainEvent.cs"
+```
+</TabItem>
+<TabItem label="ProductQuantityUpdatedDomainEvent">
+Se emite cuando se actualiza la cantidad de un producto dentro de un pedido. Representa el hecho de que la cantidad de un producto en un pedido ha sido modificada, lo cual es un cambio de estado relevante.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/ProductQuantityUpdatedDomainEvent.cs"
+```
+</TabItem>
+<TabItem label="ProductRemovedFromOrderDomainEvent">
+Se emite cuando se elimina un producto de un pedido. Representa el hecho de que un producto ha sido eliminado de la orden.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/ProductRemovedFromOrderDomainEvent.cs"
+```
+</TabItem>
+
+<TabItem label="OrderCompletedDomainEvent">
+Se emite cuando se completa un pedido. Representa el hecho de que una orden ha alcanzado el estado "Completado".
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/OrderCompletedDomainEvent.cs"
+```
+</TabItem>
+<TabItem label="OrderCancelledDomainEvent">
+Se emite cuando se cancela un pedido. Representa el hecho de que una orden ha sido cancelada.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DomainEvents/OrderCancelledDomainEvent.cs"
+```
+</TabItem>
+</Tabs>
+
+
+
+### Repositorios (`Repositories`)
+
+En el contexto de Diseño Guiado por el Dominio (DDD), los **Repositorios** son interfaces que actúan como abstracciones para acceder a los agregados del dominio. Un repositorio es responsable de la persistencia y recuperación de las entidades y agregados del dominio, desacoplando la lógica de negocio de los detalles de la implementación de la persistencia. Un repositorio no debe contener lógica de negocio, sino que se centra exclusivamente en proporcionar una interfaz para el acceso a datos.
+
+<Image src="/images/archetype/layer_domain_repository.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+#### ¿Por qué usar Repositorios?
+
+Los repositorios son un patrón clave en DDD para desacoplar el dominio de la infraestructura. Al abstraer la lógica de persistencia, se facilita la testabilidad de la capa de dominio y se permite cambiar la tecnología de almacenamiento sin afectar a la lógica de negocio. Los repositorios promueven la separación de preocupaciones y hacen que la aplicación sea más mantenible y extensible a largo plazo.
+
+#### Propósito
+El propósito principal de un repositorio es abstraer la forma en que los datos se almacenan y recuperan, permitiendo que la lógica del dominio (por ejemplo, en el agregado) no dependa de los detalles específicos de la tecnología de persistencia (como una base de datos o un sistema de archivos). Esto significa que la capa de dominio no debe conocer si los datos se guardan en una base de datos relacional, NoSQL, un sistema de archivos o incluso en memoria.
+
+#### Rol en el Dominio
+
+Los repositorios en el arquetipo actúan como interfaces que definen las operaciones que se pueden realizar sobre los agregados del dominio, como buscar, crear, actualizar o eliminar. La implementación concreta de estas operaciones se realiza en la capa de infraestructura. Los repositorios permiten que la capa de dominio acceda a los datos de forma independiente de la tecnología de persistencia, lo que facilita la reutilización y la testabilidad de la lógica de negocio.
+
+La interfaz `IOrderRepository` define las operaciones que se pueden realizar sobre los pedidos en el sistema. Estas operaciones incluyen la creación, actualización, eliminación y recuperación de pedidos, así como la adición, eliminación y actualización de productos en un pedido.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/Repositories/IOrderRepository.cs"
+```
+    
+##### Responsabilidades Principales
+    - **Abstracción de la persistencia**: Los repositorios abstraen los detalles de la persistencia para la capa de dominio.
+    - **Acceso a Agregados**: Los repositorios proporcionan un mecanismo para acceder a los agregados del dominio.
+    - **Persistencia de Agregados**: Los repositorios son responsables de persistir los agregados después de que su estado cambia.
+    - **Recuperación de Agregados**: Los repositorios se utilizan para recuperar los agregados del sistema de almacenamiento.
+
+
+### DTOs como Parámetros del Repositorio
+
+En la capa de dominio, definimos interfaces para los repositorios (como `IOrderRepository`) que actúan como abstracciones para la persistencia de los agregados. Para facilitar la interacción entre la capa de dominio y la implementación del repositorio en la capa de infraestructura, utilizamos DTOs (Data Transfer Objects) como parámetros en los métodos del repositorio.
+
+Estos DTOs encapsulan la información necesaria para llevar a cabo operaciones específicas sobre los agregados, como añadir productos, actualizar cantidades, o cancelar un pedido. Es importante destacar que estos DTOs son diferentes a los que se usan en la capa de aplicación. Los DTOs de la capa de dominio son específicos para las necesidades de persistencia de los agregados y generalmente reflejan los datos que se necesitan para actualizar el estado del agregado.
+
+<Image src="/images/archetype/layer_domain_dtos_params.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Tabs>
+<TabItem label="AddProductToOrderParams">
+DTO utilizado como parámetro para añadir un producto a un pedido. Contiene la información necesaria para realizar la operación, como el ID del producto, la cantidad y el usuario que realiza la acción.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DataTransferObjects/AddProductToOrderParams.cs"
+```
+</TabItem>
+<TabItem label="UpdateQuantityProductParams">
+DTO utilizado como parámetro para actualizar la cantidad de un producto en un pedido. Contiene el ID del producto, la nueva cantidad y el usuario que realiza la acción.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DataTransferObjects/UpdateQuantityProductParams.cs"
+```
+</TabItem>
+<TabItem label="RemoveProductFromOrderParams">
+DTO utilizado como parámetro para eliminar un producto de un pedido. Contiene el ID del producto y el usuario que realiza la acción.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DataTransferObjects/RemoveProductFromOrderParams.cs"
+```
+</TabItem>
+<TabItem label="CompleteOrderParams">
+DTO utilizado como parámetro para completar un pedido. Contiene el ID del pedido y el usuario que realiza la acción.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DataTransferObjects/CompleteOrderParams.cs"
+```
+</TabItem>
+<TabItem label="CancelOrderParams">
+DTO utilizado como parámetro para cancelar un pedido. Contiene el ID del pedido, la razón de la cancelación y el usuario que realiza la acción.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/DataTransferObjects/CancelOrderParams.cs"
+```
+</TabItem>
+</Tabs>
+
+### Errores (`Errors.cs`)
+
+La clase `Errors` en la capa de dominio se utiliza para centralizar y definir los códigos y mensajes de error específicos que pueden ocurrir dentro de la lógica del negocio. Esta capa es el corazón de la aplicación y sus errores reflejan problemas en las reglas de negocio y validaciones de datos que deben cumplirse. La clase `Errors` actúa como un repositorio de constantes de cadena que representan estos errores. Estos errores se utilizan para validar las invariantes del dominio a través de guard clauses (`DomainGuard`) que proporciona `CodeDesignPlus.Net.Exceptions`, al momento de realizar operaciones sobre el agregado.
+
+#### Estructura y Organización de Códigos de Error
+Los códigos de error siguen una estructura jerárquica para facilitar la identificación del origen del error:
+
+- 000: Errores internos genéricos (no aplicable directamente en este caso).
+- 100: Errores específicos de la capa de Dominio.
+- 200: Errores específicos de la capa de Aplicación.
+- 300: Errores específicos de la capa de Infraestructura.
+
+Dentro de cada categoría, los códigos se numeran secuencialmente para distinguir cada tipo de error específico.
+
+#### Formato de los Mensajes de Error
+Los mensajes de error asociados a los códigos deben seguir el formato: `<code> : <message>`.
+
+- `<code>`: Es el código de error, por ejemplo "101".
+- `<message>`: Es una descripción legible del error, por ejemplo "Tenant is invalid.".
+
+Este formato estandarizado ayuda a los desarrolladores a identificar rápidamente la causa del error y a rastrear su origen.
+
+#### Errores Definidos en la Capa de Dominio
+
+La clase Errors (en la capa de Dominio) contiene las siguientes constantes, que corresponden a diferentes escenarios de error en el dominio de órdenes:
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/Errors.cs"
+```
+
+#### Uso de las Constantes de Error
+
+Estas constantes de error se utilizan en las cláusulas de guardia (guard clauses) de las clases de la capa de dominio (como `OrderAggregate`), para validar los datos y asegurar que se mantienen las invariantes del dominio. Las clases de guardado, como `DomainGuard`, lanzan excepciones específicas (del tipo `CodeDesignPlusException`) cuando una condición no se cumple, incluyendo el código y mensaje de error correspondiente.
+
+````csharp
+public void AddProduct(Guid id, string name, string description, long price, int quantity, Guid updateBy)
+{
+    DomainGuard.GuidIsEmpty(id, Errors.IdProductIsInvalid);
+    DomainGuard.IsNullOrEmpty(name, Errors.NameProductIsInvalid);
+    DomainGuard.IsLessThan(price, 0, Errors.PriceProductIsInvalid);
+    DomainGuard.IsLessThan(quantity, 0, Errors.QuantityProductIsInvalid);
+
+    // ...
+}
+````
+
+### Startup (`Startup.cs`)
+
+La sección `Startup` en la capa de dominio, aunque presente para mantener la consistencia estructural del arquetipo, no realiza ninguna configuración específica en este caso. La clase Startup está vacía y no registra servicios, dependencias ni ninguna configuración.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Domain/Startup.cs"
+```
+
+- **Beneficios de un Startup Vacío (Cuando Aplica):**
+
+    El objetivo de la capa de dominio es ser lo más pura posible. En la configuración actual del arquetipo, no se usa ningún servicio que requiera ser registrado, sin embargo, esto no quiere decir que en un futuro no se pueda configurar si se llegase a requerir. El no registrar servicios en la capa de dominio promueve su independencia de frameworks o bibliotecas externas, centrándose exclusivamente en la lógica de negocio. Esto facilita la reutilización, portabilidad y testabilidad.
+
+- **¿Por qué es necesario un Startup (Aunque Esté Vacío)?**
+
+    Si bien en este caso el `Startup` del dominio está vacío, su existencia es importante como referencia para diferentes métodos de extensión del SDK CodeDesignPlus.Net. El SDK utiliza este `Startup` para escanear los assemblies de la aplicación y registrar automáticamente servicios como repositorios, manejadores de eventos de dominio y otras configuraciones. Es decir, aunque en este caso no haya configuraciones específicas, el `Startup` es clave para el funcionamiento del SDK.
+
+## Capa de Aplicación (Application)
+---
+
+La capa de **Aplicación** actúa como el orquestrador del sistema, implementando los casos de uso y coordinando las interacciones entre el dominio y las capas externas. Esta capa sigue los principios de CQRS (Command Query Responsibility Segregation), separando las operaciones que modifican el estado del sistema (comandos) de las operaciones que leen información del sistema (consultas). Esta separación permite una mayor flexibilidad y escalabilidad, ya que los comandos y las consultas pueden ser optimizados de manera independiente.
+
+<Image src="/images/archetype/layer_application_command_queries.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Comandos (Commands)
+
+En el contexto de CQRS, los **Comandos** representan acciones que modifican el estado del sistema. Son objetos que encapsulan la intención de realizar una operación que tendrá un impacto en el dominio, por ejemplo, crear un nuevo pedido, añadir un producto o cancelar un pedido. Los comandos no contienen lógica de negocio, sino que son mensajes que se envían al sistema para indicar que se debe realizar una acción. En este arquetipo, los comandos son objetos simples que contienen la información necesaria para ejecutar la operación, pero la lógica de cómo se realiza la operación está en el handler correspondiente.
+
+<Image src="/images/archetype/layer_application_commands.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+<Tabs syncKey="commands">
+<TabItem label="CreateOrderCommand" >
+Representa la intención de crear un nuevo pedido, incluyendo todos los datos necesarios para su creación.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CreateOrder/CreateOrderCommand.cs"
+```
+</TabItem>
+<TabItem label="AddProductToOrderCommand">
+Representa la intención de añadir un producto a un pedido existente, indicando el producto y la cantidad.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/AddProductToOrder/AddProductToOrderCommand.cs"
+```
+</TabItem>
+<TabItem label="RemoveProductCommand">
+Representa la intención de eliminar un producto de un pedido existente, indicando el producto a eliminar.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/RemoveProduct/RemoveProductCommand.cs"
+```
+</TabItem>
+<TabItem label="UpdateQuantityProductCommand">
+Representa la intención de actualizar la cantidad de un producto en un pedido, indicando el producto y la nueva cantidad.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/UpdateQuantityProduct/UpdateQuantityProductCommand.cs"
+```
+</TabItem>
+<TabItem label="CompleteOrderCommand">
+Representa la intención de marcar un pedido como completado, con el identificador del pedido.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CompleteOrder/CompleteOrderCommand.cs"
+```
+</TabItem>
+<TabItem label="CancelOrderCommand">
+Representa la intención de cancelar un pedido, indicando el identificador del pedido y la razón de la cancelación.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CancelOrder/CancelOrderCommand.cs"
+```
+</TabItem>
+</Tabs>
+
+#### Lógica de los Comandos 
+
+Los comandos son objetos que contienen los datos necesarios para realizar la operación en el dominio. Son contenedores de información y no tienen lógica de negocio en sí mismos.
+
+#### Handlers de Comandos
+
+Cada comando tiene un **Handler de Comando** asociado, que es el responsable de ejecutar la lógica de negocio correspondiente en el dominio. El handler recibe el comando, recupera los agregados necesarios del dominio a través de los repositorios, aplica la lógica del dominio para realizar la operación y persistir los cambios, y publica los eventos de dominio correspondientes.
+
+<Tabs>
+<TabItem label="CreateOrderCommandHandler">
+ 
+Procesa el comando `CreateOrderCommand`, creando un nuevo pedido en el sistema con la información proporcionada.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CreateOrder/CreateOrderCommandHandler.cs"
+```
+</TabItem>
+<TabItem label="AddProductToOrderCommandHandler">
+
+Procesa el comando `AddProductToOrderCommand`, añadiendo un producto a un pedido existente con la cantidad especificada.
+        
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/AddProductToOrder/AddProductToOrderCommandHandler.cs"
+```
+</TabItem>
+<TabItem label="RemoveProductCommandHandler">
+
+Procesa el comando `RemoveProductCommand`, eliminando un producto de un pedido existente.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/RemoveProduct/RemoveProductCommandHandler.cs"
+```
+</TabItem>
+<TabItem label="UpdateQuantityProductCommandHandler">
+
+Procesa el comando `UpdateQuantityProductCommand`, actualizando la cantidad de un producto en un pedido.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/UpdateQuantityProduct/UpdateQuantityProductCommandHandler.cs"
+```
+</TabItem>
+<TabItem label="CompleteOrderCommandHandler">
+
+Procesa el comando `CompleteOrderCommand`, marcando un pedido como completado.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CompleteOrder/CompleteOrderCommandHandler.cs"
+```
+</TabItem>
+<TabItem label="CancelOrderCommandHandler">
+
+Procesa el comando `CancelOrderCommand`, cancelando un pedido con la razón especificada.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Commands/CancelOrder/CancelOrderCommandHandler.cs"
+```
+</TabItem>
+</Tabs>
+
+### Consultas (Queries)
+
+En el contexto de CQRS, las **Queries** representan solicitudes para obtener información del sistema sin modificar su estado. Son objetos que encapsulan los criterios o datos necesarios para realizar la consulta, como buscar un pedido por ID, obtener todos los pedidos o filtrar por algún criterio específico.  Las queries no contienen lógica de negocio, sino que solo encapsulan los criterios de la consulta.
+
+<Image src="/images/archetype/layer_application_queries.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+<Tabs>
+<TabItem label="FindOrderByIdQuery">
+Representa la intención de obtener un pedido por su identificador único.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Queries/FindOrderById/FindOrderByIdQuery.cs"
+```
+</TabItem>
+<TabItem label="GetAllOrdersQuery">
+Representa la intención de obtener todos los pedidos, permitiendo el uso de criterios de búsqueda para filtrar o ordenar los resultados.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Queries/GetAllOrders/GetAllOrdersQuery.cs"
+```
+</TabItem>
+</Tabs>
+
+#### Lógica de las Queries
+
+Las queries son objetos que contienen los datos o criterios necesarios para realizar la consulta en el dominio. Son contenedores de información y no tienen lógica de negocio en sí mismos.
+
+#### Handlers de Queries
+
+Cada query tiene un **Handler de Query** asociado, que es el responsable de ejecutar la consulta en el dominio. El handler recibe la query, recupera los datos necesarios del dominio a través de los repositorios y devuelve la información solicitada en forma de DTOs.
+
+<Tabs>
+<TabItem label="FindOrderByIdQueryHandler">
+
+Procesa la consulta `FindOrderByIdQuery`, buscando un pedido por su identificador único y devolviendo la información asociada.
+        
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Queries/FindOrderById/FindOrderByIdQueryHandler.cs"
+```
+</TabItem>
+<TabItem label="GetAllOrdersQueryHandler">
+
+Procesa la consulta `GetAllOrdersQuery`, obteniendo todos los pedidos del sistema y aplicando los criterios de búsqueda especificados.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/Queries/GetAllOrders/GetAllOrdersQueryHandler.cs"
+```
+</TabItem>
+</Tabs>
+
+### Data Transfer Objects (DTOs)
+
+Los **DTOs (Data Transfer Objects)** son objetos simples utilizados para transferir información entre las capas, especialmente entre la capa de aplicación y los entrypoints. En el contexto de CQRS, los DTOs se utilizan para encapsular los datos que se obtienen mediante las consultas (queries) y se envían a los clientes, así como para recibir datos en los comandos. Los DTOs evitan la exposición directa de las entidades del dominio a las capas externas, promoviendo un mayor nivel de desacoplamiento. En este arquetipo, la mayoría de los DTOs son generados automáticamente a partir de los comandos utilizando la librería `CodeDesignPlus.Net.Generator`, que hace uso de los Source Generators de C#. Esto reduce la necesidad de escribir código repetitivo y facilita la mantenibilidad del arquetipo.
+
+#### Beneficios en CQRS
+- **Desacoplamiento:** Los DTOs desacoplan las capas de aplicación y presentación de las entidades del dominio, permitiendo que las capas evolucionen independientemente.
+- **Especialización:** Los DTOs se pueden adaptar específicamente a las necesidades de cada tipo de consulta, por ejemplo, para optimizar los datos que se envían al cliente.
+- **Transferencia de datos:** Los DTOs se usan para transferir datos tanto de entrada en los comandos como de salida en las consultas.
+
+#### Data Transfer Objects 
+
+En la capa de aplicación, los Data Transfer Objects (DTOs) juegan un papel fundamental en la transferencia de información entre las distintas capas y los puntos de entrada (entrypoints) de la aplicación. Los DTOs son objetos diseñados específicamente para transportar datos, evitando exponer directamente las entidades del dominio o los detalles internos de la aplicación. Esto ayuda a mantener la separación de preocupaciones y la flexibilidad del sistema.
+
+En este arquetipo, los DTOs se utilizan de manera diferenciada en comandos y consultas:
+
+##### Comandos
+Los comandos representan acciones que modifican el estado del sistema. Los comandos que están decorados con el atributo [DtoGenerator] generan automáticamente un DTO, el cual encapsula la información necesaria para realizar la operación.
+
+**Generación Automática de DTOs Basada en la Estructura del Comando:** 
+
+La librería `CodeDesignPlus.Net.Generator` genera automáticamente el DTO basándose en la estructura del comando. Esto significa que el DTO resultante tendrá propiedades que coincidan con las del comando, facilitando la transferencia de datos de manera precisa y eficiente. Estos DTOs son los que se utilizan como estructura de datos en los entrypoints de la aplicación (como controladores API o servicios de frontend). El entrypoint recibe el DTO, que luego es mapeado a un objeto comando utilizando Mapster para que pueda ser procesado por la capa de aplicación.
+
+##### Consultas 
+Las consultas representan acciones que recuperan información del sistema sin modificar su estado. Estas retornan DTOs que contienen la información solicitada. Estos DTOs definen cómo se presentan los datos al cliente y pueden contener información proveniente de múltiples fuentes.
+
+**Creación Manual de DTOs:** 
+
+A diferencia de los comandos, los DTOs para las consultas no se generan automáticamente. El desarrollador debe crear estos DTOs manualmente, diseñándolos de acuerdo con la información que debe ser devuelta y el formato deseado.
+
+<Image src="/images/archetype/layer_application_dtos.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+<Tabs>
+<TabItem label="AddressDto">
+DTO que representa una dirección, con sus atributos como país, estado, ciudad, dirección y código postal.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/DataTransferObjects/AddressDto.cs"
+```
+</TabItem>
+<TabItem label="OrderDto">
+DTO que representa un pedido, con sus atributos como ID, cliente, dirección de envío, productos y estado.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/DataTransferObjects/OrderDto.cs"
+```
+</TabItem>
+<TabItem label="ProductDto">
+DTO que representa un producto, con sus atributos como ID, nombre, descripción, precio y cantidad.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/DataTransferObjects/ProductDto.cs"
+```
+</TabItem>
+<TabItem label="ClientDto">
+DTO que representa un cliente, con sus atributos como ID, nombre, correo electrónico y teléfono.
+    
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Order/DataTransferObjects/ClientDto.cs"
+```
+</TabItem>
+</Tabs>
+### Errores (`Errors.cs`)
+
+En la capa de aplicación, la clase `Errors` se utiliza para centralizar y definir los códigos y mensajes de error específicos que pueden ocurrir en la capa de aplicación. Estos errores reflejan problemas en la lógica de la aplicación o en la interacción con otros sistemas, pero no en las reglas de negocio en sí. La clase `Errors` actúa como un repositorio de constantes de cadena que representan estos errores. Estos errores se utilizan para validar las entradas y salidas de los comandos y consultas, y para manejar excepciones en la capa de aplicación.
+
+#### Códigos y Mensajes de Error
+Los códigos de error para la capa de aplicación seguirán la misma estructura y formato que en la capa de dominio, pero utilizando el rango de códigos 200 para errores de esta capa. Por ejemplo:
+
+- InvalidInputData ( 201: Invalid input data provided)
+- ServiceUnavailable (202: The service is currently unavailable.)
+- PaymentFailed (203: Payment process failed.)
+
+#### Errores Definidos en la Capa de Aplicación
+
+La clase `Errors` (en la capa de Aplicación) contiene las siguientes constantes, que corresponden a diferentes escenarios de error en la capa de aplicación:
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Errors.cs"
+```
+
+#### Uso de las Constantes de Error
+
+Estas constantes de error se utilizan en las cláusulas de guardia (guard clauses) de las clases de la capa de aplicación (como los handlers de comandos y consultas), para validar los datos y asegurar que se mantienen las invariantes de la aplicación. Las clases de guardado, como `ApplicationGuard`, lanzan excepciones específicas (del tipo `CodeDesignPlusException`) cuando una condición no se cumple, incluyendo el código y mensaje de error correspondiente.
+
+````csharp
+using CodeDesignPlus.Net.Microservice.Domain.ValueObjects;
+
+namespace CodeDesignPlus.Net.Microservice.Application.Order.Commands.CreateOrder;
+
+public class CreateOrderCommandHandler(IOrderRepository orderRepository, IUserContext user, IPubSub pubSub) : IRequestHandler<CreateOrderCommand>
+{
+    public async Task Handle(CreateOrderCommand request, CancellationToken cancellationToken)
+    {
+        var order = await orderRepository.FindAsync(request.Id, cancellationToken);
+
+        ApplicationGuard.IsNotNull(order, Errors.OrderAlreadyExists);
+
+        // ...
+    }
+}
+````
+
+### Startup (`Startup.cs`)
+
+La sección `Startup` de la capa de aplicación tiene como objetivo la configuración de la aplicación. A diferencia del dominio, en la capa de aplicación si se realizan configuraciones, como por ejemplo, la configuración del mapper. Las clases `Startup` en CodeDesignPlus evitan tener toda la configuración centralizada en el `Program.cs` de .NET Core, haciendo que este archivo no se vuelva extenso e inmanejable.
+
+#### Configuración en la Capa de Aplicación
+
+En esta capa, el Startup se centra en:
+
+- Configuraciones personalizadas del comportamiento de la aplicación.
+- Ejecutar la configuración del mapper, a traves de la clase estática MapsterConfigOrder (ejemplo).
+
+##### Beneficios de esta Configuración
+
+Al centralizar la configuración en el `Startup` de la capa de aplicación, se evita tener un `Program.cs` extenso e ilegible. El `Startup` funciona como punto de entrada para otras configuraciones personalizadas. La configuración del mapper es clave para el buen funcionamiento de la capa de aplicación, evitando hacer asignaciones manuales.
+
+#### ¿Por qué es necesario el uso del Startup en la Capa de Aplicación?
+
+El `Startup` de la capa de aplicación es necesario para organizar y centralizar configuraciones que son específicas de esta capa. Además, el SDK utiliza esta clase como referencia para métodos de extensión en el escaneo de los assemblies. Aunque el SDK automatiza algunos registros, el desarrollador puede usar el Startup para agregar configuraciones personalizadas.
+
+
+### Setup (`Setup`)
+
+La carpeta `Setup` en la capa de aplicación tiene como propósito principal contener configuraciones transversales que se utilizan en toda la capa de aplicación. Es decir, aquellas configuraciones que no pertenecen a un componente específico, sino que son necesarias para el funcionamiento de varios componentes. Esta carpeta sirve como un lugar centralizado para organizar y gestionar la configuración de la aplicación, evitando tenerla dispersa en diferentes partes del código.
+
+En este arquetipo, la clase `MapsterConfig` dentro de la carpeta `Setup` es un ejemplo de configuración transversal. Esta clase se utiliza para configurar el mapeo de objetos entre las entidades del dominio y los DTOs de la capa de aplicación. La configuración se realiza utilizando la librería `Mapster`, una herramienta que simplifica la transformación de datos entre diferentes tipos.
+
+````csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Application/Setup/MapsterConfig.cs"
+````
+
+
+## Capa de Infraestructura (Infrastructure)
+---
+
+La capa de Infraestructura actúa como el puente entre la lógica de negocio (definida en el dominio) y el mundo exterior, siguiendo el patrón de diseño Ports and Adapters (también conocido como Arquitectura Hexagonal). En este enfoque, la capa de dominio es el "núcleo" de la aplicación y se comunica con el exterior a través de "puertos" (interfaces). La capa de infraestructura, por su parte, proporciona las implementaciones concretas de las dependencias externas, actuando como "adaptadores" que se conectan a estos "puertos". Su principal responsabilidad es, por lo tanto, implementar las tecnologías y los servicios específicos que la aplicación necesita, como bases de datos, servicios de mensajería, APIs externas, sistemas de archivos, etc. En esencia, esta capa se encarga de los detalles de implementación que son específicos de cada tecnología, permitiendo que el dominio se mantenga independiente de estas decisiones.
+
+- **Puertos (Interfaces)**: Las interfaces como `IOrderRepository`, definidas en la capa de dominio, actúan como "puertos" que la aplicación utiliza para acceder a la persistencia de datos, sin conocer los detalles de la implementación.
+
+- **Adaptadores (Implementaciones)**: Las clases de la capa de infraestructura, como `OrderRepository`, actúan como "adaptadores" que implementan las interfaces de la capa de dominio utilizando tecnologías concretas (en este caso, MongoDB). Esto desacopla el dominio de los detalles de implementación.
+
+<Image src="/images/archetype/layer_infrastructure_repositories.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Responsabilidades de la Capa de Infraestructura
+
+- **Implementación de Repositorios:** La capa de infraestructura es responsable de implementar los repositorios, que son las clases que se encargan de la persistencia y recuperación de datos. Estos repositorios interactúan directamente con las bases de datos, sistemas de archivos o cualquier otro mecanismo de almacenamiento.
+
+- **Adaptación a Tecnologías Específicas:** La infraestructura se encarga de adaptar la lógica de dominio a las tecnologías específicas de cada entorno. Por ejemplo, si la lógica de dominio requiere una operación de persistencia, la capa de infraestructura se encarga de realizar esta operación utilizando una base de datos específica (MongoDB en este caso).
+
+- **Integración con Servicios Externos:** La capa de infraestructura también es responsable de la integración con servicios externos, como APIs de terceros, sistemas de mensajería o servicios de correo electrónico.
+
+- **Implementación de Componentes Técnicos:** Además de la persistencia de datos y las integraciones con servicios externos, la capa de infraestructura puede implementar otros componentes técnicos, como servicios de logging, mecanismos de caché o cualquier otro componente de soporte técnico.
+
+- **Transformación de Datos:** En muchos casos, es necesario transformar los objetos del dominio a un formato que sea adecuado para la infraestructura. Por ejemplo, al persistir datos en MongoDB, los objetos de dominio se transforman a documentos de MongoDB. La capa de infraestructura es la encargada de realizar estas transformaciones.
+
+### El Patrón Repositorio
+
+El patrón Repositorio es una abstracción que se utiliza para desacoplar la lógica de negocio de los detalles específicos de la persistencia de datos. El repositorio actúa como una interfaz entre el dominio y la base de datos, ocultando los detalles de cómo los datos se almacenan y recuperan. El dominio y la aplicación interactúan con el repositorio a través de interfaces, sin preocuparse por la tecnología de persistencia específica (como una base de datos relacional, NoSQL, un sistema de archivos, etc.) o la forma en que se organizan los datos.
+
+<Image src="/images/archetype/pattern_repositories.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+**Beneficios del Uso del Patrón Repositorio:**
+
+    - **Desacoplamiento:** El patrón repositorio desacopla la lógica de dominio de las implementaciones de persistencia, permitiendo que el dominio se centre en las reglas de negocio y la lógica de aplicación, sin tener que conocer cómo se almacenan y recuperan los datos.
+    - **Testabilidad:** Facilita la realización de pruebas unitarias, ya que los repositorios pueden ser reemplazados por implementaciones simuladas, que permiten comprobar la lógica del dominio sin depender de una base de datos concreta.
+    - **Flexibilidad:** Permite cambiar la tecnología de persistencia (como la base de datos) sin tener que modificar la lógica de negocio, ya que los cambios se realizan únicamente en las implementaciones de los repositorios.
+    - **Mantenibilidad:** Centraliza el código de acceso a datos, lo que facilita su mantenimiento y mejora su comprensión.
+
+### Implementación del Repositorio `OrderRepository`
+
+El arquetipo, hace uso de dos patrones clave: Ports and Adapters y el patrón Repositorio. En este contexto, la clase `OrderRepository` actúa como un "adapter" dentro del patrón Ports and Adapters, implementando la interfaz `IOrderRepository` (el "port") que fue definida en la capa de dominio. Para la persistencia de datos, `OrderRepository` utiliza MongoDB y la librería oficial de MongoDB. Al hacer esto, se adhiere al principio de inversión de dependencias. La capa de aplicación se comunica con la capa de infraestructura a través de la interfaz `IOrderRepository` de la capa de dominio, desconociendo la implementación concreta del repositorio.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Infrastructure/Repositories/OrderRepository.cs"
+```
+
+
+### Errores (`Errors.cs`)
+
+La capa de aplicación tambien tiene su propia clase `Errors` para centralizar y definir los códigos y mensajes de error específicos que pueden ocurrir en la capa de aplicación. Estos errores reflejan problemas en la lógica de la aplicación o en la interacción con otros sistemas, pero no en las reglas de negocio en sí. La clase `Errors` actúa como un repositorio de constantes de cadena que representan estos errores. Estos errores se utilizan para validar las entradas y salidas de los comandos y consultas, y para manejar excepciones en la capa de aplicación.
+
+#### Códigos y Mensajes de Error
+
+Los códigos de error para la capa de infraestructura seguirán la misma estructura y formato que en las otras capas, pero utilizando el rango de códigos 300 para errores de esta capa. Por ejemplo:
+
+-  `DatabaseConnectionFailed` (**301**: Failed to connect to the database.)
+-  `FileStorageError` (**302**: Error accessing the file system.)
+-  `MessageQueueError` (**303**: Failed to publish message.)
+
+#### Errores Definidos en la Capa de Infraestructura
+
+La clase `Errors` (en la capa de Infraestructura) contiene las siguientes constantes, que corresponden a diferentes escenarios de error en la capa de infraestructura:
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Infrastructure/Errors.cs"
+```
+
+#### Uso de las Constantes de Error
+
+Estas constantes se utilizan en las implementaciones concretas de los repositorios y otros componentes de infraestructura para lanzar excepciones específicas (del tipo `CodeDesignPlusException`) cuando ocurre algún problema en la capa de infraestructura.
+
+````csharp
+public class OrderRepository : IOrderRepository {
+    public async Task<OrderAggregate> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+         try{
+           // código para consultar en base de datos
+         }catch(Exception ex){
+            throw new CodeDesignPlusException(Errors.DatabaseConnectionFailed, ex);
+         }
+    }
+}
+````
+
+### Startup (`Startup.cs`)
+
+Al igual que en la capa de dominio, el Startup en la capa de infraestructura, en este contexto, no realiza ninguna configuración específica en este contexto, manteniendolo vacio. Esto se debe a que el SDK CodeDesignPlus automatiza los registros de los servicios de la infraestructura como los repositorios. Sin embargo, la clase Startup sigue siendo necesaria para el funcionamiento del SDK.
+
+```csharp repository="Archetype" url="src/domain/CodeDesignPlus.Net.Microservice.Infrastructure/Startup.cs"
+```
+
+- **Beneficios de un Startup Vacío (Cuando Aplica)**
+
+    El principal beneficio de no tener configuraciones en la capa de infraestructura en este caso es la simplicidad de esta capa. Al igual que en el dominio, en esta capa no hay ninguna configuración por defecto que deba llevarse a cabo. El desarrollador puede tener la libertad de configurar a su gusto.
+
+- **¿Por qué es necesario un Startup (Aunque Esté Vacío)? **
+
+    Si bien la clase `Startup` en la capa de infraestructura está vacía en este arquetipo, sigue siendo necesaria como referencia para los métodos de extensión del SDK CodeDesignPlus.Net. El SDK utiliza esta clase para escanear los assemblies de la aplicación y registrar automáticamente los servicios de la infraestructura como los repositorios. Así, se automatizan los registros, pero se deja la posibilidad al desarrollador de agregar configuraciones adicionales.
+
+
+
+
+## Entrypoints (Puntos de Entrada)
+---
+
+En el contexto de la arquitectura Ports and Adapters (también conocida como arquitectura hexagonal), los entry points representan los puntos de acceso a la aplicación desde el mundo exterior. Son las puertas de entrada por las cuales los usuarios o sistemas externos interactúan con la lógica de negocio. Estos entry points actúan como los "drivers" o "actuadores" del patrón, encargándose de la recepción de las solicitudes del mundo exterior, la orquestación de la lógica de aplicación y el envío de las respuestas adecuadas. En esencia, un entry point es un "adaptador" que se conecta a los "puertos" (interfaces) definidos en la capa de aplicación para que esta última pueda interactuar con el mundo exterior.
+
+En CodeDesignPlus, los entry points manejan las peticiones que vienen de fuentes como eventos de dominio, rest api o grpc y se encargan de realizar el mapeo de los datos de entrada a DTOs que sean adecuados para la capa de aplicación. Es decir, a través de los entry points, los datos de entrada se convierten en el lenguaje que la capa de aplicación entiende. Los entry points no deben realizar validaciones, ni lógica de negocio.
+
+<Image src="/images/archetype/entrypoints.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### CodeDesignPlus.Net.Microservice.AsyncWorker
+
+Este entry point está diseñado para procesar tareas asíncronas en segundo plano. Es ideal para ejecutar procesos que no requieren una respuesta inmediata y que pueden ser procesados de forma diferida, como el procesamiento de datos en lotes, tareas programadas, el envío de correos electrónicos, etc.
+
+`CodeDesignPlus.Net.Microservice.AsyncWorker` se implementa como un worker service o un proceso en segundo plano que escucha un determinado tipo de mensaje o evento. Al recibir un mensaje, el worker procesa la información utilizando la lógica de la capa de aplicación.
+
+**Responsabilidades:**
+
+- Escuchar mensajes de colas de mensajeria (como RabbitMQ, Kafka).
+- Deserializar los mensajes a DTOs de la capa de aplicación.
+- Invocar los comandos de la capa de aplicación para procesar la información recibida.
+- Loggear errores, exepciones y métricas.
+
+**Relación con Ports and Adapters:**
+
+Actúa como un "adaptador" que recibe eventos y mensajes del mundo exterior (cola de mensajería) y los transforma en solicitudes para la capa de aplicación.
+
+### CodeDesignPlus.Net.Microservice.gRpc
+
+Este entry point utiliza el framework gRPC, un moderno framework de código abierto de alto rendimiento para llamadas a procedimientos remotos (RPC). Es ideal para aplicaciones que requieren una comunicación eficiente y de baja latencia, como microservicios o sistemas que necesitan una comunicación en tiempo real.
+
+`CodeDesignPlus.Net.Microservice.gRpc` se implementa como un servicio gRPC que define un protocolo basado en `protobuf` para la comunicación. Recibe peticiones a través de canales gRPC, deserializa los mensajes a DTOs de la capa de aplicación y devuelve respuestas utilizando el mismo protocolo.
+
+**Responsabilidades:**
+
+- Recibir peticiones gRPC.
+- Deserializar los mensajes protobuf a DTOs de la capa de aplicación.
+- Invocar los comandos y queries de la capa de aplicación.
+- Serializar las respuestas a mensajes protobuf.
+- Manejar canales gRPC.
+
+**Relación con Ports and Adapters:**
+
+Actúa como un "adaptador" que recibe peticiones a través de gRPC del mundo exterior y las transforma en solicitudes para la capa de aplicación, exponiendo la lógica de la aplicación a través de este protocolo.
+
+### CodeDesignPlus.Net.Microservice.Rest
+
+Este entry point expone la lógica de la aplicación como una API REST. Es el entry point adecuado para aplicaciones que necesitan ser accedidas por clientes web, aplicaciones móviles o cualquier otro sistema que utilice el protocolo HTTP.
+
+`CodeDesignPlus.Net.Microservice.Rest` se implementa como una API REST basada en ASP.NET Core. Recibe peticiones HTTP (GET, POST, PUT, DELETE, etc.), deserializa los datos del request a DTOs de la capa de aplicación, y devuelve las respuestas serializadas en un formato específico (como JSON).
+
+**Responsabilidades:**
+
+- Recibir peticiones HTTP.
+- Deserializar el request body a DTOs de la capa de aplicación.
+- Invocar los comandos y queries de la capa de aplicación.
+- Serializar las respuestas a JSON (u otro formato).
+- Manejar peticiones y respuestas HTTP.
+
+**Relación con Ports and Adapters:**
+
+Actúa como un "adaptador" que recibe peticiones HTTP del mundo exterior y las transforma en solicitudes para la capa de aplicación, exponiendo la lógica del dominio a través de la API.

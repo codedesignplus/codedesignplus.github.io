@@ -1,0 +1,37 @@
+---
+title: IEventHandler
+---
+
+La interfaz `IEventHandler` define el contrato para los manejadores de eventos en el sistema PubSub. Los manejadores de eventos son responsables de procesar eventos específicos cuando se publican en el sistema.
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IEventHandler.cs"
+```
+
+## Métodos
+---
+
+La interfaz `IEventHandler` define un solo método que se encarga de procesar un evento específico cuando se publica en el sistema.
+
+### HandleAsync
+**Type:** `Task HandleAsync(TEvent data, CancellationToken token)`
+
+Este método se encarga de procesar un evento específico cuando se publica en el sistema. El método recibe el evento a procesar y un token de cancelación para monitorear las solicitudes de cancelación.
+
+### Implementación de un manejador de eventos
+
+Para implementar un manejador de eventos, se debe crear una clase que implemente la interfaz `IEventHandler`. A continuación se muestra
+
+```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEventHandler.cs"
+```
+
+### Registrar un manejador de eventos
+
+Para registrar un manejador de eventos en el sistema de inyección de dependencias de .NET, se debe utilizar el método de extensión `AddPubSub` que invoca `AddEventHandler` proporcionado por la clase `ServiceCollectionExtensions`.
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Extensions/ServiceCollectionExtensions.cs#L95"
+```
+
+## Conclusiones
+---
+
+La interfaz `IEventHandler` es fundamental para el manejo de eventos en el sistema PubSub. Permite a los desarrolladores definir la lógica específica para procesar eventos cuando se publican. Al implementar esta interfaz y registrar los manejadores de eventos en el contenedor de dependencias, se puede construir un sistema de eventos robusto y escalable.

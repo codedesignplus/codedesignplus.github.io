@@ -1,0 +1,50 @@
+---
+title: Json Serializer
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La clase estática `JsonSerializer` proporciona métodos para serializar y deserializar objetos a y desde cadenas JSON, utilizando la biblioteca Newtonsoft.Json. Esta clase actúa como un envoltorio, simplificando el proceso de serialización y deserialización, y permitiendo configuraciones personalizadas.
+
+```csharp url="packages/CodeDesignPlus.Net.Serializers/src/CodeDesignPlus.Net.Serializers/JsonSerializer.cs"
+```
+
+## ¿Cómo Funciona?
+---
+
+La clase `JsonSerializer` utiliza la biblioteca Newtonsoft.Json bajo el capó. Al llamar a los métodos de serialización, la clase convierte objetos .NET en cadenas JSON. De manera similar, los métodos de deserialización convierten cadenas JSON en objetos .NET. La clase ofrece sobrecargas que permiten especificar configuraciones personalizadas como formato de la salida JSON y opciones de configuración de Newtonsoft.Json a través de `JsonSerializerSettings`.
+
+## Métodos
+---
+
+La clase `JsonSerializer` proporciona los siguientes métodos para serialización y deserialización de objetos:
+
+### Serialize
+
+El método `Serialize` convierte un objeto .NET en una cadena JSON. Puede aceptar un objeto y devolver una cadena JSON, o un objeto y un objeto `JsonSerializerSettings` para configuraciones personalizadas.
+
+### Deserialize
+
+El método `Deserialize` convierte una cadena JSON en un objeto .NET. Puede aceptar una cadena JSON y devolver un objeto, o una cadena JSON y un objeto `JsonSerializerSettings` para configuraciones personalizadas.
+
+## Ejemplo de Uso
+---
+
+El ejemplo muestra cómo serializar y deserializar un objeto `UserModel` utilizando la clase `JsonSerializer`. La clase `UserModel` es un modelo simple con propiedades como `Id`, `Name`, `Email` y `Birthdate`. Al serializar el objeto, se obtiene una cadena JSON que se imprime en la consola. Luego, la cadena JSON se deserializa en un nuevo objeto `UserModel`, y se imprime el nombre del usuario.
+
+```csharp url="examples/CodeDesignPlus.Net.Serializers.Sample/src/CodeDesignPlus.Net.Serializers.Sample/Program.cs"
+```
+
+## Conclusiones
+---
+
+-   La clase `JsonSerializer` simplifica el proceso de serialización y deserialización de objetos .NET a JSON y viceversa.
+-   Proporciona métodos estáticos para la serialización y deserialización básicas, así como métodos sobrecargados para opciones avanzadas.
+-   Se integra perfectamente con la biblioteca Newtonsoft.Json, aprovechando su funcionalidad.
+-   Es recomendable utilizar las configuraciones de `JsonSerializerSettings` para escenarios específicos como el manejo de valores nulos o la serialización/deserialización de fechas en formatos concretos.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de Newtonsoft.Json](https://www.newtonsoft.com/json)
+-   [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)

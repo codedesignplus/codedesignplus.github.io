@@ -1,0 +1,77 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Esta clase proporciona métodos de extensión para configurar e integrar fácilmente los servicios de Redis Pub/Sub en una aplicación .NET utilizando `IServiceCollection`. Facilita la configuración, validación y registro de los servicios necesarios para utilizar Redis Pub/Sub como mecanismo de mensajería.
+
+```csharp url="packages/CodeDesignPlus.Net.Redis.PubSub/src/CodeDesignPlus.Net.Redis.PubSub/Extensions/ServiceCollectionExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `CodeDesignPlus.Net.Redis`: Necesario para agregar los servicios de Redis.
+- `CodeDesignPlus.Net.PubSub`: Necesario para agregar los servicios de Pub/Sub.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Utilizan Redis como base de datos o caché y desean incorporar un sistema de mensajería Pub/Sub.
+- Requieren desacoplar componentes a través de un sistema de mensajería.
+- Buscan una forma sencilla y estandarizada de configurar Redis Pub/Sub mediante configuración.
+- Necesitan un registro automático de handlers de mensajeria.
+
+## Beneficios
+---
+
+- **Configuración Centralizada:** Permite configurar Redis Pub/Sub a través del archivo `appsettings.json`, centralizando la configuración y facilitando su gestión.
+- **Facilidad de Integración:** Simplifica la incorporación de Redis Pub/Sub en la aplicación con una única llamada al método de extensión.
+- **Validación de Configuración:** Valida automáticamente la configuración de Redis Pub/Sub al inicio de la aplicación, reduciendo errores en tiempo de ejecución.
+- **Registro Automático:**  Permite el registro automático de handlers para los mensajes, reduciendo la necesidad de configuraciones manuales.
+
+## Métodos de extensión
+---
+
+La clase `ServiceCollectionExtensions` proporciona un único método de extensión para configurar Redis Pub/Sub en una aplicación .NET. Este método agrega los servicios necesarios para utilizar Redis Pub/Sub y valida la configuración de la aplicación.
+
+### AddRedisPubSub
+**Type:** `public static IServiceCollection AddRedisPubSub(this IServiceCollection services, IConfiguration configuration)`
+
+Agrega los servicios de Redis Pub/Sub al `IServiceCollection` especificado.
+
+- **Parámetros**
+    -   `services`: El `IServiceCollection` al que se agregarán los servicios.
+    -   `configuration`: La configuración utilizada para enlazar las opciones de Redis Pub/Sub.
+
+- **Tipo de retorno**
+    -   `IServiceCollection`: El `IServiceCollection` modificado, permitiendo el encadenamiento de llamadas a otros métodos de configuración.
+
+- **Excepciones**
+    -   `ArgumentNullException`: Se lanza si `services` o `configuration` son `null`.
+    -   `RedisPubSubException`: Se lanza si la sección de configuración `RedisPubSub` no existe.
+
+- **Ejemplo de uso**
+    ```csharp
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Services.AddRedisPubSub(builder.Configuration);
+    ```
+
+## Conclusiones
+---
+
+El método de extensión `AddRedisPubSub` es una herramienta poderosa para facilitar la integración y configuración de Redis Pub/Sub en aplicaciones .NET. Permite configurar Redis Pub/Sub de forma rápida y centralizada, utilizando la configuración de la aplicación y proporciona una forma sencilla de registrar los servicios necesarios.
+
+## Referencias
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación de Redis Pub/Sub](https://redis.io/docs/interact/pubsub/)
+- [StackExchange.Redis library](https://github.com/StackExchange/StackExchange.Redis)
+- [CodeDesignPlus.Net.Redis library](https://github.com/CodeDesignPlus/Net.Redis)
+- [CodeDesignPlus.Net.PubSub library](https://github.com/CodeDesignPlus/Net.PubSub)

@@ -1,0 +1,309 @@
+---
+title: ApplicationGuard
+---
+La clase `ApplicationGuard` proporciona métodos de extensión diseñados para implementar cláusulas de guardia en la capa de aplicación. Estos métodos permiten validar argumentos, manejar excepciones de manera centralizada y reforzar la robustez del código al evitar estados inválidos.
+
+`ApplicationGuard` está alineada con los principios de la arquitectura hexagonal, permitiendo a los desarrolladores realizar validaciones específicas de negocio según los requerimientos de cada caso de uso. Esto garantiza que las reglas de negocio se mantengan coherentes y desacopladas de la lógica de infraestructura.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Guards/ApplicationGuard.cs"
+```
+
+## Métodos de Extensión
+
+La clase `ApplicationGuard` proporciona los siguientes métodos de extensión para realizar validaciones en la capa de aplicación, utilizando códigos de error estructurados.
+
+### IsNull
+**Type:** `public static void IsNull(object value, string error)`
+
+Lanza una excepción si el valor especificado es nulo.
+
+```csharp
+public void ProcesarUsuario(Usuario usuario)
+{
+    ApplicationGuard.IsNull(usuario, "201: El usuario no puede ser nulo.");
+    // ... lógica para procesar el usuario ...
+}
+```
+
+### IsNotNull
+**Type:** `public static void IsNotNull(object value, string error)`
+
+Lanza una excepción si el valor especificado no es nulo.
+
+
+
+```csharp
+public void AsignarId(Usuario usuario)
+{
+    ApplicationGuard.IsNotNull(usuario.Id, "202: El Id del usuario no puede ser nulo.");
+    // ... lógica para asignar el ID ...
+}
+```
+
+### IsNullOrEmpty
+**Type:** `public static void IsNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o vacía.
+
+
+
+```csharp
+public void EnviarMensaje(string mensaje)
+{
+    ApplicationGuard.IsNullOrEmpty(mensaje, "203: El mensaje no puede estar vacío.");
+    // ... lógica para enviar el mensaje ...
+}
+```
+
+### IsNotNullOrEmpty
+**Type:** `public static void IsNotNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o vacía.
+
+
+
+```csharp
+public void EstablecerNombre(string nombre)
+{
+    ApplicationGuard.IsNotNullOrEmpty(nombre, "204: El nombre no puede ser nulo o vacío.");
+    // ... lógica para establecer el nombre ...
+}
+```
+
+### IsNullOrWhiteSpace
+**Type:** `public static void IsNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o contiene solo espacios en blanco.
+
+
+
+```csharp
+public void ValidarDireccion(string direccion)
+{
+    ApplicationGuard.IsNullOrWhiteSpace(direccion, "205: La dirección no puede estar vacía o contener solo espacios en blanco.");
+    // ... lógica para validar la dirección ...
+}
+```
+
+### IsNotNullOrWhiteSpace
+**Type:** `public static void IsNotNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o no contiene solo espacios en blanco.
+
+
+
+```csharp
+public void ProcesarCodigo(string codigo)
+{
+    ApplicationGuard.IsNotNullOrWhiteSpace(codigo, "206: El código no puede ser nulo o solo espacios en blanco.");
+    // ... lógica para procesar el código ...
+}
+```
+
+### IsTrue
+**Type:** `public static void IsTrue(bool value, string error)`
+
+Lanza una excepción si el valor especificado es verdadero.
+
+
+```csharp
+public void ValidarCompra(bool isValido)
+{
+    ApplicationGuard.IsTrue(isValido == false , "207: La compra no es valida.");
+    // ... lógica para validar la compra ...
+}
+```
+
+### IsFalse
+**Type:** `public static void IsFalse(bool value, string error)`
+
+Lanza una excepción si el valor especificado es falso.
+
+
+
+```csharp
+public void ProcesarPago(bool pagoRealizado)
+{
+    ApplicationGuard.IsFalse(pagoRealizado == true, "208: El pago no se ha realizado correctamente.");
+    // ... lógica para procesar el pago ...
+}
+```
+
+### IsGreaterThan
+**Type:** `public static void IsGreaterThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor que el valor de comparación.
+
+
+
+```csharp
+public void ValidarEdad(int edad)
+{
+    ApplicationGuard.IsGreaterThan(edad, 18, "209: La edad debe ser mayor que 18.");
+    // ... lógica para validar la edad ...
+}
+```
+
+### IsGreaterThanOrEqual
+**Type:** `public static void IsGreaterThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor o igual que el valor de comparación.
+
+
+
+```csharp
+public void ValidarDescuento(decimal descuento)
+{
+    ApplicationGuard.IsGreaterThanOrEqual(descuento, 0, "210: El descuento no puede ser menor a 0.");
+    // ... lógica para validar el descuento ...
+}
+```
+
+### IsLessThan
+**Type:** `public static void IsLessThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor que el valor de comparación.
+
+
+
+```csharp
+public void ValidarCantidad(int cantidad)
+{
+    ApplicationGuard.IsLessThan(cantidad, 100, "211: La cantidad no puede ser mayor a 100.");
+    // ... lógica para validar la cantidad ...
+}
+```
+
+### IsLessThanOrEqual
+**Type:** `public static void IsLessThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor o igual que el valor de comparación.
+
+
+
+```csharp
+public void ValidarPeso(decimal peso)
+{
+    ApplicationGuard.IsLessThanOrEqual(peso, 100, "212: El peso no puede ser mayor a 100.");
+    // ... lógica para validar el peso ...
+}
+```
+
+### AreEquals
+**Type:** `public static void AreEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados no son iguales.
+
+
+
+```csharp
+public void ValidarClave(string clave, string claveConfirmada)
+{
+    ApplicationGuard.AreEquals(clave, claveConfirmada, "213: Las claves no coinciden.");
+    // ... lógica para validar la clave ...
+}
+```
+
+### AreNotEquals
+**Type:** `public static void AreNotEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados son iguales.
+
+
+```csharp
+public void ValidarId(Guid id, Guid newId)
+{
+    ApplicationGuard.AreNotEquals(id, newId, "214: Los ID son iguales");
+    // ... logica para validar el id
+}
+```
+
+### IsInRange
+**Type:** `public static void IsInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no está dentro del rango especificado.
+
+
+
+```csharp
+public void ValidarNota(int nota)
+{
+    ApplicationGuard.IsInRange(nota, 0, 10, "215: La nota debe estar entre 0 y 10.");
+    // ... lógica para validar la nota ...
+}
+```
+
+### IsNotInRange
+**Type:** `public static void IsNotInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado está dentro del rango especificado.
+
+
+
+```csharp
+public void ValidarTemperatura(int temperatura)
+{
+    ApplicationGuard.IsNotInRange(temperatura, 10, 30, "216: La temperatura no debe estar entre 10 y 30 grados.");
+    // ... lógica para validar la temperatura ...
+}
+```
+
+### IsEmpty
+**Type:** `public static void IsEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada está vacía.
+
+
+
+```csharp
+public void ProcesarPedidos(List<Pedido> pedidos)
+{
+    ApplicationGuard.IsEmpty(pedidos, "217: La lista de pedidos no puede estar vacía.");
+    // ... lógica para procesar los pedidos ...
+}
+```
+
+### IsNotEmpty
+**Type:** `public static void IsNotEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada no está vacía.
+
+
+
+```csharp
+public void MostrarProductos(List<Producto> productos)
+{
+     ApplicationGuard.IsNotEmpty(productos, "218: La lista de productos no puede estar vacía");
+    // ... lógica para mostrar los productos ...
+}
+```
+
+### GuidIsEmpty
+**Type:** `public static void GuidIsEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado está vacío.
+
+
+
+```csharp
+public void ValidarProductoId(Guid productoId)
+{
+    ApplicationGuard.GuidIsEmpty(productoId, "219: El ID del producto no puede ser vacío.");
+    // ... lógica para validar el ID del producto ...
+}
+```
+
+### GuidIsNotEmpty
+**Type:** `public static void GuidIsNotEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado no está vacío.
+
+
+
+```csharp
+public void ActualizarProducto(Guid productoId)
+{
+     ApplicationGuard.GuidIsNotEmpty(productoId, "220: El Id no puede ser vacio");
+     // ... lógica para actualizar el producto ...
+}
+```

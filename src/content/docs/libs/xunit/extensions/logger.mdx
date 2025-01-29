@@ -1,0 +1,240 @@
+---
+title: Verify Logging
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La clase `LoggerExtensions` proporciona métodos de extensión para facilitar la verificación del registro de logs utilizando `ILogger` en pruebas unitarias con xUnit y Moq. Su propósito principal es simplificar las pruebas de componentes que utilizan logging.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Extensions/LoggerExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.Logging`: Necesario para las interfaces y enumeraciones de logging (`ILogger`, `LogLevel`, etc.).
+- `Moq`: Necesario para la creación de mocks de `ILogger`.
+- `System`: Necesario para las `Func` y el tipo `Type`.
+
+## Escenarios de uso
+---
+Esta clase es particularmente útil en pruebas unitarias (xUnit) donde se necesita:
+- Verificar que se registran los logs esperados por los componentes.
+- Asegurar que se usan los niveles de log correctos.
+- Probar diferentes escenarios de logging.
+- Simplificar el uso de `Moq` para verificar las llamadas a `ILogger`.
+
+## Beneficios
+---
+
+- **Simplifica las pruebas:** Reduce la verbosidad en la verificación de logs, haciendo las pruebas más legibles.
+- **Facilidad de uso:** Proporciona métodos de extensión que se pueden usar directamente en los mocks de `ILogger`.
+- **Verificación precisa:** Permite verificar tanto el mensaje como el nivel de log, e incluso la cantidad de veces que se llamó.
+- **Aumenta la confiabilidad:** Asegura que los componentes registren información relevante para el debugging y monitoreo.
+
+## Ejemplo Práctico
+---
+Este ejemplo muestra cómo usar `LoggerExtensions` para verificar el logging en un servicio:
+
+<Tabs>
+    <TabItem label="MyServiceTests">
+
+    ```csharp
+    using Xunit;
+    using Microsoft.Extensions.Logging;
+    using Moq;
+    using CodeDesignPlus.Net.xUnit.Helpers;
+
+    public class MyServiceTests
+    {
+        [Fact]
+        public void MyService_DoesSomething_LogsExpectedMessage()
+        {
+            // Arrange
+            var loggerMock = new Mock<ILogger<MyService>>();
+            var myService = new MyService(loggerMock.Object);
+
+            // Act
+            myService.DoSomething();
+
+            // Assert
+            loggerMock.VerifyLogging("Doing something...", LogLevel.Information);
+            loggerMock.VerifyLoggerWasCalled();
+        }
+
+        [Fact]
+        public void MyService_ThrowsException_LogsError()
+        {
+            // Arrange
+            var loggerMock = new Mock<ILogger<MyService>>();
+            var myService = new MyService(loggerMock.Object);
+
+            //Act
+            try
+            {
+                myService.ThrowException();
+            }
+            catch(Exception){}
+
+            // Assert
+            loggerMock.VerifyLogging("An error occurred", LogLevel.Error);
+            loggerMock.VerifyLoggerWasCalled();
+        }
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="MyService">
+    ```csharp
+    public class MyService
+    {
+        private readonly ILogger<MyService> _logger;
+        
+        public MyService(ILogger<MyService> logger)
+        {
+            _logger = logger;
+        }
+
+        public void DoSomething()
+        {
+            _logger.LogInformation("Doing something...");
+            //do something
+        }
+
+        public void ThrowException()
+        {
+        try
+        {
+            throw new Exception("Error");
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred");
+            throw;
+        }
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+En este ejemplo:
+
+1. Se crea un mock de `ILogger<MyService>`.
+2. Se instancia `MyService` con el mock del logger.
+3. Se ejecutan las acciones que se quieren probar.
+4. Se utilizan los métodos de extensión `VerifyLogging` y `VerifyLoggerWasCalled` para asegurar que el logger funciona como se espera.
+
+## Métodos de extensión
+---
+
+La clase `LoggerExtensions` proporciona los siguientes métodos de extensión para verificar el logging:
+
+### VerifyLogging
+
+El método `VerifyLogging` verifica que el logger se llamó con un mensaje y nivel de log específicos.
+
+```csharp
+public static Mock<ILogger<T>> VerifyLogging<T>(this Mock<ILogger<T>> logger, string expectedMessage, LogLevel expectedLogLevel = LogLevel.Debug, Times? times = null)
+```
+
+- **Parámetros:**
+    - `logger`: El mock de `ILogger<T>` en el que se realizará la verificación.
+    - `expectedMessage`: El mensaje de log esperado.
+    - `expectedLogLevel`: El nivel de log esperado (por defecto es `LogLevel.Debug`).
+    - `times`: La cantidad de veces que se espera que se registre el log (por defecto es `Times.Once()`).
+- **Tipo de retorno:**
+    - `Mock<ILogger<T>>`: El mismo mock de `ILogger<T>` para permitir el encadenamiento de métodos.
+- **Ejemplos de código:**
+
+    <Tabs>
+
+    <TabItem label="Ejemplo 1">
+
+    Este ejemplo muestra cómo verificar que un mensaje se registró con nivel `Information` una vez.
+
+    ```csharp
+    var loggerMock = new Mock<ILogger<MyService>>();
+    loggerMock.VerifyLogging("My Info Message", LogLevel.Information);
+     ```
+    </TabItem>
+
+    <TabItem label="Ejemplo 2">
+
+    Este ejemplo muestra cómo verificar que un mensaje se registró con nivel `Error` dos veces.
+
+    ```csharp
+    var loggerMock = new Mock<ILogger<MyService>>();
+    loggerMock.VerifyLogging("My Error Message", LogLevel.Error, Times.Exactly(2));
+    ```
+    </TabItem>
+
+    <TabItem label="Ejemplo 3">
+
+    Este ejemplo muestra cómo verificar que un mensaje se registró con nivel `Debug` por lo menos una vez.
+
+    ```csharp
+    var loggerMock = new Mock<ILogger<MyService>>();
+    loggerMock.VerifyLogging("My Debug Message", LogLevel.Debug, Times.AtLeastOnce());
+    ```
+    </TabItem>
+
+    </Tabs>
+
+### VerifyLoggerWasCalled
+
+El método `VerifyLoggerWasCalled` verifica que el logger fue llamado al menos una vez.
+
+```csharp
+public static void VerifyLoggerWasCalled<T>(this Mock<ILogger<T>> logger)
+```
+- **Parámetros:**
+    - `logger`: El mock del `ILogger<T>` que se verificará.
+- **Tipo de retorno:**
+    - `void`: No retorna nada, pero lanza una excepción si la verificación no coincide.
+- **Ejemplos de código:**
+
+    <Tabs>
+
+    <TabItem label="Ejemplo 1">
+
+    Este ejemplo muestra cómo verificar que el logger fue llamado al menos una vez.
+
+    ```csharp
+    // Ejemplo 1: Verificar que el logger fue llamado al menos una vez
+    var loggerMock = new Mock<ILogger<MyService>>();
+       
+    //... código donde se llama el logger
+      
+    loggerMock.VerifyLoggerWasCalled();
+     ```
+    </TabItem>
+
+    <TabItem label="Ejemplo 2">
+
+    Este ejemplo muestra cómo verificar que el logger no fue llamado.
+
+    ```csharp
+    // Ejemplo 2: Verificar que el logger no fue llamado
+    var loggerMock = new Mock<ILogger<MyService>>();
+
+    //... código que no llama al logger
+
+    Assert.Throws<MockException>(() => loggerMock.VerifyLoggerWasCalled()); //Lanza excepcion por que no se llamo el logger
+    ```
+    </TabItem>
+
+    </Tabs>
+
+## Conclusiones
+---
+- La clase `LoggerExtensions` simplifica la verificación de logging en pruebas unitarias usando mocks de `ILogger`.
+- Los métodos de extensión `VerifyLogging` y `VerifyLoggerWasCalled` hacen que las pruebas sean más claras y concisas.
+- Permiten verificar el mensaje, el nivel de log y la cantidad de veces que se llama el logger.
+- Es importante usar esta herramienta para asegurar que los componentes registren información relevante para el debugging y monitoreo.
+- Asegúrate de configurar correctamente los mocks antes de realizar las verificaciones.
+
+## Referencias
+---
+- [Microsoft.Extensions.Logging Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging?view=dotnet-plat-ext-8.0)
+- [Moq Documentation](https://github.com/moq/moq4/wiki/Quickstart)
+- [Mocking ILogger with Moq](https://adamstorr.azurewebsites.net/blog/mocking-ilogger-with-moq)

@@ -1,0 +1,232 @@
+---
+title: Overview
+---
+
+import { Tabs, TabItem, FileTree, LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.Redis` es una pieza fundamental en el ecosistema de CodeDesignPlus, diseñada para gestionar de manera robusta y coherente las conexiones a Redis. Proporciona interfaces, clases base y métodos de extensión para estandarizar la gestión de conexiones a Redis, ya sea con o sin TLS, y para la creación de instancias `IRedisService` a través de `IRedisServiceFactory`. Estas instancias son esenciales para que las librerías `CodeDesignPlus.Net.Redis.PubSub` y `CodeDesignPlus.Net.Redis.Cache` puedan interactuar con Redis de forma consistente, facilitando la creación de aplicaciones escalables y mantenibles.
+
+## Propósito y alcance
+---
+El propósito principal de `CodeDesignPlus.Net.Redis` es gestionar de manera centralizada y estandarizada las conexiones a Redis y proveer instancias de `IRedisService`. Esta librería actúa como el núcleo para que otras librerías de CodeDesignPlus (como PubSub y Cache) puedan usar Redis de manera consistente, independientemente de la configuración específica de la conexión (TLS o no). Su alcance incluye:
+
+1. Gestión de conexiones Redis: Proporcionar un mecanismo estandarizado para establecer y gestionar conexiones a Redis, tanto simples como con TLS.
+
+2. Creación de instancias `IRedisService`: Implementar una fábrica (`IRedisServiceFactory`) que permite la creación y configuración de instancias de `IRedisService` para su uso en otras librerías.
+
+3. Estandarización de la conexión: Asegurar que todas las conexiones a Redis dentro del ecosistema CodeDesignPlus sean gestionadas de forma consistente y eficiente.
+
+4. Soporte de TLS: Permitir la configuración y uso de conexiones seguras con TLS para entornos que requieren encriptación de datos.
+
+5. Base para librerías Redis: Actuar como base para librerías como `CodeDesignPlus.Net.Redis.PubSub` y `CodeDesignPlus.Net.Redis.Cache`, proporcionando el acceso a la instancia de Redis.
+
+## Principales características
+---
+
+- **Gestión de conexiones:** Facilita la creación y gestión de conexiones a múltiples instancias de Redis.
+- **Configuración flexible:** Permite configurar las opciones de conexión de cada instancia de Redis, incluyendo la configuración SSL y las credenciales.
+- **Abstracción de la caché:** Proporciona una interfaz para realizar operaciones comunes de caché en Redis.
+- **Eventos de conexión:** Permite registrar eventos de conexión para el monitoreo y el manejo de errores.
+- **Patrón de fábrica:** Utiliza el patrón de fábrica para crear instancias de servicios de Redis.
+- **Inyección de dependencias:** Facilita la integración con el sistema de inyección de dependencias de .NET.
+- **Configuración mediante opciones:** Permite la configuración mediante la sección de configuración de .NET, y el uso de validaciones.
+- **Manejo de errores:** Define excepciones personalizadas para errores relacionados con Redis.
+- **Extensible:** Ofrece extensiones para registrar el servicio en el contenedor de dependencias.
+
+## Casos de uso típicos
+---
+
+- Implementación de caché distribuida en microservicios.
+- Almacenamiento de datos en memoria para mejorar el rendimiento de aplicaciones web.
+- Gestión de sesiones de usuario en aplicaciones web.
+- Implementación de patrones de diseño como caché a nivel de aplicación.
+- Aplicaciones que requieren una solución robusta para el almacenamiento en caché.
+- Proyectos que se benefician de la inyección de dependencias y la gestión de configuración.
+- Aplicaciones que usan múltiples instancias de Redis.
+
+## Componentes Principales
+---
+
+-   **`RedisException`:** Define las excepciones personalizadas para la librería.
+-   **`ServiceCollectionExtensions`:** Define métodos de extensión para registrar los servicios en el contenedor de dependencias.
+-   **`RedisOptions`:** Define las opciones de configuración para la conexión a Redis.
+-   **`RedisService`:** Implementa la lógica para la conexión y el manejo de Redis.
+-   **`RedisServiceFactory`:** Implementa la fábrica para la creación de instancias de `IRedisService`.
+-   **`IRedisService`:** Interfaz para los servicios de Redis.
+-   **`IRedisServiceFactory`:** Interfaz para la fábrica de servicios de Redis.
+-   **`FactoryConst`**: Define constantes para los nombres de instancias de Redis.
+   -   **`Instance`**: Define la configuración de una instancia de redis.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.Redis
+        - Exceptions
+            - RedisException.cs
+        - Extensions
+            - ServiceCollectionExtensions.cs
+        - Options
+            - RedisOptions.cs
+        - Services
+            - RedisService.cs
+            - RedisServiceFactory.cs
+    - CodeDesignPlus.Net.Redis.Abstractions
+        - FactoryConst.cs
+        - Instance.cs
+        - IRedisService.cs
+        - IRedisServiceFactory.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Redis` en tu proyecto de .NET. Además, explorarás los servicios, métodos de extensión y excepciones que proporciona la librería para interactuar con Redis como solución de caché.
+### Requisitos previos
+
+- .NET 8 o superior.
+- Redis instalado y configurado en tu entorno de desarrollo.
+- Conocimientos básicos de .NET y Redis.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Redis`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continución, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Redis
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Redis
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Redis" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+---
+
+El repositorio del SDK, cuenta con la siguiente solución [CodeDesignPlus.Net.Redis.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample) que contiene los siguientes ejemplos:
+
+1. [CodeDesignPlus.Net.Redis.Standalone.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample)
+
+    Este ejemplo es una introducción sencilla al uso del SDK de CodeDesignPlus para interactuar con Redis. Se conecta a una instancia única de Redis (standalone) sin encriptación, demostrando las operaciones básicas como guardar y obtener datos. Es el punto de partida ideal para entender cómo integrar Redis con tu aplicación .NET de la manera más simple.
+
+2. [CodeDesignPlus.Net.Redis.Standalone.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample)
+
+    Este ejemplo eleva la seguridad de la conexión a Redis, manteniendo la misma estructura de conexión a una instancia única, pero utilizando TLS/SSL para encriptar la comunicación. En esencia, demuestra cómo establecer una conexión segura a Redis para proteger los datos transmitidos, ideal para entornos que necesitan mayor seguridad.
+
+3. [CodeDesignPlus.Net.Redis.Cluster.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample)
+
+    Este ejemplo introduce el uso del SDK de CodeDesignPlus con un clúster de Redis. En lugar de una única instancia, se conecta a un grupo de nodos de Redis que trabajan en conjunto, demostrando cómo manejar la distribución de datos y la escalabilidad. Es ideal para aplicaciones que necesitan manejar grandes volúmenes de datos o requieren alta disponibilidad.
+
+4. [CodeDesignPlus.Net.Redis.Cluster.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample)
+
+    Este ejemplo combina la escalabilidad de un clúster de Redis con la seguridad de TLS/SSL. Muestra cómo conectarse a un clúster de Redis, pero con todas las comunicaciones encriptadas, garantizando la protección de datos en entornos que requieren tanto alta disponibilidad como seguridad en la transmisión de información.
+
+<Aside>
+    Antes de ejecutar los ejemplos del SDK Redis, asegúrate de iniciar el servidor Redis con el docker compose del proyecto. Los ejemplos que usan Redis Cluster deben ejecutarse dentro del entorno Docker creado por docker compose para evitar problemas de conexión; los ejemplos con standalone se pueden depurar directamente con docker-compose corriendo.
+</Aside>
+
+Vamos a analizar el ejemplo `CodeDesignPlus.Net.Redis.Standalone.Sample` para entender cómo se utiliza la librería `CodeDesignPlus.Net.Redis` en un proyecto .NET. Este ejemplo se conecta a una instancia única de Redis sin encriptación y realiza operaciones básicas de caché como guardar y obtener datos.
+
+```csharp url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/Program.cs"
+```
+
+<Steps>
+1. Configuración de Redis en `appsettings.json`:
+
+    La gran diferencia entre los ejemplos, es la configuración de la conexión a Redis, a continuación podras visualizar la configuración para cada uno de los ejemplos:
+
+    <Tabs>
+        <TabItem label="Standalone">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Standalone + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+    </Tabs>
+
+2. Registramos los servicios en el contenedor de dependencias:
+
+    ```csharp
+    serviceCollection.AddRedis(configuration);
+    ```
+
+3. Obtenemos la instancia de nuestra factoria y creamos una instancia de `IRedisService`:
+
+    ```csharp
+    var factory = serviceProvider.GetRequiredService<IRedisServiceFactory>();
+
+    var service = factory.Create(FactoryConst.RedisCore);
+    ```
+
+</Steps>
+
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Redis` proporciona una serie de métodos de extensión que facilitan la interacción con MongoDB. A continuación, se muestran algunos de los métodos de extensión más comunes:
+
+### Service Collection
+
+La clase `ServiceCollectionExtensions` contiene métodos de extensión para registrar los servicios de Redis en el contenedor de dependencias. Estos métodos permiten configurar la conexión a Redis y personalizar la lógica de la librería.
+ 
+<LinkCard title="Explora los métodos de extensión" href="/libs/redis/extensions/service-collection" />
+
+## Opciones de configuración
+---
+
+La librería utiliza la clase `RedisOptions` para configurar la conexión a Redis. Esta clase permite configurar:
+*   **`Instances`:** Un diccionario de instancias de Redis, donde cada instancia tiene su propia configuración.
+    *   **`ConnectionString`:** La cadena de conexión a Redis.
+    *   **`Ssl`:** Indica si se debe usar SSL para la conexión.
+    *   **`Certificate`:** La ruta al archivo de certificado SSL.
+    *   **`PasswordCertificate`:** La contraseña del certificado SSL.
+
+<LinkCard title="Explora las opciones de configuración" href="/libs/redis/options" />
+
+## Servicios
+---
+
+`CodeDesignPlus.Net.Redis` proporciona una serie de servicios para interactuar con Redis de forma eficiente y segura. Estos servicios incluyen la conexión a Redis, la gestión de la base de datos y el suscriptor, y la configuración de eventos de conexión.
+
+### RedisService
+
+La clase `RedisService` es la implementación concreta de `IRedisService` y proporciona métodos para interactuar con Redis. Esta clase se encarga de establecer la conexión a Redis, configurar la base de datos y el suscriptor, y gestionar los eventos de conexión.
+
+<LinkCard title="Explora el servicio RedisService" href="/libs/redis/services/redis-service" />
+
+### RedisServiceFactory
+
+La clase `RedisServiceFactory` es una fábrica que crea instancias de `IRedisService` basadas en la configuración de la instancia de Redis. Permite gestionar múltiples conexiones a Redis y proporciona una abstracción para la creación de servicios Redis.
+
+<LinkCard title="Explora la fábrica RedisServiceFactory" href="/libs/redis/services/redis-factory" />
+
+## Conclusiones
+---
+
+La librería `CodeDesignPlus.Net.Redis` es una herramienta poderosa para simplificar el desarrollo de aplicaciones que utilizan Redis como caché. Al proporcionar un conjunto robusto de abstracciones y componentes, permite a los desarrolladores concentrarse en la lógica de negocio de su aplicación, promoviendo la reutilización de código y la consistencia en la arquitectura de sus microservicios.
+
+## Recursos externos
+---
+
+- [Documentación oficial de Redis](https://redis.io/docs/)
+- [Repositorio NuGet de StackExchange.Redis](https://www.nuget.org/packages/StackExchange.Redis)
+- [Documentación de la librería CodeDesignPlus.Net.Redis](Aqui va el link a tu documentación)

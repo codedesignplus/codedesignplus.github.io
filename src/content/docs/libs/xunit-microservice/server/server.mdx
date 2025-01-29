@@ -1,0 +1,87 @@
+---
+title: Server
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+Las clases `Server<TProgram>` y `ServerBase<TProgram>` proporcionan un entorno de prueba integral para aplicaciones ASP.NET Core, especialmente microservicios. Estas clases simplifican la creación, configuración y gestión de un servidor web para pruebas unitarias y de integración, ofreciendo una base sólida para validar el comportamiento de tus aplicaciones de manera eficiente y confiable.
+
+## ¿Cómo Funciona?
+---
+
+`Server<TProgram>` extiende `WebApplicationFactory<TProgram>`, proporcionando un punto de entrada para la configuración y el manejo del ciclo de vida del servidor de pruebas. `ServerBase<TProgram>`, por otro lado, proporciona una clase base para las pruebas que se ejecutan sobre el servidor creado por `Server<TProgram>`, facilitando el acceso al cliente HTTP, al proveedor de servicios y al canal gRPC.
+
+El flujo general de funcionamiento es el siguiente:
+
+1. **Configuración del Host:**  `Server<TProgram>` configura el host web de prueba, estableciendo las configuraciones de la aplicación, los servicios y el entorno. Utiliza un `ServerCompose` para la gestión de dependencias externas, como Redis, RabbitMQ, MongoDB y OpenTelemetry, a través de Docker Compose.
+2. **Inicialización de Dependencias:** El `ServerCompose` inicia los contenedores de Docker necesarios para las pruebas, asegurando que las dependencias externas estén disponibles.
+3. **Creación del Cliente:** `ServerBase<TProgram>` utiliza el método `CreateClient` de `Server<TProgram>` para crear un `HttpClient` que puede utilizarse para enviar solicitudes al servidor de prueba.
+4. **Acceso al Servicio:** `ServerBase<TProgram>` proporciona acceso al `IServiceProvider` del servidor de prueba, permitiendo obtener instancias de servicios configurados en el mismo.
+5.  **Acceso al Logger:** `ServerBase<TProgram>` proporciona acceso al `InMemoryLoggerProvider`, permitiendo inspeccionar los logs que genera el servidor de prueba.
+6. **Creación del Canal gRPC:**  `ServerBase<TProgram>` crea un canal gRPC utilizando el `HttpHandler` del servidor, lo que permite realizar llamadas gRPC.
+7. **Ejecución de Pruebas:** Las pruebas se ejecutan utilizando `ServerBase<TProgram>`, que proporciona una API conveniente para interactuar con el servidor de prueba.
+8. **Limpieza:** Al finalizar las pruebas, los contenedores de Docker y los recursos utilizados se liberan, asegurando un entorno de pruebas limpio.
+
+## Server\<TProgram>
+---
+
+La clase `Server<TProgram>` extiende `WebApplicationFactory<TProgram>` y proporciona un entorno de prueba para aplicaciones ASP.NET Core. Esta clase se encarga de configurar el host web de prueba, gestionar las dependencias externas a través de `ServerCompose`, y proporcionar un `HttpClient` para realizar solicitudes HTTP al servidor de pruebas.
+
+### ConfigureWebHost
+Configura el `IWebHostBuilder` para el servidor de pruebas. Establece las configuraciones, registra los servicios, y configura el entorno de desarrollo. Inyecta las dependencias levantadas por `ServerCompose`.
+
+### Dispose
+Detiene los contenedores de Docker y libera los recursos, como el `InMemoryLoggerProvider`.
+
+### ConfigureServices
+Configura los servicios para la aplicación de pruebas, como la autenticación de prueba y el logging en memoria.
+
+## ServerBase\<TProgram>
+---
+
+La clase `ServerBase<TProgram>` proporciona una clase base para las pruebas que se ejecutan sobre el servidor de pruebas creado por `Server<TProgram>`. Esta clase facilita el acceso al `HttpClient`, al `IServiceProvider` y al canal gRPC, permitiendo interactuar con el servidor de pruebas de manera eficiente y confiable.
+
+### InitializeAsync
+Inicializa los recursos necesarios para las pruebas, como el `HttpClient`, el `IServiceProvider` y el canal gRPC.
+
+### DisposeAsync()
+No realiza ninguna acción de limpieza adicional (en esta implementación), dado que la limpieza principal se realiza en el método Dispose de `Server<TProgram>`.
+
+
+## Implementación
+---
+
+Las clases `Server<TProgram>` y `ServerBase<TProgram>` se implementan como sigue:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/Server.cs"
+```
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Server/ServerBase.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar `Server<TProgram>` y `ServerBase<TProgram>` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Server/ServerTest.cs"
+```
+
+En este ejemplo:
+
+- `ServerTest` hereda de `ServerBase<Program>` y recibe una instancia de `Server<Program>` a través del constructor.
+- Se utiliza `IClassFixture<Server<Program>>` para indicar que la prueba necesita un servidor de prueba.
+- La prueba utiliza el `HttpClient` (`Client`) para realizar una petición HTTP al endpoint `/weatherforecast`.
+- Se realizan aserciones sobre la respuesta para verificar que fue exitosa y que se recibieron los datos esperados.
+
+## Conclusiones
+---
+
+`Server<TProgram>` y `ServerBase<TProgram>` son clases fundamentales para la creación de pruebas de integración y unitarias en aplicaciones .NET.  Al proporcionar un entorno de prueba controlado, facilitar la gestión de dependencias externas y ofrecer una API conveniente para interactuar con el servidor de pruebas, estas clases mejoran la eficiencia y confiabilidad del proceso de pruebas.
+
+## Referencias Adicionales
+---
+
+-   [Documentación de WebApplicationFactory](https://learn.microsoft.com/en-us/dotnet/api/microsoft.aspnetcore.mvc.testing.webapplicationfactory-1?view=aspnetcore-8.0)
+-   [Pruebas de Integración en ASP.NET Core](https://learn.microsoft.com/es-es/aspnet/core/test/integration-tests?view=aspnetcore-8.0)
+-   [Documentación de Docker Compose](https://docs.docker.com/compose/)

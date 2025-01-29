@@ -1,0 +1,120 @@
+---
+title: CodeDesignPlusException
+---
+
+La clase `CodeDesignPlusException` define una excepción personalizada diseñada específicamente para aplicaciones desarrolladas con CodeDesignPlus. Es utilizada principalmente por las cláusulas de guardia para validar reglas y lanzar errores dependiendo de la capa en la que se ejecuten (Domain, Application o Infrastructure).
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/CodeDesignPlusException.cs"
+```
+
+## Propiedades
+---
+- `Layer` (Layer): Representa la capa del sistema donde se originó la excepción (por ejemplo, Domain, Application, Infrastructure).
+- `Code` (string): Código único que identifica el error asociado con la excepción. Los códigos están organizados según la capa, siguiendo estas recomendaciones:
+    - 000: Errores internos genéricos.
+    - 100: Errores de la capa Domain.
+    - 200: Errores de la capa Application.
+    - 300: Errores de la capa Infrastructure.
+
+## Formato de Mensajes de Error
+---
+Los mensajes de error lanzados por CodeDesignPlusException deben seguir el formato: `<code>: <message>`
+
+Ejemplo
+```csharp
+    public const string InvalidBussinessRule = "100: Invalid business rule."
+```
+
+## Constructores
+---
+
+### Constructor básico
+Inicializa una nueva instancia de la clase CodeDesignPlusException con la capa y el código de error.
+
+#### Parámetros:
+
+- layer (Layer): La capa donde ocurrió la excepción.
+- code (string): Código del error.
+
+Ejemplo de uso:
+
+```csharp
+throw new CodeDesignPlusException(Layer.Application, "200");
+```
+
+### Constructor con mensaje
+
+Inicializa una nueva instancia de la clase CodeDesignPlusException con la capa, el código de error y un mensaje descriptivo.
+
+#### Parámetros:
+
+- layer (Layer): La capa donde ocurrió la excepción.
+- code (string): Código del error.
+- message (string): Mensaje que describe el error.
+
+Ejemplo de uso:
+
+```csharp
+throw new CodeDesignPlusException(Layer.Domain, "100", "Invalid business rule.");
+```
+
+### Constructor con excepción interna
+Inicializa una nueva instancia de la clase CodeDesignPlusException con la capa, el código de error, un mensaje descriptivo y una referencia a una excepción interna.
+
+#### Parámetros:
+
+- layer (Layer): La capa donde ocurrió la excepción.
+- code (string): Código del error.
+- message (string): Mensaje que describe el error.
+- innerException (Exception): Excepción interna que causó el error actual.
+
+Ejemplo de uso:
+
+```csharp
+try
+{
+    // Código que puede generar una excepción
+}
+catch (Exception ex)
+{
+    throw new CodeDesignPlusException(Layer.Infrastructure, "300", "Database connection failed.", ex);
+}
+```
+
+### Escenarios de Uso
+1. Excepciones lanzadas por cláusulas de guardia
+
+    CodeDesignPlusException se utiliza para validar reglas en diferentes capas del sistema.
+
+    Ejemplo:
+
+    ```csharp
+    ApplicationGuard.Requires(() => input != null, new CodeDesignPlusException(Layer.Application, "200", "Input cannot be null."));
+    ```
+
+2. Estandarización de errores
+    Utilice los códigos y el formato de mensaje recomendados para mantener la consistencia en el manejo de excepciones.
+
+3. Integración con middlewares
+    Capture y transforme las excepciones CodeDesignPlusException en respuestas estructuradas para el cliente.
+
+    Ejemplo:
+
+    ```csharp
+    app.Use(async (context, next) =>
+    {
+        try
+        {
+            await next();
+        }
+        catch (CodeDesignPlusException ex)
+        {
+            var errorResponse = new ErrorResponse(Guid.NewGuid().ToString(), ex.Layer);
+            errorResponse.AddError(ex.Code, $"{ex.Code}: {ex.Message}", string.Empty);
+
+            context.Response.ContentType = "application/json";
+            context.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await context.Response.WriteAsJsonAsync(errorResponse);
+        }
+    });
+    ```

@@ -1,0 +1,112 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.Event.Store` proporciona un método de extensión para configurar y utilizar los servicios de Event Store y Event Sourcing en aplicaciones .NET. Este método facilita la integración con el contenedor de dependencias y simplifica la configuración necesaria para el almacenamiento de eventos.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `CodeDesignPlus.Net.Event.Sourcing`: Necesario para la configuración de opciones de Event Sourcing y utilizar su extensión `AddEventSourcing`.
+- `CodeDesignPlus.Net.EventStore`: La librería principal del Event Store que contiene las abstracciones y clases necesarias.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Implementan una arquitectura basada en Event Sourcing y necesitan un almacén de eventos.
+- Quieren una forma sencilla de configurar Event Store y Event Sourcing en su aplicación .NET.
+- Necesitan configurar tanto Event Store como Event Sourcing utilizando la misma configuración.
+- Requieren utilizar la inyección de dependencias para acceder a los servicios de Event Store.
+- Desean abstraer la gestión de conexiones al almacén de eventos.
+
+## Beneficios
+---
+- **Configuración Simplificada:** Facilita la configuración de Event Store y Event Sourcing con un solo método de extensión.
+- **Coherencia:** Permite configurar las opciones de Event Sourcing desde la misma sección de configuración que Event Store.
+- **Abstracción:** Proporciona una abstracción sobre las conexiones al almacén de eventos.
+- **Inyección de Dependencias:** Permite utilizar la inyección de dependencias para acceder a los servicios de Event Store y Event Sourcing.
+- **Reutilización:**  Se basa en la configuración existente y extiende las opciones de `EventSourcing`.
+
+## Ejemplo Práctico
+---
+Supongamos que tienes el siguiente archivo `appsettings.json` con la configuración para Event Store:
+
+```json url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
+```
+
+Y quieres configurar los servicios de Event Store y Event Sourcing en tu aplicación. Podrías hacerlo en la clase `Startup` o `Program.cs`:
+
+```csharp
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using CodeDesignPlus.Net.EventStore.Extensions;
+
+public class Startup
+{
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+       services.AddEventStore(Configuration);
+    }
+
+    public void Configure(IApplicationBuilder app)
+    {
+        // ... Configuración de la aplicación ...
+    }
+}
+```
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.EventStore` proporciona un método de extensión para configurar los servicios de Event Store y Event Sourcing en una aplicación .NET. Este método simplifica la configuración y la integración con el contenedor de dependencias.
+
+### AddEventStore
+**Type:** `public static IServiceCollection AddEventStore(this IServiceCollection services, IConfiguration configuration)`
+
+Este método agrega los servicios de Event Store y Event Sourcing a la colección de servicios especificada utilizando la configuración proporcionada.
+
+- **Parámetros**
+    - `services`: La colección de servicios (`IServiceCollection`) a la que se agregarán los servicios de Event Store y Event Sourcing.
+    - `configuration`: La configuración (`IConfiguration`) que se utilizará para configurar los servicios de Event Store y Event Sourcing. La sección "EventStore" debe existir en la configuración.
+
+- **Tipo de retorno**
+    - `IServiceCollection`: La colección de servicios modificada, lo que permite encadenar otras llamadas de extensión.
+
+- **Excepciones**
+    - `ArgumentNullException`: Se lanza si `services` o `configuration` son nulos.
+    - `EventStoreException`: Se lanza si la sección de configuración `EventStore` no existe.
+
+- **Ejemplo de Uso**
+    ```csharp
+    public void ConfigureServices(IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddEventStore(configuration);
+    }
+    ```
+
+## Conclusiones
+---
+El método de extensión `AddEventStore` simplifica la configuración de Event Store y Event Sourcing, promoviendo la coherencia en las opciones de configuración al utilizar la misma sección y al extender las opciones de `EventSourcing`.  Se recomienda siempre definir la configuración en un archivo `appsettings.json`. Este enfoque facilita la configuración y uso de Event Store en aplicaciones .NET, permitiendo una fácil integración y configuración por inyección de dependencias.
+
+## Referencias
+---
+- [Repositorio de CodeDesignPlus.Net.EventStore](https://github.com/codedesignplus/CodeDesignPlus.Net.EventStore): Para consultar el código fuente y ejemplos.
+- [Repositorio de CodeDesignPlus.Net.Event.Sourcing](https://github.com/codedesignplus/CodeDesignPlus.Net.Event.Sourcing): Para entender las opciones que se extienden.
+- [Documentación de Microsoft.Extensions.DependencyInjection](https://learn.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection): Para entender el funcionamiento del IServiceCollection.
+- [Documentación de Microsoft.Extensions.Configuration](https://learn.microsoft.com/dotnet/api/microsoft.extensions.configuration): Para trabajar con la configuración en .NET.
+- [Documentación de Microsoft.Extensions.Options](https://learn.microsoft.com/dotnet/api/microsoft.extensions.options): Para entender como se gestionan las configuraciones fuertemente tipadas.
+
+---
+¡Espero que esta documentación detallada te sea de gran utilidad! Si tienes más preguntas o necesitas ajustes, no dudes en preguntar.

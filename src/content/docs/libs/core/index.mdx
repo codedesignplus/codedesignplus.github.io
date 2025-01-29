@@ -1,0 +1,176 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería **CodeDesignPlus.Net.Core** proporciona un marco robusto y coherente de interfaces y clases base, junto con métodos de extensión, que están diseñados para estandarizar y simplificar las funcionalidades esenciales en una variedad de servicios y microservicios. A través de estas abstracciones, la librería permite a los desarrolladores implementar de manera consistente patrones de diseño fundamentales como agregados, eventos de dominio, entidades y Data Transfer Objects (DTOs).
+
+## Propósito y alcance
+---
+
+El objetivo principal de `CodeDesignPlus.Net.Core` es ofrecer una base sólida y reutilizable para el desarrollo de microservicios y sistemas distribuidos en .NET. La librería busca promover el desacoplamiento, la mantenibilidad y la escalabilidad de las aplicaciones mediante la implementación consistente de patrones de diseño y abstracciones clave.
+
+## Principales características
+---
+
+- Interfaces y clases base para patrones de diseño comunes (Agregados, Entidades, DTOs, Eventos de Dominio).
+- Métodos de extensión que facilitan la configuración e integración en aplicaciones .NET.
+- Opciones de configuración para personalizar el comportamiento de la librería.
+- Abstracciones para gestionar eventos de dominio de manera eficiente.
+- Componentes básicos para la implementación de sistemas distribuidos.
+
+## Casos de uso típicos
+---
+
+- Desarrollo de servicios y microservicios con patrones de diseño bien definidos.
+- Implementación de sistemas escalables y mantenibles a largo plazo.
+- Uso de agregados y DTOs para gestionar datos en arquitecturas complejas.
+- Manejo de eventos de dominio para coordinar cambios de estado entre componentes.
+
+## Componentes Principales
+---
+
+- **Servicios**: Gestiona la resolución y la propagación de eventos de dominio a través de la interfaz `IDomainEventResolverService`.
+- **Opciones**: Permite configurar el comportamiento de la librería mediante las clases `CoreOptions` y `ContactOptions`.
+- **Métodos de Extensión**: Simplifica el registro de servicios y la configuración en el contenedor de dependencias.
+- **Abstracciones**: Proporciona interfaces y clases base para patrones como `AggregateRoot`, `Entity`, `Dto` y `DomainEvent`.
+
+<FileTree>
+- src
+    - CodeDesignPlus.Net.Core
+        - Exceptions
+            - CoreException.cs
+        - Extensions
+            - ServiceCollectionExtensions.cs
+        - Services
+            - DomainEventResolverService.cs
+    - CodeDesignPlus.Net.Core.Abstractions
+        - AggregateRoot.cs
+        - AggregateRootBase.cs
+        - DomainEvent.cs
+        - IAggregateRoot.cs
+        - IDomainEvent.cs
+        - IDomainEventResolverService.cs
+        - IDto.cs
+        - IEntity.cs
+        - IErrorCodes.cs
+        - IStartupServices.cs
+        - Attributes
+            - EventKeyAttribute.cs
+        - Models
+            - Criteria
+                - Criteria.cs
+                - OrderTypes.cs
+            - Pager
+                - Pager.cs
+                - Parameters.cs
+        - Options
+            - ContactOptions.cs
+            - CoreOptions.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Core` en tu proyecto de .NET. Además, explorarás los servicios, métodos de extensión y abstracciones que proporciona la librería para implementar patrones de diseño comunes.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+- Conocimientos básicos de patrones de diseño (DDD, CQRS).
+- Familiaridad con la inyección de dependencias en .NET.
+- Comprensión de conceptos como agregados, entidades y eventos de dominio.
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Core`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Core
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Core
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Core" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+
+```csharp
+// Ejemplo de uso de la librería en una aplicación .NET
+using CodeDesignPlus.Net.Core.Abstractions;
+using CodeDesignPlus.Net.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+
+public class Startup
+{
+    public IConfiguration Configuration { get; }
+
+    public Startup(IConfiguration configuration)
+    {
+        Configuration = configuration;
+    }
+
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // Configuración de las opciones
+        services.AddCore(Configuration);
+
+        // Ejemplo de uso de un servicio
+        services.AddTransient<IDomainEventResolverService, DomainEventResolverService>();
+        
+        // ... otros servicios
+    }
+    
+    // ...
+}
+```
+
+## Métodos de extensión
+---
+
+La librería `CodeDesignPlus.Net.Core` proporciona métodos de extensión para facilitar la configuración e integración de los servicios en una aplicación .NET. Estos métodos simplifican el registro de servicios y permiten configurarlos con la configuración de la aplicación.
+
+## ServiceCollectionExtensions
+
+La clase `ServiceCollectionExtensions` contiene métodos de extensión para registrar los servicios de la librería en el contenedor de dependencias de .NET. Estos métodos permiten configurar las opciones de la librería y registrar los servicios necesarios para implementar patrones de diseño comunes.
+
+<LinkCard title="Explora los métodos de extensión" href="/libs/core/extensions/service-collection" />
+
+
+## Opciones de configuración
+---
+
+Las opciones de configuración permiten personalizar el comportamiento de la librería. Se pueden establecer valores predeterminados para la gestión de eventos de dominio, la conexión de base de datos u otras funcionalidades.
+<LinkCard title="Explora las opciones de configuración" href="/libs/core/options" />
+
+## Servicios
+---
+
+La librería incluye servicios clave como `DomainEventResolverService`, que se encarga de la gestión de eventos de dominio. Este servicio es fundamental para la implementación de una arquitectura basada en eventos.
+
+<LinkCard title="Explora los servicios" href="/libs/core/services/domain-event-resolver" />
+
+## Conclusiones
+---
+
+`CodeDesignPlus.Net.Core` ofrece una base sólida y completa para el desarrollo de aplicaciones .NET robustas y escalables, facilitando la implementación de patrones de diseño comunes y brindando las abstracciones necesarias para construir arquitecturas complejas.
+
+## Recursos externos
+---
+
+- [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/main/packages/CodeDesignPlus.Net.Core)
+- [Patrón de opciones en .NET](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/options?view=aspnetcore-9.0)
+- [Inyección de dependencias en .NET](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-9.0)
+- [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.Core)

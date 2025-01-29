@@ -1,0 +1,126 @@
+---
+title: gRPC
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice grpc`
+
+Este comando se utiliza para agregar un proyecto gRPC a un microservicio existente que fue creado sin soporte para gRPC (es decir, sin el flag `--enable-grpc`). Este comando facilita la generación de la estructura básica para definir servicios y endpoints gRPC en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **gRPC:** Es un framework de RPC (Remote Procedure Call) de alto rendimiento y código abierto, desarrollado por Google. Utiliza Protocol Buffers como lenguaje de definición de interfaz (IDL) y HTTP/2 para la transmisión de datos.
+*   **Servicio gRPC:** En el contexto de gRPC, un servicio define un conjunto de métodos que pueden ser invocados remotamente.
+*   **Protocol Buffers (protobuf):** Es un mecanismo agnóstico de lenguaje para serializar datos estructurados. Se usa para definir la estructura de los mensajes y servicios gRPC.
+*   **Punto de Entrada gRPC:** Los servicios gRPC actúan como puntos de entrada a tu microservicio, exponiendo las operaciones disponibles para los clientes que utilizan este protocolo.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice grpc` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice grpc \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice grpc `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio al que se agregará el proyecto gRPC.
+
+## Ejemplos de Uso
+
+Este ejemplo agrega un proyecto gRPC al microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice grpc \
+        --organization "Acme" \
+        --microservice "User"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice grpc `
+        --organization "Acme" `
+        --microservice "User"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base para el proyecto gRPC en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/grpc/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo proyecto gRPC:
+
+<Image src="/images/generators/microservices/grpc/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para un proyecto gRPC en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el proyecto gRPC.
+
+    <Image src="/images/generators/microservices/grpc/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio al que se le agregará el proyecto gRPC, reflejándose en los namespaces y ubicaciones de los archivos.
+
+   <Image src="/images/generators/microservices/grpc/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   Este comando es útil cuando se necesita agregar gRPC a un microservicio que inicialmente no fue creado con soporte para este protocolo.
+*   Tras la ejecución del comando, se crea un archivo `proto` en la carpeta `Protos` del proyecto gRPC con base al nombre del aggregate.
+*   El proyecto gRPC se integra con la estructura del microservicio existente, permitiendo que los servicios gRPC accedan a la lógica de negocio del microservicio.
+
+## Enlaces Relacionados
+
+*  [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*  [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*  [Documentación de gRPC](https://grpc.io/docs/)
+*  [gRPC Basics](https://grpc.io/docs/what-is-grpc/introduction/)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice grpc` facilita la adición de un proyecto gRPC a tu microservicio, proporcionando una base sólida para la definición de servicios y endpoints gRPC. Utiliza este comando para integrar gRPC en microservicios existentes, habilitando comunicaciones eficientes entre servicios.

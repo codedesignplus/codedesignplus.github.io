@@ -1,0 +1,84 @@
+---
+title: Tokenizer
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El servicio **Tokenizer** es una clase estática que se encarga de tokenizar una cadena de entrada en una lista de tokens, utilizando operadores lógicos y de comparación como criterios de separación. Este componente es útil en el contexto de parsers o motores de búsqueda que requieren descomponer cadenas complejas en elementos individuales para su procesamiento.
+
+## ¿Cómo Funciona?
+
+El servicio **Tokenizer** divide la cadena de entrada en partes utilizando un delimitador específico (`|`). Posteriormente, clasifica estas partes en operadores lógicos, propiedades, operadores de comparación y valores basándose en reglas predefinidas. Cada fragmento se transforma en un objeto `Token`, que contiene información sobre el tipo de dato y su contenido.
+
+## Operadores
+---
+
+1. **Operadores Lógicos**: Se utilizan para combinar múltiples condiciones en una expresión. Los operadores lógicos implementados son:
+    - `and`
+    - `or`
+
+2. **Operadores de Comparación**: Se utilizan para evaluar relaciones entre propiedades y valores. Los operadores de comparación disponibles son:
+
+    - `~=` (Contiene)
+    - `^=` (Comienza con)
+    - `$=` (Termina con)
+    - `<=` (Menor o igual que)
+    - `>=` (Mayor o igual que)
+    - `=` (Igual a)
+    - `<` (Menor que)
+    - `>` (Mayor que)
+
+## Métodos
+---
+
+Los métodos principales del servicio `Tokenizer` corresponden a las operaciones de tokenización y creación de tokens a partir de fragmentos de la cadena de entrada.
+
+### Tokenize
+**Type:** `public static List<Token> Tokenize(string input)`
+
+Este método, siendo el punto de entrada principal del servicio Tokenizer, recibe una cadena de texto como entrada y la analiza para descomponerla en una lista ordenada de tokens. Cada token representa un elemento significativo en la cadena, como propiedades, operadores, valores y otros símbolos. El resultado es una lista que puede ser utilizada por otros componentes para comprender y procesar la información contenida en la cadena de entrada.
+
+### CreateTokensFromPart
+**Type:** `private static IEnumerable<Token> CreateTokensFromPart(string part)`
+
+Este método, de uso interno dentro del Tokenizer, procesa un fragmento individual de la cadena de entrada. Su objetivo es identificar y generar tokens a partir de un fragmento que contiene un operador de comparación. Detecta la ubicación del operador de comparación y divide el fragmento en tres partes, generando un token para la propiedad, uno para el operador y un último token para el valor.
+
+## Implementación
+---
+
+El servicio se implementa como una clase estática llamada `Tokenizer` en el espacio de nombres `CodeDesignPlus.Net.Criteria`. Los operadores lógicos (`and`, `or`) y de comparación (`=`, `>=`, etc.) están predefinidos como arreglos de cadenas. Para usar el servicio, simplemente llama al método `Tokenize` y pasa una cadena de entrada.
+
+El servicio no tiene dependencias externas, pero requiere un modelo de datos `Token` y un enumerador `TokenType` para clasificar los tokens creados.
+
+```csharp url="packages/CodeDesignPlus.Net.Criteria/src/CodeDesignPlus.Net.Criteria/Tokenizer.cs" 
+```
+
+
+## Ejemplo de Uso
+---
+
+```csharp
+string input = "age>=30|name~=John|status=active";
+List<Token> tokens = Tokenizer.Tokenize(input);
+
+foreach (var token in tokens)
+{
+    Console.WriteLine($"Type: {token.Type}, Value: {token.Value}");
+}
+// output: Type: Property, Value: age
+// output: Type: ComparisonOperator, Value: >=
+// output: Type: Value, Value: 30
+// output: Type: LogicalOperator, Value: or
+// output: Type: Property, Value: name
+// output: Type: ComparisonOperator, Value: ~=
+// output: Type: Value, Value: John
+// output: Type: LogicalOperator, Value: or
+// output: Type: Property, Value: status
+// output: Type: ComparisonOperator, Value: =
+// output: Type: Value, Value: active
+```
+
+## Conclusiones
+---
+
+El servicio `Tokenizer` ofrece una manera flexible y eficiente de analizar cadenas complejas y convertirlas en estructuras manejables. Es ideal para aplicaciones que requieren interpretar expresiones lógicas o construir filtros dinámicos. Para aprovechar al máximo este servicio, asegúrate de que las cadenas de entrada estén correctamente estructuradas y de extender los tipos de operadores si se necesitan reglas adicionales.

@@ -1,0 +1,39 @@
+---
+title: Niveles de Validación
+---
+
+Dominio Capa 3
+Aplicación Capa 2
+Fluent Validación Capa 1
+
+
+### Convenciones (Articulo Aparte)
+
+- Los Value Object se pueden usar de forma transversal por las dfierentes capas, sin embargo, si son entidades, se deberaan crear un dto en la capa de aplicación como homologacion.
+- RestFull agregar convenciones
+- Verbos para homologar los nombres de los metodos y convenciones con el equipo de producto
+- ClientId o IdClient, definir el orden de los nombres del Id (IdClient)
+
+- Getters y Setters en los diferentes recursos como aggregate, domain event, cuales deben ser privados y cuales publicos? Al igual con los constructores
+- existen diferentes convenciones en las notas del articulo  http://localhost:4321/quick-start/e-commerce/clients
+- Explicar las convenciones de las queue, topics, exchange y demas recursos necesarios
+- Explicar por que el id se envia desde el frontend y no es generado en el backend
+
+- Los comandos que son usados para procesar los casos de uso a partir de un consumer no llevan un DtoGenerator (Ver la documentaci'on de microservicio clientes > modificando el microservicio > consumers)
+
+- Los value object deben tener constructores privados y su configuración en mapster debe corresponder a la siguiente.
+    ```csharp
+        namespace Acme.Net.Microservice.Clients.Application.Setup;
+        
+    TypeAdapterConfig<CreateClientDto, CreateClientCommand>
+                .NewConfig()
+                .ConstructUsing(src => new CreateClientCommand(src.Id, src.Name, src.LastName, src.Email, Address.Create(src.Address.Country, src.Address.State, src.Address.City, src.Address.AddressValue)));
+    ```
+
+- Explicar las convenciones de fechas (long)
+- Explicar las convenciones de precios (long)
+
+- Explicar el header X-Tenant
+- Explicar el estaandar de las Queue y Exchange
+
+- Los nombres de los recursos deben ser en singluar, por ejemplo el aggreagate, entidaad, value object, eventos de dominio etc

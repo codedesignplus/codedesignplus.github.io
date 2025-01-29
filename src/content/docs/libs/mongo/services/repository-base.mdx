@@ -1,0 +1,267 @@
+---
+title: RepositoryBase
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `RepositoryBase` es una clase base abstracta para la implementación de repositorios que interactúan con MongoDB. Proporciona una base sólida para realizar operaciones CRUD comunes y transacciones, simplificando la gestión de entidades en una aplicación .NET.
+
+## ¿Cómo Funciona?
+
+`RepositoryBase` funciona como un punto de acceso centralizado a las colecciones de MongoDB. Utiliza `IMongoClient` para conectarse a la base de datos y proporciona métodos genéricos para realizar operaciones como la creación, lectura, actualización, y eliminación de entidades (`IEntityBase`). También incluye soporte para transacciones, criterios de filtrado y proyección. La clase está diseñada para ser heredada por clases de repositorios concretos, que especifican el tipo de entidad con el que trabajan.
+
+
+## Métodos
+---
+Esta sección describe los métodos principales proporcionados por la clase `RepositoryBase`.
+
+### GetCollection
+**Type:** `public IMongoCollection<TEntity> GetCollection<TEntity>() where TEntity : class, IEntityBase`
+
+Devuelve una instancia de `IMongoCollection<TEntity>` para el tipo de entidad especificado, permitiendo el acceso a las operaciones de la base de datos sobre esta colección. La colección se obtiene de la base de datos de MongoDB configurada.
+
+```csharp
+public Task CustomMethodAsync()
+{
+    var collection = this.GetCollection<UserEntity>();
+
+    // Do something with the collection
+
+    return Task.CompletedTask;
+}
+```
+
+### ChangeStateAsync
+**Type:** `public Task ChangeStateAsync<TEntity>(Guid id, bool state, CancellationToken cancellationToken) where TEntity : class, IEntity`
+
+Cambia el estado (activo/inactivo) de una entidad identificada por su `Guid` de forma asíncrona.  Adicionalmente, actualiza la propiedad `UpdatedAt` con la fecha y hora actual. Se utiliza comúnmente para habilitar o deshabilitar entidades.
+
+```csharp
+// Change state
+await repository.ChangeStateAsync<UserEntity>(user.Id, false, CancellationToken.None);
+```
+
+### CreateAsync
+**Type:** `public Task CreateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Inserta una nueva entidad en la colección de forma asíncrona. Este método toma la entidad a crear y un token de cancelación.
+
+```csharp
+// Create a new user
+await repository.CreateAsync(user, CancellationToken.None);
+```
+
+### CreateRangeAsync
+**Type:** `public Task CreateRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Inserta un conjunto de nuevas entidades en la colección de forma asíncrona. Este método toma la lista de entidades a crear y un token de cancelación.
+
+```csharp
+// Create some users
+await repository.CreateRangeAsync(users, CancellationToken.None);
+```
+
+### DeleteAsync
+**Type:** `public Task DeleteAsync<TEntity>(FilterDefinition<TEntity> filter, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Elimina una entidad de la colección que cumpla con el filtro especificado de forma asíncrona. Este método toma un filtro y un token de cancelación.
+
+```csharp
+// Delete user
+var filterUser = Builders<UserEntity>.Filter.Eq(x => x.Id, user.Id);
+
+await repository.DeleteAsync(filterUser, CancellationToken.None);
+```
+
+### DeleteRangeAsync
+**Type:** `public async Task DeleteRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Elimina un conjunto de entidades especificadas por su id, de la colección de forma asíncrona. Este método toma la lista de entidades a eliminar y un token de cancelación.
+
+```csharp
+// Delete some users
+await repository.DeleteRangeAsync(users, CancellationToken.None);
+```
+
+### UpdateAsync
+**Type:** `public Task UpdateAsync<TEntity>(TEntity entity, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Actualiza una entidad existente en la colección de forma asíncrona. Utiliza el `Guid` de la entidad para buscar y reemplazar el documento en la base de datos.
+
+```csharp
+// Update user
+var userUpdate = await repository.FindAsync<UserEntity>(user.Id, CancellationToken.None);
+
+userUpdate.Name = "John Doe Updated";
+
+await repository.UpdateAsync(userUpdate, CancellationToken.None);
+```
+
+### UpdateRangeAsync
+**Type:** `public async Task UpdateRangeAsync<TEntity>(List<TEntity> entities, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Actualiza un conjunto de entidades existentes en la colección de forma asíncrona.  Utiliza el `Guid` de cada entidad para buscar y reemplazar los documentos en la base de datos.
+
+```csharp
+// Update some users
+var usersUpdate = await repository.MatchingAsync<UserEntity>(criteria, CancellationToken.None);
+
+usersUpdate.ForEach(x => x.Name = $"{x.Name} Updated");
+
+await repository.UpdateRangeAsync(usersUpdate, CancellationToken.None);
+```
+
+### TransactionAsync
+**Type:** `public async Task TransactionAsync(Func<IMongoDatabase, IClientSessionHandle, Task> process, CancellationToken cancellationToken)`
+
+Ejecuta una transacción en MongoDB, donde el `process` es la lógica que se ejecutará dentro de la transacción. En caso de error, la transacción se revierte y se registra el error en el log.
+
+```csharp
+// Transaction
+await repository.TransactionAsync(async (database, session) =>
+{
+    var userTransaction = new UserEntity
+    {
+        Id = Guid.NewGuid(),
+        Name = "John Doe Transaction",
+        Email = "john.doe@codedesignplus.com"
+    };
+
+    var collection = database.GetCollection<UserEntity>(typeof(UserEntity).Name);
+
+    await collection.InsertOneAsync(session, userTransaction, cancellationToken: CancellationToken.None);
+
+}, CancellationToken.None);
+```
+
+### FindAsync
+**Type:** `public Task<TEntity> FindAsync<TEntity>(Guid id, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Busca una entidad por su identificador (`Guid`) de forma asíncrona. Si se encuentra, devuelve la entidad; de lo contrario, devuelve `null`.
+
+```csharp
+// Find a user
+var userFound = await repository.FindAsync<UserEntity>(user.Id, CancellationToken.None);
+```
+
+### MatchingAsync
+**Type:** `public Task<List<TEntity>> MatchingAsync<TEntity>(C.Criteria criteria, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Busca un conjunto de entidades que cumplan con los criterios proporcionados y los retorna de forma asíncrona. La búsqueda incluye la aplicación de filtros y ordenamiento.
+
+```csharp
+// Criteris to find users
+var criteria = new Criteria
+{
+    Filters = "IsActive=true"
+};
+
+var usersFound = await repository.MatchingAsync<UserEntity>(criteria, CancellationToken.None);
+```
+
+### MatchingAsync
+**Type:** `public Task<List<TResult>> MatchingAsync<TEntity, TResult>(C.Criteria criteria, Expression<Func<TEntity, TResult>> projection, CancellationToken cancellationToken) where TEntity : class, IEntityBase`
+
+Busca un conjunto de entidades que cumplan con los criterios proporcionados, proyectando los resultados a un nuevo tipo y los retorna de forma asíncrona. La búsqueda incluye la aplicación de filtros, ordenamiento y la proyeccion.
+
+```csharp
+// Criteria with projection
+var projection = await repository.MatchingAsync<UserEntity, UserEntity>(criteria, x => new UserEntity
+{
+    Id = x.Id,
+    Name = x.Name,
+    Email = x.Email
+}, CancellationToken.None);
+```
+
+### MatchingAsync
+**Type:** `public async Task<List<TProjection>> MatchingAsync<TEntity, TProjection>(Guid id, C.Criteria criteria, Expression<Func<TEntity, List<TProjection>>> projection, CancellationToken cancellationToken) where TEntity : class, IEntityBase where TProjection : class, IEntityBase`
+
+Busca una entidad por su `Guid` y proyecta una lista de propiedades desde la entidad con los criterios proporcionados.
+
+```csharp
+// Criteria at subdocument level and projection
+var projectionSubdocument = await repository.MatchingAsync<UserEntity, ProductEntity>(user.Id, criteria, x => x.Products, CancellationToken.None);
+```
+
+## Implementación
+---
+
+La clase `RepositoryBase` se implementa en la librería `CodeDesignPlus.Net.Mongo`. Proporciona una base sólida para la creación de repositorios que interactúan con MongoDB en aplicaciones .NET. A continuación, se muestra un fragmento de código que muestra la implementación de la clase `RepositoryBase`:
+
+```csharp url="packages/CodeDesignPlus.Net.Mongo/src/CodeDesignPlus.Net.Mongo/Repository/RepositoryBase.cs"
+```
+
+## Ejemplo de Uso
+---
+
+Imaginemos que tenemos una entidad `User` que queremos almacenar en una colección de MongoDB. Podemos crear un repositorio para esta entidad que herede de `RepositoryBase` y definir los métodos específicos de la entidad. A continuación, se muestra un ejemplo de cómo usar `RepositoryBase` en una aplicación .NET Core:
+
+
+```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Program.cs"
+```
+
+<Steps>
+
+1. Configuración de Mongo en `appsettings.json`:
+
+    ```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
+    ```
+
+2. Creamos las entidades:
+
+    Procedemos a crear las entidades que representarán los documentos en la colección de MongoDB, estas entidades deben implementar la interfaz `IEntity` de `CodeDesignPlus.Net.Core.Abstractions`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/ProductEntity.cs"
+    ```
+
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/UserEntity.cs"
+    ```
+
+3. Creamos el repositorio:
+
+    Para efectos de este ejemplo, procederemos a crear el repositorio `UserRepository` que hereda de `RepositoryBase`.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Respositories/UserRepository.cs"
+    ```
+
+4. Creamos la clase Startup:
+
+    Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
+
+    ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Startup.cs"
+    ```
+
+5. Registramos los servicios en el contenedor de dependencias:
+
+    ```csharp
+    serviceCollection.AddMongo<Startup>(configuration);
+    ```
+6. Obtenemos la instancia de nuestro repositorio:
+
+    ```csharp
+    var repository = serviceProvider.GetRequiredService<IUserRepository>();
+    ```
+
+7. Creamos un nuevo usuario:
+
+    ```csharp
+    var user = new UserEntity
+    {
+        Id = Guid.NewGuid(),
+        Name = "John Doe",
+        Email = "john.doe@codedesignplus.com",
+        CreatedAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
+        CreatedBy = Guid.NewGuid(),
+        IsActive = true
+    };
+
+    await repository.CreateAsync(user, CancellationToken.None);
+    ```
+</Steps>
+
+
+## Conclusiones
+---
+
+La clase `RepositoryBase` es una herramienta poderosa para simplificar el desarrollo de aplicaciones que interactúan con MongoDB. Al proporcionar un conjunto robusto de métodos para operaciones CRUD, transacciones y consultas complejas, permite a los desarrolladores concentrarse en la lógica de negocio de su aplicación, promoviendo la reutilización de código y la consistencia en la arquitectura de sus microservicios.

@@ -1,0 +1,234 @@
+---
+title: Data Annotations
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La clase `DataAnnotationsExtensions` proporciona un método de extensión para facilitar la validación de objetos utilizando Data Annotations en pruebas unitarias xUnit. Su propósito principal es simplificar el proceso de validación de modelos y entidades durante las pruebas.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Extensions/DataAnnotationUtil.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+- `System.ComponentModel.DataAnnotations`: Necesario para usar las Data Annotations y las clases relacionadas con la validación.
+- `System.Collections.Generic`: Necesario para usar listas y colecciones genéricas.
+
+## Escenarios de uso
+---
+Esta clase es particularmente útil en pruebas unitarias (xUnit) donde se necesita:
+- Validar objetos que usan Data Annotations (atributos de validación).
+- Probar la lógica de validación de modelos, DTOs y entidades.
+- Asegurar que los objetos cumplen con las restricciones definidas por los atributos de validación.
+- Simplificar la validación personalizada implementando `IValidatableObject`.
+
+## Beneficios
+---
+
+- **Facilidad de uso:** Simplifica la validación de objetos al extender directamente el tipo.
+- **Validación Integral:** Permite la validación tanto de Data Annotations como la validación personalizada mediante `IValidatableObject`.
+- **Mejor control:** Proporciona una lista de `ValidationResult` detallando todas las fallas encontradas.
+- **Integración:** Facilita la creación de pruebas que validan objetos y aseguran la integridad de los datos.
+
+## Ejemplo Práctico
+---
+Este ejemplo muestra cómo usar `DataAnnotationsExtensions` para validar un objeto con Data Annotations y `IValidatableObject`:
+
+
+<Tabs>
+    <TabItem label="DataAnnotationsTests">
+    
+    ```csharp
+    using Xunit;
+    using System.ComponentModel.DataAnnotations;
+    using System.Collections.Generic;
+    using CodeDesignPlus.Net.xUnit.Helpers;
+
+    public class DataAnnotationsTests
+    {
+        [Fact]
+        public void Validate_ValidModel_ReturnsNoValidationResults()
+        {
+            // Arrange
+            var validModel = new MyModel
+            {
+                Name = "Test",
+                Email = "test@example.com",
+                Age = 25
+            };
+
+            // Act
+            var results = validModel.Validate();
+
+            // Assert
+            Assert.Empty(results);
+        }
+
+        [Fact]
+        public void Validate_InvalidModel_ReturnsValidationResults()
+        {
+            // Arrange
+            var invalidModel = new MyModel
+            {
+                Name = null,
+                Email = "invalid email",
+                Age = 150
+            };
+
+            // Act
+            var results = invalidModel.Validate();
+
+            // Assert
+            Assert.NotEmpty(results);
+            Assert.Equal(3, results.Count);
+
+            Assert.Contains(results, x => x.MemberNames.Contains(nameof(MyModel.Name)));
+            Assert.Contains(results, x => x.MemberNames.Contains(nameof(MyModel.Email)));
+            Assert.Contains(results, x => x.MemberNames.Contains(nameof(MyModel.Age)));
+            
+        }
+
+        [Fact]
+        public void Validate_IValidatableObject_CheckCustomValidation()
+        {
+            // Arrange
+            var invalidModel = new MyModel
+            {
+                Name = "Test",
+                Email = "test@example.com",
+                Age = 10
+            };
+
+            // Act
+            var results = invalidModel.Validate();
+
+            // Assert
+            Assert.NotEmpty(results);
+            Assert.Equal(1, results.Count);
+            Assert.Contains(results, x => x.ErrorMessage.Contains("Age must be greater than 20"));
+        }
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="MyModel">
+    
+    ```csharp
+   
+    public class MyModel : IValidatableObject
+    {
+        [Required]
+        public string Name { get; set; }
+        [EmailAddress]
+        public string Email { get; set; }
+        [Range(1, 100)]
+        public int Age { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Age <= 20)
+            {
+                yield return new ValidationResult("Age must be greater than 20", new[] { nameof(Age) });
+            }
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+En este ejemplo:
+1. Se define `MyModel` con `DataAnnotations` y se implementa `IValidatableObject`.
+2. En las pruebas se crean instancias de `MyModel` con y sin validaciones.
+3. Se llama al método de extensión `.Validate()` para obtener los resultados.
+4. Se valida si hay errores, y se confirma que son los esperados.
+5. Se valida la funcionalidad de la implementacion de `IValidatableObject`.
+
+## Métodos de extensión
+---
+
+La clase `DataAnnotationsExtensions` proporciona un método de extensión llamado `Validate` que permite validar objetos con Data Annotations y `IValidatableObject`. A continuación se detallan los aspectos clave de este método:
+
+### Validate
+
+El método `Validate` permite validar un objeto con Data Annotations y `IValidatableObject`. Devuelve una lista de `ValidationResult` que contiene los resultados de la validación.
+
+```csharp
+public static IList<ValidationResult> Validate<T>(this T data)
+```
+- **Parámetros:**
+    - `data`: El objeto que se va a validar. El tipo debe ser genérico `T` para que el método de extensión funcione con cualquier clase.
+- **Tipo de retorno:**
+    - `IList<ValidationResult>`: Una lista de `ValidationResult` que contiene los resultados de la validación. Si no hay errores de validación, la lista estará vacía.
+- **Excepciones:**
+    - `ArgumentNullException`: Se lanza si el objeto `data` es `null`.
+- **Ejemplos de código:**
+
+    Los siguientes ejemplos muestran cómo usar el método `Validate` con objetos que usan Data Annotations y `IValidatableObject`:
+
+    <Tabs>
+        <TabItem label="Ejemplo 1">
+
+        Este ejemplo muestra cómo validar un objeto simple con Data Annotations.
+
+        ```csharp
+        // Ejemplo 1: Validando un objeto simple con Data Annotations
+        public class Person {
+            [Required]
+            public string Name { get; set; }
+            [Range(0,120)]
+            public int Age {get; set;}
+        }
+        var person = new Person { Name = "Juan", Age = 25 };
+        var results1 = person.Validate();
+        Assert.Empty(results1); // La validación fue exitosa
+
+        var person2 = new Person { Name = null, Age = 150};
+        var results2 = person2.Validate();
+        Assert.NotEmpty(results2); // La validación falló
+        ```
+        </TabItem>
+
+        <TabItem label="Ejemplo 2">
+
+        Este ejemplo muestra cómo validar un objeto que implementa `IValidatableObject`.
+
+        ```csharp
+        
+        // Ejemplo 2: Validando un objeto que implementa IValidatableObject
+        public class Product : IValidatableObject {
+            [Required]
+                public string Name { get; set; }
+                public decimal Price {get; set;}
+            public IEnumerable<ValidationResult> Validate(ValidationContext validationContext) {
+                if (Price <=0 ) {
+                yield return new ValidationResult("Price must be greater than zero", new []{nameof(Price)});
+                }
+            }
+        }
+
+        var product1 = new Product { Name = "Laptop", Price = 1000 };
+        var result3 = product1.Validate();
+        Assert.Empty(result3);
+
+        var product2 = new Product { Name = null, Price = 0 };
+        var result4 = product2.Validate();
+        Assert.NotEmpty(result4);
+
+        Assert.Equal(2, result4.Count);
+        ```
+
+        </TabItem>
+    </Tabs>
+
+## Conclusiones
+---
+- La clase `DataAnnotationsExtensions` simplifica la validación de objetos con Data Annotations y la lógica personalizada en `IValidatableObject`.
+- El método de extensión `Validate` permite ejecutar fácilmente la validación y obtener una lista detallada de los errores.
+- Es esencial usar esta herramienta en pruebas unitarias para asegurar la integridad de los datos de los objetos que se están probando.
+- Es importante verificar la lista de resultados para determinar si la validación fue exitosa o no.
+
+## Referencias
+---
+- [System.ComponentModel.DataAnnotations Namespace](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations?view=net-8.0)
+- [IValidatableObject Interface](https://learn.microsoft.com/en-us/dotnet/api/system.componentmodel.dataannotations.ivalidatableobject?view=net-8.0)
+- [Options Validation Generator](https://learn.microsoft.com/en-us/dotnet/core/extensions/options-validation-generator)

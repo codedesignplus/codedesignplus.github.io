@@ -1,0 +1,81 @@
+---
+title: RedisService
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El servicio `RedisService` proporciona una interfaz y una implementación para gestionar la conexión a un servidor Redis. Su propósito principal es centralizar la gestión de la conexión, el acceso a la base de datos, la suscripción a canales pub/sub y el manejo de eventos de conexión, permitiendo un uso consistente de Redis en la aplicación.
+
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/IRedisService.cs"
+```
+
+## ¿Cómo Funciona?
+---
+
+`RedisService` actúa como un puente entre la aplicación y un servidor Redis. Internamente, utiliza `StackExchange.Redis` para manejar la conexión. El servicio se inicializa con una configuración de instancia (`Instance`) que contiene detalles de la conexión, como la cadena de conexión, el uso de SSL/TLS, etc. Al inicializarse, establece la conexión con Redis y proporciona acceso a la base de datos (`IDatabaseAsync`), al suscriptor (`ISubscriber`) y al multiplexador de conexión (`IConnectionMultiplexer`). Además, maneja eventos de la conexión como cambios de configuración y errores, registrando estos eventos mediante un `ILogger`.
+
+## Métodos
+---
+
+`RedisService` proporciona un único método para inicializar el servicio con la configuración de la instancia de Redis.
+
+### Initialize(Instance instance)
+
+Este método inicializa el servicio Redis con la configuración proporcionada en `instance`. Configura la conexión a Redis usando la cadena de conexión, habilita SSL/TLS si es necesario, y registra eventos de la conexión.
+
+## Propiedades
+---
+
+Las propiedades de `RedisService` proporcionan acceso a los componentes clave de la conexión a Redis, como la conexión, la base de datos y el suscriptor.
+
+### Connection
+
+Propiedad que retorna la conexión multiplexada a redis (`IConnectionMultiplexer`).
+
+### Database
+
+Propiedad que retorna la base de datos de redis (`IDatabaseAsync`).
+
+### Subscriber
+
+Propiedad que retorna el subscritor de redis (`ISubscriber`) para la funcionalidad pub/sub.
+
+### IsConnected
+
+Propiedad que retorna un valor booleano indicando si la conexión a redis está activa o no.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis/Services/RedisService.cs"
+```
+
+La implementación de `RedisService` utiliza la librería `StackExchange.Redis` para establecer la conexión con Redis. El método `Initialize` toma una instancia de `Instance` que contiene la configuración de la conexión y realiza los siguientes pasos:
+
+1.  **Creación de `ConfigurationOptions`:**  Utiliza el método `CreateConfiguration` de la instancia `Instance` para convertir la configuración en un objeto `ConfigurationOptions` de `StackExchange.Redis`.
+2.  **Configuración de SSL/TLS:** Si la configuración especifica el uso de SSL/TLS, el método `ConfigureSslIfRequired` configura los callbacks necesarios para la selección y validación del certificado.
+3.  **Establecimiento de la Conexión:** Utiliza `ConnectionMultiplexer.Connect` para establecer la conexión a Redis con las opciones configuradas.
+4.  **Registro de Eventos:** Registra los callbacks para los eventos de conexión, configuración y errores de `StackExchange.Redis`, utilizando `ILogger` para registrar la información relevante.
+5.  **Obtención de la Base de Datos y el Suscriptor:** Una vez establecida la conexión, obtiene una instancia de la base de datos y del suscriptor, que se exponen a través de las propiedades `Database` y `Subscriber`.
+
+El manejo de SSL/TLS incluye la selección y validación del certificado, buscando en los certificados de la máquina los que cumplan con los requisitos de la cadena del certificado.
+
+## Ejemplo de Uso
+---
+
+Este ejemplo muestra cómo inicializar y utilizar `IRedisService` en una aplicación de consola a través de `IRedisServiceFactory` y la inyección de dependencias de .NET.
+
+```csharp url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/Program.cs"
+```
+
+## Conclusiones
+---
+
+`RedisService` es un componente esencial para la interacción con Redis en la aplicación, proporcionando una capa de abstracción que facilita el uso de la librería `StackExchange.Redis`, la gestión de conexiones, la configuración de SSL/TLS y el manejo de errores de conexión. Su uso permite centralizar el acceso a Redis en la aplicación y promueve la reutilización del código.
+
+## Referencias Adicionales
+---
+
+-   [Documentación oficial de StackExchange.Redis](https://stackexchange.github.io/StackExchange.Redis/)
+-   [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+-   [Patrón de inyección de dependencias en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection)

@@ -1,0 +1,142 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. La clase `SecurityOptions` proporciona un conjunto de opciones para configurar la seguridad, específicamente la autenticación y autorización basadas en JWT. Estas opciones se configuran típicamente en el archivo `appsettings.json` de la aplicación.
+
+## SecurityOptions
+---
+
+La clase `SecurityOptions` proporciona un conjunto de opciones que pueden configurarse en el archivo `appsettings.json` de tu aplicación. Estas opciones son esenciales para definir el comportamiento y la configuración de seguridad, incluyendo la autenticación JWT.
+
+```csharp url="packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security.Abstractions/Options/SecurityOptions.cs"
+```
+
+### Propiedades
+
+- **Section**
+    - Tipo: `string`
+    - Descripción: Nombre de la sección en el archivo `appsettings.json` donde se encuentran las opciones de seguridad.
+    - Valor Predeterminado: `"Security"`
+    - Uso: Se utiliza para acceder a la configuración de seguridad dentro del archivo de configuración.
+
+- **Authority**
+    - Tipo: `string`
+    - Descripción: La autoridad (issuer) que se utiliza para la autenticación. Por ejemplo, la URL de un servidor de identidad.
+    - Valor Predeterminado: `null`
+    - Uso: Se utiliza para configurar la autenticación, especialmente cuando se usa un proveedor de identidad externo.
+
+- **ClientId**
+    - Tipo: `string`
+    - Descripción: El ID del cliente utilizado para la autenticación, si es necesario.
+    - Valor Predeterminado: `null`
+    - Uso: Identifica la aplicación cliente que está solicitando la autenticación.
+
+- **IncludeErrorDetails**
+    - Tipo: `bool`
+    - Descripción: Indica si se deben incluir detalles de errores en las respuestas de autenticación.
+    - Valor Predeterminado: `false`
+    - Uso: Útil para depuración y desarrollo, pero debe desactivarse en entornos de producción para evitar exponer información sensible.
+
+- **RequireHttpsMetadata**
+    - Tipo: `bool`
+    - Descripción: Indica si se requiere el uso de HTTPS para la comunicación de metadatos de autenticación.
+    - Valor Predeterminado: `true`
+    - Uso: Es una buena práctica de seguridad requerir HTTPS en la configuración de autenticación.
+
+- **ValidateAudience**
+    - Tipo: `bool`
+    - Descripción: Indica si se debe validar el público (audience) del token JWT.
+    - Valor Predeterminado: `true`
+    - Uso: Verifica que el token JWT esté destinado a esta aplicación específica.
+
+- **ValidateIssuer**
+    - Tipo: `bool`
+    - Descripción: Indica si se debe validar el emisor (issuer) del token JWT.
+    - Valor Predeterminado: `true`
+    - Uso: Verifica que el token JWT provenga de una fuente de confianza.
+
+- **ValidateLifetime**
+    - Tipo: `bool`
+    - Descripción: Indica si se debe validar la vida útil del token JWT.
+    - Valor Predeterminado: `true`
+    - Uso:  Asegura que el token JWT no esté caducado.
+
+- **ValidIssuer**
+    - Tipo: `string`
+    - Descripción: El emisor (issuer) válido que se debe verificar contra el emisor del token.
+    - Valor Predeterminado: `null`
+    - Uso: Especifica el emisor aceptable para la autenticación.
+    - **Requerido:** Debe configurarse si `ValidateIssuer` es `true`.
+
+- **ValidAudiences**
+    - Tipo: `IEnumerable<string>`
+    - Descripción: Los públicos (audiences) válidos que se deben verificar contra el público del token.
+    - Valor Predeterminado: `null`
+    - Uso: Especifica los públicos aceptables para la autenticación.
+    - **Requerido:** Debe configurarse si `ValidateAudience` es `true`.
+
+- **Applications**
+    - Tipo: `string[]`
+    - Descripción:  Arreglo de nombres de aplicaciones a las que se les permite usar la autenticación.
+    - Valor Predeterminado: `[]`
+    - Uso: Se puede usar para configurar autenticación especifica por aplicación.
+
+- **CertificatePath**
+    - Tipo: `string`
+    - Descripción: La ruta del archivo del certificado X.509 utilizado para la firma de tokens.
+    - Valor Predeterminado: `null`
+    - Uso:  Permite la firma de tokens con un certificado específico.
+
+- **CertificatePassword**
+    - Tipo: `string`
+    - Descripción: La contraseña del certificado X.509.
+    - Valor Predeterminado: `null`
+    - Uso: Proporciona la contraseña necesaria para acceder al certificado.
+
+### Métodos
+
+La clase `SecurityOptions` proporciona métodos para cargar y validar el certificado X.509 utilizado para la firma de tokens.
+
+#### GetCertificate
+
+Este método carga el certificado X.509 desde la ruta especificada en `CertificatePath`, usando la contraseña en `CertificatePassword`.
+
+```csharp
+public X509Certificate2 GetCertificate()
+```
+
+- **Tipo de retorno:**
+    - `X509Certificate2`: El certificado X.509 para usar en la validación del token. Retorna `null` si `CertificatePath` está vacío.
+- **Excepciones:**
+    - `FileNotFoundException`: Si el archivo especificado en `CertificatePath` no se encuentra.
+     
+- **Ejemplo:**
+       ```csharp
+       var certificate = securityOptions.GetCertificate();
+       if (certificate != null) {
+           //Usar el certificado
+       }
+       ```
+
+### Validación
+
+La clase `SecurityOptions` utiliza Data Annotations para validar las propiedades requeridas como `ValidIssuer` y `ValidAudiences`. Esto asegura que estas configuraciones estén presentes y sean válidas cuando se cargan.
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones de seguridad:
+
+```json url="examples/CodeDesignPlus.Net.Security.Sample/src/CodeDesignPlus.Net.Security.Sample/appsettings.json"
+```
+
+## Referencias Adicionales
+---
+
+- [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)
+- [Patrón de opciones en .NET](https://docs.microsoft.com/en-us/dotnet/core/extensions/options)
+- [Documentación de JWT (JSON Web Tokens)](https://jwt.io/introduction)
+- [Documentación de X509 Certificates](https://docs.microsoft.com/en-us/dotnet/api/system.security.cryptography.x509certificates?view=net-7.0)

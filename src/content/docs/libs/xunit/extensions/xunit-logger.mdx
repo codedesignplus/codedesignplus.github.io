@@ -1,0 +1,213 @@
+---
+title: xUnit Logger
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Este conjunto de clases y extensiones proporciona una implementación de logging para pruebas unitarias con xUnit, que permite dirigir los mensajes de log directamente a la salida de la prueba. Esto facilita la depuración y el seguimiento del comportamiento de las aplicaciones durante las pruebas.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Output/Loggers/XunitExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.Logging`: Necesario para las interfaces y enumeraciones de logging (`ILogger`, `ILoggerProvider`, `ILoggingBuilder`, `LogLevel`, `EventId`, `IExternalScopeProvider`).
+- `Microsoft.Extensions.DependencyInjection`: Necesario para usar `IServiceCollection` y `ServiceProvider`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration` y para leer configuración
+- `xunit`: Necesario para `ITestOutputHelper`.
+- `System`: Necesario para `Func`, `StringBuilder`, `IDisposable`, etc.
+
+## Escenarios de uso
+---
+Este conjunto de clases es particularmente útil en pruebas unitarias (xUnit) donde se necesita:
+- Capturar mensajes de log generados durante la ejecución de las pruebas.
+- Verificar que los componentes generan los logs esperados.
+- Examinar los logs de forma sencilla y directa en la salida de las pruebas.
+- Integrar el logging de la aplicación con las pruebas unitarias sin necesidad de configuraciones complejas.
+- Probar componentes de la capa de infraestructura que utilizan logging.
+
+## Beneficios
+---
+
+- **Integración sencilla:** Se integra fácilmente con las pruebas xUnit al implementar `ILogger` y `ILoggerProvider`.
+- **Salida directa:** Los mensajes de log se escriben directamente en la salida de la prueba, lo que facilita la lectura y depuración.
+- **Soporte de scopes:** Admite el uso de scopes para organizar los mensajes de log.
+- **Verificación directa:** Permite verificar la lógica del logger en las pruebas.
+- **Personalizable:** Posibilidad de ajustar el comportamiento del logger a través de la configuración.
+
+## Ejemplo Práctico
+---
+Este ejemplo muestra cómo configurar y usar el `XunitLoggerExtensions` en una prueba unitaria:
+
+<Tabs>
+    <TabItem label="LoggingTests">
+
+    ```csharp
+    using Xunit;
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.DependencyInjection;
+    using CodeDesignPlus.Net.xUnit.Helpers.Loggers;
+    using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Configuration;
+
+    public class LoggingTests
+    {
+        private readonly ITestOutputHelper _output;
+
+        public LoggingTests(ITestOutputHelper output)
+        {
+            _output = output;
+        }
+
+        [Fact]
+        public void MyService_LogsMessages_Successfully()
+        {
+            // Arrange
+        var host = Host.CreateDefaultBuilder()
+            .ConfigureLogging((loggingBuilder) =>
+            {
+                loggingBuilder.AddProvider(new XunitLoggerProvider(_output,loggingBuilder.UsesScopes()));
+            })
+            .Build();
+
+            var logger = host.Services.GetRequiredService<ILogger<MyService>>();
+
+            var service = new MyService(logger);
+
+            // Act
+            service.DoSomething();
+
+
+            using (_logger.BeginScope("my_scope_1"))
+            {
+                _logger.LogInformation("My message log with scope");
+                using (_logger.BeginScope("my_scope_2"))
+                {
+                _logger.LogWarning("My message log with scope 2");
+                }
+            }
+        }
+    }
+
+    ```
+    </TabItem>
+
+    <TabItem label="MyService">
+
+    ```csharp
+    public class MyService
+    {
+        private readonly ILogger<MyService> _logger;
+
+        public MyService(ILogger<MyService> logger)
+        {
+            _logger = logger;
+        }
+
+        public void DoSomething()
+        {
+            _logger.LogInformation("Doing something...");
+            _logger.LogDebug("Message debug");
+            try
+            {
+                throw new Exception("error");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "My error log");
+            }
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+En este ejemplo:
+
+1. Se crea un `HostBuilder` con la configuración básica de logging.
+2. Se agrega el proveedor `XunitLoggerProvider` para redireccionar los logs a la salida de xUnit.
+3. Se crea un logger de tipo `ILogger<MyService>`.
+4. Se instancia la clase `MyService` con el logger creado.
+5. Se ejecuta la acción `DoSomething` de la clase `MyService` que escribe diferentes tipos de logs.
+6. Se crea un scope y se realiza un log de información
+7. Se crea otro scope anidado y se realiza un log de warning
+8. La salida del test en xUnit reflejará todos los logs generados
+
+## Métodos de extensión
+---
+
+La clase `XunitLoggerExtensions` proporciona un método de extensión llamado `UsesScopes` que permite determinar si un `ILoggingBuilder` utiliza scopes. A continuación se detallan los aspectos clave de este método:
+
+### UsesScopes
+
+El método `UsesScopes` permite determinar si un `ILoggingBuilder` utiliza scopes.
+
+```csharp
+public static bool UsesScopes(this ILoggingBuilder builder)
+```
+- **Parámetros:**
+    - `builder`: El `ILoggingBuilder` que se va a analizar.
+- **Tipo de retorno:**
+    - `bool`: Indica si el `ILoggingBuilder` utiliza scopes (`true`) o no (`false`).
+- **Ejemplos de código:**
+    ```csharp
+    var host = Host.CreateDefaultBuilder()
+       .ConfigureLogging((loggingBuilder) =>
+       {
+          var usesScopes = loggingBuilder.UsesScopes();
+          //...
+       })
+       .Build();
+    ```
+
+## Clases
+---
+
+La librería `CodeDesignPlus.Net.xUnit.Helpers.Loggers` proporciona las siguientes clases para la implementación de logging en pruebas unitarias:
+
+### XunitLogger
+
+Implementación de `ILogger` que escribe los logs a la salida de xUnit.
+
+- **Constructores:**
+    ```csharp
+    public XunitLogger(ITestOutputHelper output, IExternalScopeProvider scopes, string categoryName, bool useScopes)
+    ```
+    - `output`:  ITestOutputHelper para escribir a la salida de la prueba.
+    - `scopes`: El proveedor de scopes.
+    - `categoryName`: Nombre de la categoría del logger.
+    - `useScopes`: Indica si se usan scopes.
+
+- **Métodos:**
+   - `IsEnabled(LogLevel logLevel)`: Indica si un nivel de log está habilitado.
+   - `BeginScope<TState>(TState state)`: Inicia un scope.
+   - `Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)`: Escribe el log a la salida, con la información formateada.
+
+### XunitLoggerProvider
+
+Implementación de `ILoggerProvider` que crea instancias de `XunitLogger`.
+
+- **Constructores:**
+    ```csharp
+    public XunitLoggerProvider(ITestOutputHelper output, bool useScopes)
+    ```
+    - `output`:  ITestOutputHelper para escribir a la salida de la prueba.
+    - `useScopes`: Indica si se usan scopes.
+- **Métodos:**
+     - `CreateLogger(string categoryName)`: Crea una instancia de `XunitLogger`.
+     - `Dispose()`: Elimina el proveedor de logs.
+     - `SetScopeProvider(IExternalScopeProvider scopes)`: Asigna el proveedor de scopes.
+
+## Conclusiones
+---
+- Las clases `XunitLogger`, `XunitLoggerProvider` y la extensión `UsesScopes` permiten una integración sencilla del logging en las pruebas unitarias de xUnit.
+- Los logs se escriben directamente a la salida de xUnit, lo que facilita la depuración.
+- Se admite el uso de scopes para organizar los mensajes de log.
+- La configuración del logger se realiza de manera flexible mediante la implementación de `ILoggerProvider`.
+- Es importante utilizar `UsesScopes` para determinar si se debe usar los scopes.
+
+## Referencias
+---
+- [Microsoft.Extensions.Logging Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging?view=dotnet-plat-ext-8.0)
+- [xUnit Documentation](https://xunit.net/)
+- [Logging in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/logging?tabs=command-line)

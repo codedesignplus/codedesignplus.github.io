@@ -1,0 +1,186 @@
+---
+title: Configuration Util
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La clase `ConfigurationUtil` proporciona métodos utilitarios para facilitar la creación de instancias de `IConfiguration` en pruebas unitarias usando xUnit. Su propósito principal es permitir la configuración de aplicaciones basada en objetos de configuración simples, simulando el uso de archivos `appsettings.json`.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit/src/CodeDesignPlus.Net.xUnit/Extensions/ConfigurationUtil.cs"
+```
+
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration` y la construcción de la configuración.
+- `System.Text.Json`: Necesario para serializar objetos a JSON.
+- `System.IO`: Necesario para el uso de `MemoryStream`.
+- `System.Text`: Necesario para la codificación UTF8.
+
+## Escenarios de uso
+---
+Esta clase es particularmente útil en pruebas unitarias (xUnit) donde se necesita:
+- Simular la configuración de una aplicación sin la necesidad de archivos `appsettings.json`.
+- Probar el comportamiento de componentes que dependen de la configuración de la aplicación.
+- Configurar diferentes escenarios de prueba con diferentes configuraciones de forma rápida y controlada.
+
+## Beneficios
+---
+
+- **Flexibilidad:** Permite definir la configuración de forma programática usando objetos C#.
+- **Facilidad de uso:** Simplifica la creación de instancias `IConfiguration` para pruebas, evitando la necesidad de cargar archivos de configuración desde el disco.
+- **Aislamiento:** Permite que las pruebas sean independientes de la configuración real de la aplicación, lo cual es crucial para pruebas unitarias.
+
+## Ejemplo Práctico
+---
+Este ejemplo muestra cómo usar `ConfigurationUtil` para configurar la inyección de dependencias:
+
+<Tabs>
+    <TabItem label="ExampleServiceTests">
+    
+    ```csharp
+    using Xunit;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Configuration;
+    using CodeDesignPlus.Net.xUnit.Helpers;
+
+    public class ExampleServiceTests
+    {
+        [Fact]
+        public void MyService_Should_BeConfiguredCorrectly()
+        {
+            // Arrange: Define un objeto de configuración simple
+            var configSettings = new 
+            {
+                MyService = new
+                {
+                    ApiKey = "test-key",
+                    Timeout = 10
+                }
+            };
+
+            // Usamos ConfigurationUtil para crear un IConfiguration
+            var configuration = ConfigurationUtil.GetConfiguration(configSettings);
+
+            // Aquí puedes verificar que la configuración es correcta
+            Assert.Equal("test-key", configuration["MyService:ApiKey"]);
+            Assert.Equal("10", configuration["MyService:Timeout"]);
+
+            // Luego, puedes usar esta configuración para configurar tus servicios
+            var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<MyService>(sp => new MyService(configuration));
+
+            var serviceProvider = serviceCollection.BuildServiceProvider();
+
+            // Act: Obtén la instancia de MyService
+            var myService = serviceProvider.GetRequiredService<MyService>();
+            
+            // Assert: Verifica que la configuración se haya aplicado correctamente
+            Assert.Equal("test-key", myService.ApiKey);
+            Assert.Equal(10, myService.Timeout);
+        }
+    }
+    ```
+    </TabItem>
+
+    <TabItem label="MyService">
+    
+    ```csharp
+    
+    public class MyService 
+    {
+        public string ApiKey {get;}
+        public int Timeout {get;}
+
+        public MyService(IConfiguration configuration)
+        {
+            ApiKey = configuration["MyService:ApiKey"];
+            Timeout =  int.Parse(configuration["MyService:Timeout"]);
+        }
+    }
+    ```
+    </TabItem>
+</Tabs>
+
+
+En este ejemplo:
+
+1. Definimos una clase de configuración llamada `MyService` que obtiene sus propiedades de la configuración.
+2. Creamos un objeto de configuración anonimo llamado `configSettings`
+3. Usamos  `ConfigurationUtil.GetConfiguration` para crear un `IConfiguration` a partir del objeto anónimo `configSettings`.
+4. Se agrega `MyService` como singleton utilizando la configuración creada.
+5. Verificamos que la configuración en el objeto `MyService` es la que se esperaba
+
+## Métodos de extensión
+---
+
+La clase `ConfigurationUtil` proporciona un método estático para crear instancias de `IConfiguration` a partir de objetos de configuración simples. A continuación se detallan los métodos disponibles:
+
+### GetConfiguration
+
+El método `GetConfiguration` permite crear una instancia de `IConfiguration` a partir de un objeto de configuración. Este método es estático y no requiere instanciar la clase `ConfigurationUtil`.
+
+```csharp
+public static IConfiguration GetConfiguration(object appSettings = null)
+```
+- **Parámetros:**
+    - `appSettings`: Un objeto que representa la configuración de la aplicación. Este objeto será serializado a JSON y utilizado para construir la configuración. El valor por defecto es `null`.
+- **Tipo de retorno:**
+    - `IConfiguration`: Una instancia de `IConfiguration` que contiene la configuración serializada del objeto `appSettings`.
+- **Ejemplos de código:**
+
+    Los siguientes ejemplos muestran cómo usar el método `GetConfiguration` con diferentes tipos de objetos de configuración.
+
+    <Tabs>
+        <TabItem label="Ejemplo 1">
+
+        Este ejemplo muestra cómo usar `GetConfiguration` sin un objeto de configuración. En este caso, se crea una instancia de `IConfiguration` vacía.
+
+        ```csharp
+        var config = ConfigurationUtil.GetConfiguration();
+        Assert.NotNull(config); // Verifica que no es nulo
+        ```
+        </TabItem>
+
+        <TabItem label="Ejemplo 2">
+
+        Este ejemplo muestra cómo usar `GetConfiguration` con un objeto de configuración simple:
+
+        ```csharp
+        var config = ConfigurationUtil.GetConfiguration(new { MyKey = "my value
+        Assert.Equal("my value", config["MyKey"]);
+        ```
+        </TabItem>
+
+        <TabItem label="Ejemplo 3">
+
+        Este ejemplo muestra cómo usar `GetConfiguration` con un objeto de configuración anidado:
+
+        ```csharp
+        var config = ConfigurationUtil.GetConfiguration(new {
+            Logging = new {
+                LogLevel = new {
+                    Default = "Information"
+                }
+            }
+        });
+        Assert.Equal("Information", config["Logging:LogLevel:Default"]);
+        ```
+        </TabItem>
+
+    </Tabs>
+
+
+## Conclusiones
+---
+- La clase `ConfigurationUtil` proporciona una forma sencilla y eficiente de crear instancias de `IConfiguration` en pruebas unitarias.
+- Permite una configuración basada en objetos, evitando la necesidad de archivos de configuración.
+- Facilita la escritura de pruebas más limpias y controladas.
+- Es esencial usar esta herramienta en pruebas que dependan de `IConfiguration`, ya que te permitirá mantener la prueba aislada de la configuración de la aplicación.
+- Es importante considerar las posibles excepciones al serializar objetos complejos.
+
+## Referencias
+---
+- [Microsoft.Extensions.Configuration Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration?view=dotnet-plat-ext-8.0)
+- [Microsoft.Extensions.Configuration.Json Documentation](https://learn.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration.json?view=dotnet-plat-ext-8.0)
+- [System.Text.Json Documentation](https://learn.microsoft.com/en-us/dotnet/api/system.text.json?view=net-8.0)

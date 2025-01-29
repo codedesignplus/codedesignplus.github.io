@@ -1,0 +1,144 @@
+---
+title: Swagger Extensions
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+La clase `SwaggerExtensions` proporciona métodos de extensión para configurar y habilitar Swagger en aplicaciones ASP.NET Core, simplificando el proceso de documentación de APIs REST. Su objetivo principal es facilitar la configuración de Swagger, incluyendo la definición de información general de la API, la configuración de la autenticación y la habilitación de la interfaz de usuario de Swagger UI.
+
+```csharp url="packages/CodeDesignPlus.Net.Microservice.Commons/src/CodeDesignPlus.Net.Microservice.Commons/EntryPoints/Rest/Swagger/SwaggerExtensions.cs"
+```
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection` y el registro de servicios en el contenedor de inyección de dependencias.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration` y la lectura de la configuración de la aplicación.
+- `Microsoft.AspNetCore.Builder`: Necesario para la interfaz `IApplicationBuilder` y el registro de middleware.
+- `Swashbuckle.AspNetCore`: Necesario para la funcionalidad de Swagger/OpenAPI en ASP.NET Core.
+- `CodeDesignPlus.Net.Core.Abstractions`: Necesario para la interfaz `CoreOptions` y la configuración de la API.
+- `CodeDesignPlus.Net.Core.Exceptions`: Necesario para la excepción `CoreException`.
+
+## Escenarios de uso
+---
+
+Estos métodos de extensión son particularmente útiles en aplicaciones que:
+
+- Implementan APIs REST.
+- Desean generar documentación interactiva para sus APIs usando Swagger.
+- Necesitan configurar la autenticación con JWT (JSON Web Tokens) en Swagger.
+- Requieren una configuración sencilla y consistente de Swagger en su aplicación.
+- Quieren incluir comentarios XML en la documentación de la API.
+
+## Beneficios
+---
+
+- **Configuración simplificada:** Reduce la cantidad de código necesario para configurar Swagger en aplicaciones ASP.NET Core.
+- **Configuración centralizada:** Permite centralizar la configuración de Swagger utilizando opciones de configuración.
+- **Soporte de Autenticación JWT:** Configura automáticamente la autenticación JWT en Swagger.
+- **Integración de comentarios XML:** Permite incluir los comentarios XML de la documentación del código en la documentación de Swagger.
+- **Consistencia:** Garantiza una configuración consistente de Swagger en toda la aplicación.
+
+## Ejemplo Práctico
+---
+
+Para usar estos métodos de extensión en tu aplicación, debes agregarlos al `IServiceCollection` en el método `ConfigureServices` y al `IApplicationBuilder` en el método `Configure` o `MapEndpoints` de tu clase `Program.cs`.
+
+```csharp
+// En tu archivo Program.cs
+using CodeDesignPlus.Net.Microservice.Commons.EntryPoints.Rest.Swagger;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Agregar servicios necesarios para ASP.NET Core
+builder.Services.AddControllers();
+
+// Agrega la configuración de Swagger utilizando AddCoreSwagger
+builder.Services.AddCoreSwagger<Program>(builder.Configuration);
+
+
+var app = builder.Build();
+
+// Habilitar Swagger y SwaggerUI utilizando UseCoreSwagger
+app.UseCoreSwagger();
+app.UseRouting();
+app.MapControllers();
+
+
+app.Run();
+```
+Es importante que definas la sección `Core` configuracion en el `appsettings.json`
+
+```json url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/appsettings.json"
+```
+
+## Métodos de extensión
+---
+
+La clase `SwaggerExtensions` proporciona dos métodos de extensión para configurar y habilitar Swagger en aplicaciones ASP.NET Core:
+
+### AddCoreSwagger
+**Type:** `public static IServiceCollection AddCoreSwagger<TProgram>(this IServiceCollection services, IConfiguration configuration) where TProgram : class`
+
+El método de extensión AddCoreSwagger se encarga de configurar Swagger en la aplicación. Durante su ejecución, registra todos los servicios necesarios y ajusta múltiples aspectos críticos. Primero, extrae la información de la API, como el título, la versión, la descripción y los detalles de contacto, directamente desde la configuración proporcionada. Además, integra la documentación de comentarios XML, permitiendo una mayor claridad y detalle en la documentación generada automáticamente. Finalmente, configura la autenticación JWT, asegurando que las comunicaciones y operaciones dentro de la API sean seguras y estén debidamente autenticadas.
+
+- **Parámetros:**
+    - `services`: La instancia de `IServiceCollection` a la cual se agregarán los servicios de Swagger.
+    - `configuration`: La instancia de `IConfiguration` que contiene la configuración de la aplicación.
+    - `TProgram`: El tipo de la clase program de tu proyecto, esta se utiliza para obtener el nombre del Assembly y la ruta al archivo XML.
+- **Tipo de retorno:**
+   -  `IServiceCollection`: La misma instancia de `IServiceCollection` para permitir el encadenamiento de llamadas a métodos.
+- **Excepciones:**
+   - `ArgumentNullException`: Se lanza si alguno de los parametros `services` o `configuration` son nulos.
+   - `CoreException`: Se lanza si no se encuentra la sección "Core" en la configuración de la aplicación.
+   
+- **Ejemplo de Código:**
+    ```csharp
+    // Dentro de ConfigureServices en Startup.cs
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddControllers();
+        // Configura Swagger
+        services.AddCoreSwagger<Program>(Configuration);
+    }
+    ```
+
+### UseCoreSwagger(args...)
+**Type:** `public static IApplicationBuilder UseCoreSwagger(this IApplicationBuilder app)`
+
+Este método de extensión habilita el middleware de Swagger en el pipeline de la aplicación, incluyendo la interfaz de usuario de Swagger UI. Configura el endpoint de Swagger para que utilice la configuración de la API.
+
+- **Parámetros:**
+    - `app`: La instancia de `IApplicationBuilder` a la cual se agregarán los middlewares de Swagger.
+- **Tipo de retorno:**
+   -  `IApplicationBuilder`: La misma instancia de `IApplicationBuilder` para permitir el encadenamiento de llamadas a métodos.
+- **Excepciones:**
+   - `ArgumentNullException`: Se lanza si la instancia de `app` es nula.
+- **Ejemplo de Código:**
+    ```csharp
+    // Dentro de Configure en Startup.cs
+    public void Configure(IApplicationBuilder app)
+    {
+        // Habilitar Swagger
+        app.UseCoreSwagger();
+    }
+    ```
+
+## Conclusiones
+---
+
+Los métodos de extensión `AddCoreSwagger` y `UseCoreSwagger` simplifican la configuración de Swagger en aplicaciones ASP.NET Core. Al centralizar la configuración y automatizar el registro de servicios y middleware, estos métodos reducen el código repetitivo y mejoran la consistencia en la documentación de la API.  Se recomienda utilizar estas extensiones en proyectos que requieran documentación de APIs REST con Swagger.
+
+## Referencias
+---
+
+- [Documentación oficial de Swagger](https://swagger.io/docs/)
+- [Documentación oficial de Swashbuckle.AspNetCore](https://github.com/domaindrivendev/Swashbuckle.AspNetCore)
+- [Documentación oficial de Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/dotnet/api/microsoft.extensions.dependencyinjection)
+- [Documentación oficial de Microsoft.Extensions.Configuration](https://docs.microsoft.com/dotnet/api/microsoft.extensions.configuration)
+- [Documentación oficial de Microsoft.AspNetCore.Builder](https://docs.microsoft.com/dotnet/api/microsoft.aspnetcore.builder)
+- [Documentación de CodeDesignPlus.Net.Core.Abstractions](https://github.com/CodeDesignPlus/CodeDesignPlus.Net.Core)
+- [Documentación de CodeDesignPlus.Net.Core.Exceptions](https://github.com/CodeDesignPlus/CodeDesignPlus.Net.Exceptions)

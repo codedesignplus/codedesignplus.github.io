@@ -1,0 +1,47 @@
+---
+title: Options
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El patrón de opciones es una técnica común en aplicaciones .NET que permite centralizar la configuración en un solo lugar, facilitando la gestión y validación de las opciones de configuración. La clase EFCoreOptions proporciona un conjunto de opciones que pueden configurarse en el archivo appsettings.json de tu aplicación. Estas opciones son esenciales para definir el comportamiento y la configuración de EFCore en tu proyecto.
+
+## EFCoreOptions
+---
+
+La clase EFCoreOptions permite configurar aspectos clave relacionados con la habilitación de EFCore y el registro de repositorios en el contenedor de dependencias.
+
+```csharp url="packages/CodeDesignPlus.Net.EFCore/src/CodeDesignPlus.Net.EFCore.Abstractions/Options/EFCoreOptions.cs"
+```
+
+### Propiedades
+
+- **Enable**
+  - Tipo: bool
+  - Descripción: Indica si EFCore está habilitado para su uso en la aplicación.
+  - Valor Predeterminado: true
+
+- **RegisterRepositories**
+  - Tipo: bool
+  - Descripción: Especifica si los repositorios deben registrarse automáticamente en el contenedor de dependencias.
+  - Valor Predeterminado: true
+
+
+## Ejemplo de Configuración
+---
+
+A continuación se muestra un ejemplo de archivo `appsettings.json` que configura las opciones requeridas:
+
+```json
+{
+  "EFCore": {
+    "Enable": true,
+    "RegisterRepositories": true
+  }
+}
+```
+
+## Conclusiones
+---
+
+Las opciones de configuración son una forma eficaz de centralizar y gestionar la configuración de `CodeDesignPlus.Net.EFCore` en tu aplicación. Al definir las opciones en un solo lugar, puedes garantizar que la configuración sea coherente y fácil de mantener.

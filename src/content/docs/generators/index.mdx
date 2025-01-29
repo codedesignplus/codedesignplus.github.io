@@ -1,0 +1,102 @@
+---
+title: Overview
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En el ecosistema del desarrollo de software, la eficiencia y la consistencia son claves para el éxito. Los generadores de código son herramientas poderosas que automatizan la creación de estructuras de proyectos, componentes y configuraciones, ahorrando tiempo y reduciendo la posibilidad de errores. En este artículo, te introduciremos a Yeoman y a los generadores de CodeDesignPlus, que te ayudarán a impulsar tu desarrollo .NET.
+
+## ¿Qué es Yeoman?
+---
+
+Yeoman es un sistema de scaffolding, una herramienta que facilita la creación de proyectos o partes de ellos mediante la generación automática de código y la estructura de carpetas necesarias. Funciona como un sistema de plantillas, donde los desarrolladores pueden crear "generadores" que se ejecutan desde la línea de comandos. Estos generadores realizan tareas como:
+
+*   **Creación de Estructura de Proyectos:** Genera la estructura inicial de un proyecto, incluyendo carpetas, archivos de configuración y dependencias.
+*   **Generación de Código Boilerplate:** Crea componentes reutilizables, como controladores, modelos, servicios, etc., reduciendo la necesidad de escribir código repetitivo.
+*   **Configuración de Herramientas:** Configura automáticamente herramientas de desarrollo, como linters, formateadores y sistemas de pruebas.
+*   **Automatización de Tareas:**  Simplifica tareas comunes del desarrollo, como la creación de pruebas, el despliegue y la integración continua.
+
+Yeoman es compatible con una amplia gama de lenguajes y frameworks, lo que lo convierte en una herramienta versátil y útil para cualquier desarrollador.
+
+## ¿Qué son los Generadores CodeDesignPlus?
+---
+
+Los generadores CodeDesignPlus son extensiones de Yeoman diseñadas específicamente para el desarrollo de aplicaciones .NET que siguen los principios y patrones establecidos por CodeDesignPlus. Estos generadores se enfocan en facilitar la creación de aplicaciones con una arquitectura limpia, escalable y mantenible.
+
+Actualmente, CodeDesignPlus ofrece los siguientes generadores:
+
+1.  `codedesignplus:microservice`: Para la creación de microservicios con un enfoque en Domain-Driven Design (DDD), Command Query Responsibility Segregation (CQRS) y arquitectura orientada a eventos (Event-Driven).
+
+Con estos generadores, podrás crear rápidamente microservicios y bibliotecas con la estructura, la lógica y las configuraciones recomendadas por CodeDesignPlus, permitiendo que te enfoques en la lógica de negocio y no en los detalles técnicos.
+
+## Instalación de Yeoman y el Generador CodeDesignPlus
+---
+Para empezar a utilizar los generadores CodeDesignPlus, necesitas tener instalado Node.js y npm (Node Package Manager). Sigue estos pasos:
+
+1.  **Instala Node.js y npm:** Descarga e instala Node.js desde el sitio oficial [nodejs.org](https://nodejs.org). npm se instala automáticamente con Node.js.
+2.  **Instala Yeoman globalmente:** Abre tu terminal y ejecuta el siguiente comando:
+    ```bash
+    npm install -g yo
+    ```
+    `yo` es el ejecutable de Yeoman que gestiona los generadores.
+3.  **Instala el generador CodeDesignPlus globalmente:** Ejecuta el siguiente comando:
+    ```bash
+    npm install -g generator-codedesignplus
+    ```
+    `generator-codedesignplus` contiene los generadores específicos de CodeDesignPlus, como `codedesignplus:microservice` y `codedesignplus:library`.
+
+Una vez que has instalado Yeoman y el generador, puedes ejecutar los comandos de CodeDesignPlus desde la línea de comandos en la raíz de tu proyecto.
+
+## Generadores CodeDesignPlus
+---
+
+CodeDesignPlus ofrece generadores especializados para la creación de microservicios y bibliotecas .NET. Estos generadores te permiten crear proyectos con una arquitectura sólida y basada en buenas prácticas de desarrollo. A continuación, se describen los generadores disponibles:
+
+### `codedesignplus:microservice`
+
+Este generador te permite crear microservicios basados en el arquetipo `CodeDesignPlus.Net.Microservice`. Este arquetipo promueve las siguientes prácticas:
+
+*   **Arquitectura DDD:**  Fomenta la modelado de software basado en el dominio del negocio.
+*   **CQRS:**  Separa las responsabilidades de lectura y escritura para optimizar cada lado.
+*   **Event-Driven:**  Permite que los componentes se comuniquen mediante eventos, mejorando el desacoplamiento.
+*   **Ports & Adapters:**  Desacopla la lógica de la aplicación de la infraestructura.
+
+
+<LinkCard title="Aprender más sobre el generador Microservice" href="/generators/microservice" />
+
+
+## Uso de los Generadores
+---
+
+Para utilizar los generadores, navega a la carpeta donde deseas crear tu microservicio o librería y ejecuta el siguiente comando:
+
+```bash
+yo codedesignplus:<generador> <comando> [opciones]
+```
+
+Donde:
+*   `<generador>` es el nombre del generador, como `microservice` o `library`.
+*   `<comando>` es el comando específico que quieres ejecutar (p. ej., `microservice`, `aggregate`, etc.).
+*   `[opciones]` son opciones adicionales para configurar el generador (p. ej., `--organization`, `--microservice`, etc.).
+
+Por ejemplo, para crear un nuevo microservicio, utilizarías:
+
+```bash
+yo codedesignplus:microservice microservice --organization "Acme" --microservice "User" ... (otras opciones)
+```
+Consulta la documentación específica de cada generador para conocer todos los comandos y opciones disponibles.
+
+## Beneficios de Usar los Generadores
+---
+
+*   **Aumento de la Productividad:**  Automatiza tareas repetitivas, permitiéndote centrarte en la lógica de negocio.
+*   **Consistencia del Código:** Genera código siguiendo las mismas convenciones y patrones, facilitando el mantenimiento.
+*   **Reducción de Errores:** Minimiza la posibilidad de errores al generar estructuras y código de forma automática.
+*   **Rápida Puesta en Marcha:** Acelera el inicio de nuevos proyectos con configuraciones y estructuras predefinidas.
+*   **Adopción de Buenas Prácticas:** Fomenta el uso de arquitecturas limpias, escalables y mantenibles.
+
+## Conclusión
+---
+
+Los generadores CodeDesignPlus para Yeoman son herramientas valiosas para cualquier desarrollador .NET que busca mejorar su productividad, la calidad del código y la adopción de buenas prácticas de desarrollo. Con la capacidad de crear microservicios y librerías de forma rápida y sencilla, podrás construir aplicaciones más robustas y eficientes.

@@ -1,0 +1,393 @@
+---
+title: DomainGuard
+---
+
+La clase `DomainGuard` ofrece métodos de extensión específicos para implementar cláusulas de guardia en la capa de dominio. Su propósito principal es garantizar que los objetos de dominio se mantengan en un estado consistente al aplicar las reglas invariantes del negocio.
+
+`DomainGuard` opera bajo los principios del diseño orientado al dominio (DDD), asegurando que las validaciones críticas se ejecuten dentro del contexto del dominio. Esto permite encapsular las reglas de negocio fundamentales y mantener la integridad del modelo de dominio, incluso frente a cambios en otras capas.
+
+```csharp url="packages/CodeDesignPlus.Net.Exceptions/src/CodeDesignPlus.Net.Exceptions/Guards/DomainGuard.cs"
+
+```
+
+## Métodos de Extensión
+
+La clase `DomainGuard` proporciona los siguientes métodos de extensión para realizar validaciones en la capa de dominio, utilizando códigos de error estructurados.
+
+### IsNull
+**Type:** `public static void IsNull(object value, string error)`
+
+Lanza una excepción si el valor especificado es nulo.
+
+
+
+```csharp
+public class Pedido
+{
+    public Pedido(Cliente cliente)
+    {
+        DomainGuard.IsNull(cliente, "101: El cliente no puede ser nulo en un pedido.");
+        Cliente = cliente;
+    }
+    public Cliente Cliente {get;}
+}
+```
+
+### IsNotNull
+**Type:** `public static void IsNotNull(object value, string error)`
+
+Lanza una excepción si el valor especificado no es nulo.
+
+
+
+```csharp
+public class Producto
+{
+   public Producto(Guid id)
+    {
+        DomainGuard.IsNotNull(id, "102: El ID del producto no puede ser nulo.");
+        Id = id;
+    }
+    public Guid Id {get;}
+}
+```
+
+### IsNullOrEmpty
+**Type:** `public static void IsNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o vacía.
+
+
+
+```csharp
+public class Categoria
+{
+  public Categoria(string nombre)
+    {
+        DomainGuard.IsNullOrEmpty(nombre, "103: El nombre de la categoría no puede estar vacío.");
+        Nombre = nombre;
+    }
+    public string Nombre { get; }
+}
+```
+
+### IsNotNullOrEmpty
+**Type:** `public static void IsNotNullOrEmpty(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o vacía.
+
+
+
+```csharp
+public class Direccion
+{
+  public Direccion(string calle)
+    {
+        DomainGuard.IsNotNullOrEmpty(calle, "104: La calle no puede ser nula o vacía.");
+        Calle = calle;
+    }
+    public string Calle { get; }
+}
+```
+
+### IsNullOrWhiteSpace
+**Type:** `public static void IsNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada es nula o contiene solo espacios en blanco.
+
+
+
+```csharp
+public class Email
+{
+   public Email(string value)
+    {
+        DomainGuard.IsNullOrWhiteSpace(value, "105: El email no puede estar vacío o contener solo espacios en blanco.");
+        Value = value;
+    }
+     public string Value { get; }
+}
+```
+
+### IsNotNullOrWhiteSpace
+**Type:** `public static void IsNotNullOrWhiteSpace(string value, string error)`
+
+Lanza una excepción si la cadena especificada no es nula o no contiene solo espacios en blanco.
+
+
+
+```csharp
+public class CodigoPostal
+{
+    public CodigoPostal(string value)
+    {
+        DomainGuard.IsNotNullOrWhiteSpace(value, "106: El código postal no puede ser nulo o solo espacios en blanco.");
+         Value = value;
+    }
+     public string Value { get; }
+}
+```
+
+### IsTrue
+**Type:** `public static void IsTrue(bool value, string error)`
+
+Lanza una excepción si el valor especificado es verdadero.
+
+
+
+```csharp
+public class Envio
+{
+   public Envio(bool isValido)
+    {
+        DomainGuard.IsTrue(isValido == false , "107: El envio no es valido.");
+       IsValido = isValido;
+    }
+    public bool IsValido { get; }
+}
+```
+
+### IsFalse
+**Type:** `public static void IsFalse(bool value, string error)`
+
+Lanza una excepción si el valor especificado es falso.
+
+
+
+```csharp
+public class Pago
+{
+    public Pago(bool pagoRealizado)
+    {
+       DomainGuard.IsFalse(pagoRealizado == true, "108: El pago no se ha realizado correctamente.");
+       PagoRealizado = pagoRealizado;
+    }
+    public bool PagoRealizado { get; }
+}
+```
+
+### IsGreaterThan
+**Type:** `public static void IsGreaterThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor que el valor de comparación.
+
+
+
+```csharp
+public class Edad
+{
+   public Edad(int value)
+    {
+        DomainGuard.IsGreaterThan(value, 0, "109: La edad debe ser mayor que 0.");
+         Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### IsGreaterThanOrEqual
+**Type:** `public static void IsGreaterThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es mayor o igual que el valor de comparación.
+
+
+
+```csharp
+public class Descuento
+{
+    public Descuento(decimal value)
+    {
+        DomainGuard.IsGreaterThanOrEqual(value, 0, "110: El descuento no puede ser menor a 0.");
+        Value = value;
+    }
+     public decimal Value { get; }
+}
+```
+
+### IsLessThan
+**Type:** `public static void IsLessThan<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor que el valor de comparación.
+
+
+
+```csharp
+public class Stock
+{
+  public Stock(int value)
+    {
+        DomainGuard.IsLessThan(value, 1000, "111: El stock no puede ser mayor a 1000.");
+         Value = value;
+    }
+    public int Value { get; }
+}
+```
+
+### IsLessThanOrEqual
+**Type:** `public static void IsLessThanOrEqual<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no es menor o igual que el valor de comparación.
+
+
+
+```csharp
+public class Peso
+{
+   public Peso(decimal value)
+    {
+        DomainGuard.IsLessThanOrEqual(value, 1000, "112: El peso no puede ser mayor a 1000.");
+        Value = value;
+    }
+     public decimal Value { get; }
+}
+```
+
+### AreEquals
+**Type:** `public static void AreEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados no son iguales.
+
+
+
+```csharp
+public class Clave
+{
+    public Clave(string value, string confirmValue)
+    {
+         DomainGuard.AreEquals(value, confirmValue, "113: Las claves no coinciden.");
+         Value = value;
+    }
+     public string Value { get; }
+}
+```
+
+### AreNotEquals
+**Type:** `public static void AreNotEquals<T>(T value, T compare, string error) where T : IComparable<T>`
+
+Lanza una excepción si los valores especificados son iguales.
+
+
+
+```csharp
+public class Id
+{
+    public Id(Guid value, Guid newId)
+    {
+       DomainGuard.AreNotEquals(value, newId, "114: Los ID son iguales");
+        Value = value;
+    }
+     public Guid Value { get; }
+}
+```
+
+### IsInRange
+**Type:** `public static void IsInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado no está dentro del rango especificado.
+
+
+
+```csharp
+public class Calificacion
+{
+    public Calificacion(int value)
+    {
+       DomainGuard.IsInRange(value, 0, 5, "115: La calificación debe estar entre 0 y 5.");
+        Value = value;
+    }
+     public int Value { get; }
+}
+```
+
+### IsNotInRange
+**Type:** `public static void IsNotInRange<T>(T value, T min, T max, string error) where T : IComparable<T>`
+
+Lanza una excepción si el valor especificado está dentro del rango especificado.
+
+
+
+```csharp
+public class Temperatura
+{
+   public Temperatura(int value)
+    {
+        DomainGuard.IsNotInRange(value, -10, 40, "116: La temperatura no debe estar entre -10 y 40 grados.");
+         Value = value;
+    }
+      public int Value { get; }
+}
+```
+
+### IsEmpty
+**Type:** `public static void IsEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada está vacía.
+
+
+
+```csharp
+public class Imagenes
+{
+  public Imagenes(List<string> value)
+    {
+       DomainGuard.IsEmpty(value, "117: La lista de imágenes no puede estar vacía.");
+        Value = value;
+    }
+     public List<string> Value { get; }
+}
+```
+
+### IsNotEmpty
+**Type:** `public static void IsNotEmpty<T>(IEnumerable<T> value, string error)`
+
+Lanza una excepción si la colección especificada no está vacía.
+
+
+
+```csharp
+public class Tags
+{
+    public Tags(List<string> value)
+    {
+      DomainGuard.IsNotEmpty(value, "118: La lista de tags no puede estar vacía");
+        Value = value;
+    }
+     public List<string> Value { get; }
+}
+```
+
+### GuidIsEmpty
+**Type:** `public static void GuidIsEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado está vacío.
+
+
+
+```csharp
+public class Identificador
+{
+    public Identificador(Guid value)
+    {
+         DomainGuard.GuidIsEmpty(value, "119: El identificador no puede ser vacío.");
+        Value = value;
+    }
+     public Guid Value { get; }
+}
+```
+
+### GuidIsNotEmpty
+**Type:** `public static void GuidIsNotEmpty(Guid value, string error)`
+
+Lanza una excepción si el GUID especificado no está vacío.
+
+```csharp
+public class Transaccion
+{
+  public Transaccion(Guid value)
+    {
+        DomainGuard.GuidIsNotEmpty(value, "120: El ID de la transacción no puede ser vacio");
+         Value = value;
+    }
+      public Guid Value { get; }
+}
+```

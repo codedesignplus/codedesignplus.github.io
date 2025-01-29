@@ -1,0 +1,70 @@
+---
+title: Aggregate
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El `AggregateAttribute` es un atributo personalizado diseñado para facilitar la creación de pruebas unitarias que validen el comportamiento de los agregados en tu modelo de dominio.  Este atributo permite generar automáticamente instancias de agregados, ya sea utilizando el constructor o un método estático `Create`, lo que agiliza el proceso de pruebas y asegura una cobertura exhaustiva.
+
+## ¿Cómo Funciona?
+---
+
+El `AggregateAttribute` funciona como un proveedor de datos para pruebas unitarias utilizando el framework xUnit.  Cuando se aplica a un método de prueba, el atributo se encarga de:
+
+1. **Escanear el ensamblado:** Identifica todas las clases que son agregados (clases que heredan de `AggregateRoot`).
+2. **Crear instancias:** Para cada agregado encontrado, crea una instancia utilizando el constructor o el método estático `Create` (si existe).
+3. **Proveer datos:** Suministra la instancia del agregado junto con su tipo y los valores de los parámetros utilizados en su creación como datos para la prueba unitaria.
+   
+## Métodos
+---
+
+### GetData  
+
+```csharp
+GetData(MethodInfo testMethod)
+```
+
+Este método es el punto central del `AggregateAttribute`.  Se encarga de realizar las siguientes acciones:
+
+- **Localizar Agregados:** Busca en el ensamblado especificado por el parámetro genérico `TAssemblyScan`  todas las clases que son agregados (heredan de `AggregateRoot`).
+- **Crear Instancias:**  Crea una instancia de cada agregado utilizando el constructor o el método estático `Create`.
+  - **Constructor:** Si el parámetro `useCreateMethod` es `false`, se utiliza el constructor que recibe un `Guid` como parámetro.
+  - **Método `Create`:** Si el parámetro `useCreateMethod` es `true`, se busca un método estático llamado `Create` en la clase del agregado. Si no se encuentra, se lanza una excepción.
+- **Retornar Datos:**  Retorna una secuencia de arrays de objetos, cada array contiene:
+    - El `Type` del agregado.
+    - La instancia del agregado.
+    - Un diccionario con los `ParameterInfo` y los valores utilizados en la creación del agregado.
+    
+
+## Implementación
+---
+
+El `AggregateAttribute` se implementa como un atributo personalizado que hereda de `DataAttribute` de xUnit.  Recibe un parámetro genérico `TAssemblyScan` que indica el ensamblado en el que buscar los agregados y un parámetro booleano `useCreateMethod` para indicar si se debe usar el método estático `Create` o el constructor para crear instancias.
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/src/CodeDesignPlus.Net.xUnit.Microservice/Attributes/AggregateAttribute.cs"
+```
+
+## Ejemplo de Uso
+---
+
+El siguiente ejemplo muestra cómo utilizar el `AggregateAttribute` en un método de prueba unitaria:
+
+```csharp url="packages/CodeDesignPlus.Net.xUnit.Microservice/tests/CodeDesignPlus.Net.xUnit.Microservice.Test/Validations/AggregateTest.cs"
+```
+
+En este ejemplo:
+
+- `[Aggregate<Errors>(false)]` crea instancias de todos los agregados en el ensamblado donde se define `Errors` utilizando el constructor.
+- `[Aggregate<Errors>(true)]` crea instancias de todos los agregados en el ensamblado donde se define `Errors` utilizando el método estático `Create`, si existe.
+- Los métodos de prueba reciben el `Type` del agregado, la `instancia` del agregado y un `diccionario` con los valores de los parámetros utilizados en la creación del mismo,  lo que permite realizar aserciones sobre el objeto creado.
+
+## Conclusiones
+---
+
+El `AggregateAttribute` es una herramienta valiosa para simplificar las pruebas unitarias de agregados en microservicios.  Al automatizar la creación de instancias y la provisión de datos de prueba, este atributo permite a los desarrolladores concentrarse en la lógica de negocio y garantizar la calidad de su código.
+
+## Referencias Adicionales
+---
+
+-   [DataAttribute Class Reference](https://csharp-tokyo.github.io/xUnit-Hands-on/class_xunit_1_1_sdk_1_1_data_attribute.html)
+-   [Patrón de diseño Aggregate](https://martinfowler.com/bliki/DDD_Aggregate.html)

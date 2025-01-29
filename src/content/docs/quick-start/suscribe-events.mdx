@@ -1,0 +1,214 @@
+---
+title: Suscripción a Eventos de Dominio
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+En este tutorial, exploraremos cómo un microservicio puede suscribirse a eventos de dominio publicados por otros microservicios y reaccionar a ellos. Crearemos un nuevo microservicio llamado **Subscriptions** que publicará un evento `SubscriptionCanceledDomainEvent`. Luego, modificaremos el microservicio de **Clients** para escuchar este evento e inactivar al cliente correspondiente. Utilizaremos el generador `codedesignplus:microservice` para crear el microservicio **Subscriptions** y agregar soporte para consumidores de eventos al microservicio **Clients**.
+
+## ¿Por qué Suscribirse a Eventos?
+
+La suscripción a eventos permite que los microservicios se comuniquen de manera asíncrona y desacoplada. En lugar de realizar llamadas directas (como en REST o gRPC), un microservicio puede publicar un evento y otros microservicios interesados en ese evento pueden reaccionar a él. Esto ofrece:
+
+*   **Desacoplamiento:** Los microservicios no dependen directamente unos de otros.
+*   **Escalabilidad:** Permite que cada microservicio opere a su propio ritmo.
+*   **Resiliencia:** Si un microservicio no está disponible, los eventos aún pueden ser procesados cuando el servicio vuelva a estar activo.
+*   **Extensibilidad:** Es fácil agregar nuevos consumidores sin modificar los servicios que publican los eventos.
+
+## Prerrequisitos
+
+Para seguir este tutorial, necesitarás:
+
+1. Tener creado el microservicio **Clients** siguiendo el [tutorial anterior](/quick-start/create-microservice).
+2. Crear el microservicio **Subscriptions** utilizando el generador `codedesignplus:microservice` y publicar el evento `SubscriptionCanceledDomainEvent`.
+3. Tener funcionando el entorno de desarrollo descrito en el [tutorial de Entorno de desarrollo](/quick-start/dev-environment) debido a que se requiere de RabbitMQ para la comunicación entre microservicios.
+
+## ¿Qué Aprenderás?
+
+2. Cómo añadir soporte para consumidores de eventos a un microservicio existente utilizando el generador `codedesignplus:microservice`.
+3. Cómo implementar un consumidor para escuchar y reaccionar a un evento específico.
+
+## Creando el Microservicio Subscriptions
+
+En este punto, no profundizaremos en la creación del microservicio, ya que hemos cubierto este proceso en tutoriales anteriores. Utilizaremos el generador `codedesignplus:microservice` para crear el microservicio **Subscriptions** y agregar soporte para publicar eventos de dominio.
+
+<Steps>
+
+1. Abre tu terminal y ejecuta el siguiente comando para crear el microservicio **Subscriptions**:
+
+    <Tabs>
+    <TabItem label="Bash">
+
+        ```bash
+        yo codedesignplus:microservice microservice \
+            --organization "Acme" \
+            --microservice "Subscriptions" \
+            --description "Microservicio para gestionar las suscripciones de la plataforma." \
+            --contact-name "Jane Doe" \
+            --contact-email "jane.doe@example.com" \
+            --vault store-acme \
+            --is-crud \
+            --aggregate "Subscription"
+        ```
+
+    </TabItem>
+
+    <TabItem label="Powershell">
+
+        ```powershell
+        yo codedesignplus:microservice microservice `
+            --organization "Acme" `
+            --microservice "Subscriptions" `
+            --description "Microservicio para gestionar las suscripciones de la plataforma." `
+            --contact-name "Jane Doe" `
+            --contact-email "jane.doe@example.com" `
+            --vault store-acme `
+            --is-crud `
+            --aggregate "Subscription"
+        ```
+
+    </TabItem>
+        
+    </Tabs>
+
+2.  Crea el evento de dominio `SubscriptionCanceledDomainEvent` que será publicado cuando se cancele una suscripción.
+
+    ````csharp repository="ms-suscription" url="src/domain/Acme.Net.Microservice.Subscriptions.Domain/DomainEvents/SubscriptionCanceledDomainEvent.cs"
+    ```
+   
+3.  Modifica el aggregate `Subscription` para lanzar el evento `SubscriptionCanceledDomainEvent` cuando se cancele una suscripción.
+
+    ````csharp repository="ms-suscription" url="src/domain/Acme.Net.Microservice.Subscriptions.Domain/SubscriptionAggregate.cs"
+    ```
+</Steps>
+
+<Aside>
+- Para más información sobre los parámetros del comando, puedes consultar la [documentación del generador](/generators/microservice/commands/microservice-crud).
+- Recuerda ejecutar `dotnet build` para asegurarte que la compilación es correcta.
+</Aside>
+
+## Agregando Soporte para Consumidores de Eventos
+
+Ahora, vamos a modificar el microservicio **Clients** para que se suscriba al evento `SubscriptionCanceledDomainEvent`. Utilizaremos el generador `codedesignplus:microservice` con la opción `asyncWorker`.
+
+<Steps>
+
+1. Abre tu terminal y navega al directorio raíz del microservicio de **Clients**. Ejecuta el siguiente comando:
+
+    ```bash
+    yo codedesignplus:microservice asyncWorker
+    ```
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/output-1.png" alt="Suscripción Microservicio Clients" width="1600" height="900" decoding="async" loading="lazy" />
+   
+2. El generador agregará los proyectos AsyncWorker necesarios para consumir eventos de dominio.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/vscode.png" alt="Program Microservicio Clients" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Ejecutaremos el siguiente comando para agregar el evento `SubscriptionCanceledDomainEvent`, el aggregate `Subscription` y el comando `CancelSubscriptionCommand` al microservicio **Clients**.
+
+    <Tabs>
+    <TabItem label="Bash"> 
+    ```bash
+    yo codedesignplus:microservice consumer \
+        --consumer-name "SubscriptionCanceled" \
+        --consumer-aggregate "Subscription" \
+        --consumer-action "inactive_client" \
+        --consumer-microservice "ms-suscriptions"
+    ```
+    </TabItem>
+    <TabItem label="Powershell"> 
+    ```powershell
+    yo codedesignplus:microservice consumer `
+        --consumer-name "SubscriptionCanceled" `
+        --consumer-aggregate "Subscription" `
+        --consumer-action "inactive_client" `
+        --consumer-microservice "ms-suscriptions"
+    ```
+    </TabItem>
+    </Tabs>
+
+    Al ejecutar el comando, se creará la estructura necesaria para consumir el evento `SubscriptionCanceledDomainEvent` en el microservicio **Clients**.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/consumer.png" alt="Consumer Microservicio Clients" width="1600" height="900" decoding="async" loading="lazy" />
+
+    Los archivos generados son:
+
+    - Domain Event `SubscriptionCanceledDomainEvent.cs`:
+  
+      Este archivo representa el evento `SubscriptionCanceledDomainEvent` que será consumido por el microservicio **Clients**.
+
+    - Consumer `SubscriptionCanceledHandler.cs`:
+
+      Este archivo recibe el evento `SubscriptionCanceledDomainEvent` e invoca el command handler `InactiveClientCommandHandler`
+    
+    - Command: `InactiveClientCommand.cs`:
+
+      Este archivo representa el comando `InactiveClientCommand` que será utilizado para invocar el command handler `InactiveClientCommandHandler`
+
+    - Command Handler: `InactiveClientCommandHandler.cs`:
+
+      Este archivo representa el command handler `InactiveClientCommandHandler` que será invocado por el consumer `SubscriptionCanceledHandler` para inactivar al cliente correspondiente.
+
+    - Aggregate: `Subscription.cs`:
+
+      Este archivo representa el agregado `Subscription` que será utilizado para persistir la información de los eventos consumidos y procesados.
+
+    - Repository: `SubscriptionRepository.cs` y `ISubscriptionRepository.cs`:
+
+      Este archivo representa el repositorio `SubscriptionRepository` que será utilizado para persistir la información del agregado `Subscription`.
+
+    ```mermaid
+    %%{init: {'theme': 'dark', 'themeVariables': { 'background': '#ffffff'}}}%%
+    sequenceDiagram
+        participant Subscriptions MS
+        participant RabbitMQ
+        participant Clients MS
+        participant InactiveClientCommandHandler
+        
+        Subscriptions MS ->> RabbitMQ: Publish SubscriptionCanceledDomainEvent
+        RabbitMQ -->> Clients MS: SubscriptionCanceledDomainEvent
+        Clients MS ->> Clients MS: SubscriptionCanceledHandler
+        Clients MS ->> InactiveClientCommandHandler: InactiveClientCommand
+        InactiveClientCommandHandler -->> Clients MS: Inactive Client
+    ```
+</Steps>
+
+<Aside>
+- Para más información sobre los parámetros del comando, puedes consultar la [documentación del generador](/generators/microservice/commands/async-worker).
+- Recuerda ejecutar `dotnet build` para asegurarte que la compilación es correcta.
+</Aside>
+
+## Consumiendo Eventos de Dominio
+
+Ahora que hemos agregado soporte para consumidores de eventos al microservicio **Clients**, vamos a implementar la lógica necesaria para inactivar al cliente correspondiente cuando se cancele una suscripción.
+
+<Steps>
+
+1. Abre el archivo `SubscriptionCanceledDomainEvent.cs` y agrega las propiedades necesarias para mapear la informacaión del evento. Recuerda que el evento de dominio tiene una propiedad `SubscriptionStatus` que indica el estado de la suscripción, esta sera creada en la capa de dominio debido a que tambien sera usada por el aggregate `Subscription`.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/subscription-canceled-domain-event.png" alt="SubscriptionCanceled" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. Modificaremos el aggregate `Suscription` para persitir solo la información necesaria del evento `SubscriptionCanceledDomainEvent` y que requiera la lógica de negocio.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/subscription-aggregate.png" alt="SubscriptionAggregate" width="1600" height="900" decoding="async" loading="lazy" />	
+
+3. Implementaremos el command `InactivateClientCommand` que será utilizado para inactivar al cliente correspondiente.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/inactive-client-command.png" alt="InactiveClientCommand" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. Implementaremos el command handler `InactiveClientCommandHandler` que será invocado por el consumer `SubscriptionCanceledHandler` para persistir la información de la suscripción cancelada e inactivar al cliente correspondiente invocando el command `InactivateClientCommand` que pertenece al microservicio **Clients**.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/inactive-client-command-handler.png" alt="InactiveClientCommandHandler" width="1600" height="900" decoding="async" loading="lazy" />
+
+5. Modificaremos el consumer `SubscriptionCanceledHandler` para invocar el command handler `InactiveClientCommandHandler` cuando se reciba el evento `SubscriptionCanceledDomainEvent`.
+
+    <Image src="/images/quick-start/subscribe-events/subscribe-clients/subscription-canceled-handler.png" alt="SubscriptionCanceledHandler" width="1600" height="900" decoding="async" loading="lazy" />
+</Steps>
+
+## Conclusiones
+
+En este tutorial, hemos aprendido cómo crear un microservicio que publica eventos de dominio y cómo otro microservicio puede suscribirse a ellos. Hemos utilizado el generador `codedesignplus:microservice` para agilizar la creación de estos componentes y hemos visto cómo la arquitectura basada en eventos permite una comunicación asíncrona y desacoplada entre microservicios.
+
+Este es un paso clave para construir sistemas robustos y escalables basados en microservicios.

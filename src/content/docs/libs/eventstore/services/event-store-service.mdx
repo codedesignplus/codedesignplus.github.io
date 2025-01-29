@@ -1,0 +1,99 @@
+---
+title: IEventStoreService
+---
+
+import { Aside, LinkCard, Steps } from '@astrojs/starlight/components';
+
+`IEventStoreService` es una interfaz que define los métodos necesarios para interactuar con EventStore. Esta interfaz extiende `IEventSourcingService` para proporcionar métodos adicionales específicos de EventStore, facilitando la gestión de eventos y la interacción con la base de datos de eventos.
+
+Se utiliza para abstraer la lógica de interacción con EventStore, proporcionando métodos para guardar, recuperar y gestionar eventos. Permite a los desarrolladores trabajar con eventos de manera uniforme y desacoplada del cliente específico de EventStore.
+
+## Funcionalidades
+---
+1. **Guardar Eventos**:
+   - `Task SaveEventAsync<TEvent>(TEvent @event, string key)`: Guarda un evento en EventStore utilizando la clave proporcionada para determinar la conexión.
+
+2. **Recuperar Eventos**:
+   - Métodos para recuperar eventos específicos de una categoría y un ID de agregado.
+
+3. **Gestión de Eventos**:
+   - Métodos para gestionar la versión de los eventos y otras operaciones relacionadas con la gestión de eventos en EventStore.
+
+## Dependencias
+---
+`IEventStoreService` depende de `IEventStoreFactory` para crear y gestionar conexiones a EventStore. `IEventStoreFactory` utiliza `IEventStoreConnection` para inicializar y gestionar las conexiones a EventStore. Esta relación asegura que las conexiones se manejen de manera eficiente y que la lógica de interacción con EventStore esté desacoplada de los detalles de implementación específicos.
+
+## Implementación
+---
+
+La interfaz `IEventStoreService` se implementa en la clase `EventStoreService`, que proporciona la lógica para interactuar con EventStore. La clase `EventStoreService` se encuentra en el espacio de nombres `CodeDesignPlus.Net.EventStore.Services`.
+
+```csharp url="packages/CodeDesignPlus.Net.EventStore/src/CodeDesignPlus.Net.EventStore/Services/EventStoreService.cs"
+```
+
+
+## Ejemplo
+---
+
+Una vez que se ha implementado la interfaz `IEventStoreService`, se puede utilizar para interactuar con EventStore en una aplicación .NET.
+
+<Steps>
+
+1. Agregar las propiedades de configuración al archivo `appsettings.json`:
+
+    ```json
+    {
+        "EventStore": {
+            "Servers": {
+                "Core": {
+                    "ConnectionString": "tcp://localhost:1113?tls=false",
+                    "User": "admin",
+                    "Password": "12345678"
+                }
+            }
+        }
+    }
+    ```
+
+2. Registrar la interfaz `IEventStoreService` en el contenedor de dependencias:
+
+    ```csharp
+
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddSingleton<IEventStoreConnection, EventStoreConnection>();
+            services.AddSingleton<IEventStoreFactory, EventStoreFactory>();
+            services.AddSingleton<IEventStoreService, EventStoreService>();
+            services.AddLogging();
+        }
+    }
+
+    ```
+
+3. Utilizar la interfaz `IEventStoreService` para interactuar con EventStore en la aplicación.
+
+    ```csharp
+    public class EventStoreService
+    {
+        private readonly IEventStoreService eventStoreService;
+
+        public EventStoreService(IEventStoreService eventStoreService)
+        {
+            this.eventStoreService = eventStoreService;
+        }
+
+        public async Task SaveEventAsync<TEvent>(TEvent @event, string key)
+        {
+            await this.eventStoreService.SaveEventAsync(@event, key);
+        }
+    }
+    ```
+</Steps>
+
+
+## Conclusiones
+---
+
+`IEventStoreService` es una interfaz esencial para interactuar con EventStore en aplicaciones .NET. Proporciona métodos para guardar, recuperar y gestionar eventos de manera eficiente, permitiendo a los desarrolladores construir sistemas escalables y mantenibles basados en eventos. Al abstraer la lógica de interacción con EventStore, `IEventStoreService` facilita la implementación de event sourcing y garantiza una gestión robusta y escalable de eventos en aplicaciones .NET.

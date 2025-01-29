@@ -1,0 +1,99 @@
+---
+title: Channel Provider
+---
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+Este documento describe los servicios `IChannelProvider` y `ChannelProvider`, los cuales se encargan de gestionar los canales y exchanges en RabbitMQ, proporcionando una capa de abstracción que facilita la interacción con la infraestructura de mensajería. `ChannelProvider` implementa la interfaz `IChannelProvider` y gestiona la creación, reutilización y configuración de canales y exchanges.
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ.Abstractions/IChannelProvider.cs"
+```
+
+## ¿Cómo Funciona?
+---
+
+`ChannelProvider` actúa como un administrador de canales y exchanges para RabbitMQ. Internamente, mantiene un registro de los canales y exchanges creados para evitar la creación innecesaria de recursos. Utiliza un diccionario concurrente para almacenar los canales y exchanges, garantizando la seguridad en entornos de alta concurrencia. Cuando se solicita un canal para publicar o consumir, `ChannelProvider` verifica si existe un canal para ese tipo de evento o manejador, reutilizándolo si es posible o creando uno nuevo si no existe. De manera similar, se encarga de declarar los exchanges para cada tipo de evento. La implementación se asegura que los exchanges declarados tengan la configuración de los headers para la información del negocio y microservicio.
+
+## Métodos
+---
+
+`ChannelProvider` implementa la interfaz `IChannelProvider`, que define los siguientes métodos:
+
+### GetChannelPublish
+**Type:** `IModel GetChannelPublish(Type domainEventType)`
+
+Obtiene un canal de RabbitMQ para publicar un evento de dominio específico. Recibe el tipo del evento de dominio como argumento. Si ya existe un canal asociado a este tipo, lo reutiliza; de lo contrario, crea un nuevo canal.
+
+### GetChannelPublish
+**Type:** `IModel GetChannelPublish<TDomainEvent>(TDomainEvent domainEvent) where TDomainEvent : IDomainEvent`
+
+Obtiene un canal de RabbitMQ para publicar un evento de dominio específico utilizando el tipo genérico del evento. Recibe una instancia del evento de dominio y deriva el tipo de evento desde la instancia. Si ya existe un canal asociado a este tipo, lo reutiliza; de lo contrario, crea un nuevo canal.
+
+### ExchangeDeclare
+**Type:** `string ExchangeDeclare(Type domainEventType)`
+
+Declara un exchange en RabbitMQ para el tipo de evento de dominio especificado. Si ya existe un exchange con ese nombre, lo devuelve; de lo contrario, crea un nuevo exchange del tipo *fanout* y lo registra para futuras solicitudes.
+
+### ExchangeDeclare
+**Type:** `string ExchangeDeclare<TDomainEvent>(TDomainEvent domainEvent) where TDomainEvent : IDomainEvent`
+
+Declara un exchange en RabbitMQ para un evento de dominio específico. Recibe una instancia del evento de dominio y deriva el tipo de evento desde la instancia. Si ya existe un exchange con ese nombre, lo devuelve; de lo contrario, crea un nuevo exchange del tipo *fanout* y lo registra para futuras solicitudes.
+
+###  GetChannelConsumer
+**Type:** `IModel GetChannelConsumer<TEvent, TEventHandler>() where TEvent : IDomainEvent where TEventHandler : IEventHandler<TEvent>`
+
+Obtiene un canal de RabbitMQ para consumir un evento de dominio específico utilizando el tipo genérico del evento y su manejador. Recibe el tipo de evento y el tipo de su manejador. Si ya existe un canal asociado a este manejador, lo reutiliza; de lo contrario, crea un nuevo canal.
+
+### SetConsumerTag
+**Type:** `void SetConsumerTag<TEvent, TEventHandler>(string consumerTag) where TEvent : IDomainEvent where TEventHandler : IEventHandler<TEvent>`
+
+Establece un tag para un consumidor específico asociado a un tipo de evento y manejador. Se utiliza para identificar un consumidor en particular dentro de un canal.
+
+### GetConsumerTag
+**Type:** `string GetConsumerTag<TEvent, TEventHandler>() where TEvent : IDomainEvent where TEventHandler : IEventHandler<TEvent>`
+
+Obtiene el tag del consumidor asociado a un tipo de evento y manejador.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/ChannelProvider.cs"
+```
+
+El servicio `ChannelProvider` se implementa como una clase que hereda de `IChannelProvider` y se encarga de:
+
+1.  **Recibir dependencias:** Recibe la conexión a RabbitMQ (`IRabbitConnection`), el servicio de resolución de eventos de dominio (`IDomainEventResolverService`) y las opciones de la aplicación (`IOptions<CoreOptions>`).
+2.  **Gestión de canales:** Utiliza un `ConcurrentDictionary<string, ChannelModel>` para almacenar los canales creados y poder reutilizarlos.
+3.  **Gestión de exchanges:** Utiliza un `ConcurrentDictionary<string, string>` para almacenar los exchanges declarados y poder reutilizarlos.
+4.  **Creación de exchanges:** Al solicitar un exchange, se verifica si ya existe. Si no, se crea uno nuevo con tipo *fanout* y se almacena.
+5.  **Creación de canales:** Al solicitar un canal, se verifica si ya existe. Si no, se crea uno nuevo a partir de la conexión de RabbitMQ y se almacena.
+6.  **Implementación de tags:** Permite establecer y obtener el tag de un consumidor específico.
+7.  **Manejo de concurrencia:** Utiliza diccionarios concurrentes para manejar la creación y acceso a canales y exchanges de forma segura en entornos de alta concurrencia.
+
+Las dependencias del servicio son:
+
+-  `IRabbitConnection`: Para la conexión a RabbitMQ.
+-  `IDomainEventResolverService`: Para obtener el nombre del exchange basado en el evento de dominio.
+-  `IOptions<CoreOptions>`: Para obtener información general de la aplicación, como el nombre del negocio y el microservicio.
+
+La clase `ChannelModel` es una clase interna que guarda el `IModel` y un `ConsumerTag`.
+
+## Ejemplo de Uso
+---
+
+En este ejemplo, se muestra como se pueden usar los métodos de `ChannelProvider` para publicar y consumir eventos de dominio en RabbitMQ. La clase `RabbitPubSubService` se encarga de publicar eventos de dominio y suscribirse a ellos utilizando `ChannelProvider` para obtener los canales y exchanges necesarios. La implementación de `RabbitPubSubService` utiliza la inyección de dependencias para obtener las instancias necesarias, como `IDomainEventResolverService` y `IOptions<CoreOptions>`. Además, se muestra cómo se configuran los exchanges y las colas en RabbitMQ para los eventos de dominio, y cómo se procesan los eventos recibidos por los consumidores.
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/RabbitPubSubService.cs"
+```
+
+## Conclusiones
+---
+
+`ChannelProvider` ofrece una solución eficiente y segura para manejar los canales y exchanges de RabbitMQ en una aplicación .NET. La gestión centralizada de canales y exchanges, combinada con la reutilización de recursos, mejora el rendimiento y simplifica el código que interactúa con RabbitMQ. Es importante notar que se recomienda usar el tipo genérico de los metodos `ExchangeDeclare` y `GetChannelPublish` siempre que sea posible para evitar errores.
+
+## Referencias Adicionales
+---
+
+*   [Documentación oficial de RabbitMQ .NET](https://www.rabbitmq.com/dotnet.html)
+*   [Exchange types in RabbitMQ](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges)
+*  [Implementación de diccionarios concurrentes en .NET](https://learn.microsoft.com/en-us/dotnet/api/system.collections.concurrent.concurrentdictionary-2?view=net-8.0)

@@ -1,0 +1,97 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Esta extensión proporciona un método para configurar y agregar servicios de observabilidad a una aplicación .NET utilizando OpenTelemetry. Permite la configuración de métricas y rastreo (tracing) para monitorear el rendimiento y diagnosticar problemas en la aplicación.
+
+## Dependencias y Requisitos Previos
+---
+
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+- `Microsoft.Extensions.Hosting`: Necesario para la interfaz `IHostEnvironment`
+- `OpenTelemetry`: Necesario para las funcionalidades de observabilidad.
+- `CodeDesignPlus.Net.Core`: Necesario para la configuración del core.
+- `Confluent.Kafka.Extensions.OpenTelemetry`: Necesario para la instrumentación de Kafka.
+
+## Escenarios de uso
+---
+
+Este método de extensión es particularmente útil en aplicaciones que:
+
+-   Requieren monitoreo del rendimiento en tiempo real.
+-   Necesitan rastrear la propagación de solicitudes a través de múltiples servicios.
+-   Utilizan gRPC, bases de datos SQL, Redis o Kafka y quieren tener telemetría de estas integraciones.
+-   Necesitan exportar datos de observabilidad a herramientas como Jaeger o Prometheus.
+-   Quieren una configuración centralizada y flexible para la observabilidad.
+
+## Beneficios
+---
+
+-   **Configuración Simplificada:** Facilita la configuración de OpenTelemetry, reduciendo la cantidad de código boilerplate necesario.
+-   **Integración con Múltiples Fuentes de Datos:** Permite instrumentar fácilmente componentes ASP.NET Core, clientes gRPC, bases de datos SQL, Redis, Kafka y la propia SDK de CodeDesignPlus.
+-   **Flexibilidad:** Permite personalizar la configuración de métricas y tracing a través de acciones opcionales.
+-   **Estandarización:** Fomenta el uso de OpenTelemetry, un estándar de la industria para la observabilidad.
+-   **Extensibilidad:** Facilita la incorporación de instrumentaciones adicionales.
+
+## Ejemplo Práctico
+---
+
+```csharp
+using CodeDesignPlus.Net.Observability.Extensions;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddObservability(builder.Configuration, builder.Environment);
+
+var app = builder.Build();
+
+app.MapGet("/", () => "Hello World!");
+
+app.Run();
+```
+
+En este ejemplo:
+    - Se crea un `WebApplication` con el método `CreateBuilder`.
+    - Se agrega la observabilidad a la colección de servicios utilizando el método `AddObservability`.
+    - Se construye la aplicación y se define una ruta de prueba.
+    - Se ejecuta la aplicación.
+
+## Métodos de extensión
+
+La clase `ServiceCollectionExtensions` proporciona un único método de extensión para configurar y agregar servicios de observabilidad a una aplicación .NET. Este método agrega los servicios necesarios para monitorear el rendimiento y diagnosticar problemas en la aplicación.
+
+### AddObservability
+**Type:** `public static IOpenTelemetryBuilder AddObservability(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment, Action<MeterProviderBuilder> metricsBuilder = null, Action<TracerProviderBuilder> traceBuilder = null)`
+
+Agrega los servicios de observabilidad a la colección de servicios, configurando tanto las métricas como el rastreo (tracing) utilizando OpenTelemetry. Este método es el punto de entrada principal para habilitar la observabilidad en la aplicación.
+
+- **Parámetros**
+    -   `services` (`IServiceCollection`): Colección de servicios a la cual se agregarán los servicios de observabilidad.
+    -   `configuration` (`IConfiguration`): Configuración de la aplicación.
+    -   `environment` (`IHostEnvironment`): Entorno de ejecución de la aplicación.
+    -   `metricsBuilder` (`Action<MeterProviderBuilder>`): Acción opcional para personalizar la configuración de métricas. Permite modificar el `MeterProviderBuilder` antes de que se construya el proveedor de métricas.
+    -   `traceBuilder` (`Action<TracerProviderBuilder>`): Acción opcional para personalizar la configuración de tracing. Permite modificar el `TracerProviderBuilder` antes de que se construya el proveedor de tracing.
+
+- **Tipo de retorno**
+    -   `IOpenTelemetryBuilder`: El builder de OpenTelemetry, que permite realizar más configuraciones de OpenTelemetry.
+
+- **Excepciones**
+    -   `ObservabilityException`: Se lanza si la sección de configuración `ObservabilityOptions.Section` no existe en la configuración.
+
+## Conclusiones
+---
+
+La extensión `ServiceCollectionExtensions` facilita la configuración de observabilidad en aplicaciones .NET al proporcionar el método `AddObservability` que integra y configura OpenTelemetry. Permite personalizar métricas y tracing, instrumentar componentes clave y exportar datos a herramientas de monitoreo.
+
+Es recomendable usar esta extensión en cualquier proyecto .NET que requiera monitoreo y rastreo de rendimiento, ya que simplifica la configuración de OpenTelemetry y mejora la observabilidad de la aplicación. Para la correcta configuración, es importante tener una sección de configuración en el `appsettings.json` llamada `Observability` y las propiedades necesarias.
+
+## Referencias
+---
+
+-   [OpenTelemetry](https://opentelemetry.io/)
+-   [Documentación de OpenTelemetry .NET](https://github.com/open-telemetry/opentelemetry-dotnet)
+-   [Documentación de ASP.NET Core](https://docs.microsoft.com/aspnet/core)

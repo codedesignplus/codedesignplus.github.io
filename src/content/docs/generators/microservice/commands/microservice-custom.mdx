@@ -1,0 +1,597 @@
+---
+title: "Microservice (Custom)"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command**: `yo codedesignplus:microservice microservice`
+
+Este comando se utiliza para crear la estructura base de un nuevo microservicio con un enfoque en la lógica de negocio compleja y eventos. A diferencia de un microservicio CRUD, este tipo es más flexible y se adapta a escenarios donde el flujo de trabajo es más importante que las operaciones básicas de persistencia de datos.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+
+## Conceptos Clave
+
+*   **Microservicio Custom:** Es una unidad de software autónoma y pequeña que realiza una función específica, con un enfoque en la lógica de negocio y eventos en lugar de las operaciones CRUD estándar.
+*   **Lógica de Negocio:** El conjunto de reglas y procesos que definen cómo opera el negocio. Los microservicios Custom se centran en la implementación de esta lógica.
+*   **Eventos de Dominio:** Representaciones de algo que ha ocurrido en el dominio del negocio. Los microservicios Custom a menudo generan y responden a estos eventos.
+*   **Arquetipo:** El arquetipo base [`CodeDesignPlus.Net.Microservice`](../archetypes/) para la creación de microservicios en .NET, proporcionando una estructura de proyecto bien definida y buenas prácticas.
+*   **Diseño Basado en Dominio (DDD):** Los principios de DDD son fundamentales para la estructura y organización de la lógica de negocio en los microservicios Custom.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice microservice` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice microservice \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --description  "<microservice_description>" \
+        --contact-name "<contact_name>" \
+        --contact-email "<contact_email>" \
+        --vault "<vault_name>" \
+        --aggregate "<aggregate_name>" \
+        --enable-grpc \
+        --enable-async-worker \
+        --consumer-name "<consumer_name>" \
+        --consumer-aggregate "<consumer_aggregate>" \
+        --consumer-action "<consumer_action>" \
+        --domain-events "<domain_events>" \
+        --entities "<entities>" \
+        --commands "<commands>" \
+        --queries "<queries>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice microservice `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --description "<microservice_description>" `
+        --contact-name "<contact_name>" `
+        --contact-email "<contact_email>" `
+        --vault "<vault_name>" `
+        --aggregate "<aggregate_name>" `
+        --enable-grpc `
+        --enable-async-worker `
+        --consumer-name "<consumer_name>" `
+        --consumer-aggregate "<consumer_aggregate>" `
+        --consumer-action "<consumer_action>" `
+        --domain-events "<domain_events>" `
+        --entities "<entities>" `
+        --commands "<commands>" `
+        --queries "<queries>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización. Se utiliza para la organización del código y la gestión de los namespaces.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio que se va a crear.
+
+### `--description`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Una descripción detallada del microservicio que proporciona un contexto claro sobre su propósito.
+
+### `--contact-name`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Nombre de la persona de contacto responsable del microservicio.
+
+### `--contact-email`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: Email de contacto de la persona responsable.
+
+### `--vault`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del vault para la gestión de secretos y configuraciones.
+
+### `--aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del agregado raíz del microservicio, esencial para la organización del dominio.
+
+### `--enable-grpc`
+    - **Tipo**: `boolean`
+    - **Obligatorio**: No
+    - **Descripción**: Habilita la API gRPC para el microservicio, que ofrece un protocolo de comunicación de alto rendimiento.
+
+### `--enable-async-worker`
+    - **Tipo**: `boolean`
+    - **Obligatorio**: No
+    - **Descripción**: Habilita un worker asíncrono para el manejo de eventos y tareas en segundo plano, mejorando la escalabilidad.
+
+### `--consumer-name`
+    - **Tipo**: `string`
+    - **Obligatorio**: Si cuando `--enable-async-worker` es `true`
+    - **Descripción**: El nombre del evento que este microservicio consumirá.
+
+### `--consumer-aggregate`
+    - **Tipo**: `string`
+    - **Obligatorio**: Si cuando `--enable-async-worker` es `true`
+    - **Descripción**: El agregado asociado al evento que se consumirá.
+
+### `--consumer-action`
+    - **Tipo**: `string`
+    - **Obligatorio**: Si cuando `--enable-async-worker` es `true`
+    - **Descripción**: La acción que se realizará en respuesta al evento consumido.
+
+### `--domain-events`
+    - **Tipo**: `string`
+    - **Obligatorio**: No
+    - **Descripción**: Una lista de eventos de dominio separados por comas que el microservicio puede publicar.
+
+### `--entities`
+    - **Tipo**: `string`
+    - **Obligatorio**: No
+    - **Descripción**: Una lista de entidades separadas por comas que el microservicio gestiona.
+
+### `--commands`
+    - **Tipo**: `string`
+    - **Obligatorio**: No
+    - **Descripción**: Una lista de comandos separados por comas que el microservicio puede ejecutar.
+
+### `--queries`
+    - **Tipo**: `string`
+    - **Obligatorio**: No
+    - **Descripción**: Una lista de queries separadas por comas que el microservicio puede ejecutar.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un microservicio Custom llamado `inventory` para gestionar el inventario de productos en la plataforma de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+        ```bash
+        yo codedesignplus:microservice microservice \
+            --organization "Acme" \
+            --microservice inventory \
+            --description "Microservicio para gestionar el inventario de productos." \
+            --contact-name "John Smith" \
+            --contact-email "john.smith@example.com" \
+            --vault "vault-acme" \
+            --aggregate "Product" \
+            --enable-grpc \
+            --enable-async-worker \
+            --consumer-name "OrderCreated" \
+            --consumer-aggregate "Order" \
+            --consumer-action "update-stock" \
+            --domain-events "ProductCreated,ProductUpdated,ProductRemoved" \
+            --entities "Product,Category" \
+            --commands "CreateProduct,UpdateProduct,RemoveProduct" \
+            --queries "FindProductById,FindProductsByCategory"
+        ```
+    </TabItem>
+    <TabItem label="PowerShell">
+        ```powershell
+        yo codedesignplus:microservice microservice `
+            --organization "Acme" `
+            --microservice inventory `
+            --description "Microservicio para gestionar el inventario de productos." `
+            --contact-name "John Smith" `
+            --contact-email "john.smith@example.com" `
+            --vault "vault-acme" `
+            --aggregate "Product" `
+            --enable-grpc `
+            --enable-async-worker `
+            --consumer-name "OrderCreated" `
+            --consumer-aggregate "Order" `
+            --consumer-action "update-stock" `
+            --domain-events "ProductCreated,ProductUpdated,ProductRemoved" `
+            --entities "Product,Category" `
+            --commands "CreateProduct,UpdateProduct,RemoveProduct" `
+            --queries "FindProductById,FindProductsByCategory"
+        ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base del microservicio Custom `inventory` en la organización `acme`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/microservice-custom/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados:
+
+<Tabs>
+    <TabItem label="Explorador de Archivos">
+    <Image src="/images/generators/microservices/microservice-custom/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+    </TabItem>
+    <TabItem label="Árbol de Archivos">
+        <FileTree>
+        - .dockerignore
+        - .env
+        - .gitignore
+        - Acme.Net.Microservice.Inventory.sln
+        - archetype.json
+        - resources
+            - docker-compose.yaml
+            - shared
+                - grafana-dashboards.yaml
+                - grafana-datasources.yaml
+                - loki-config.yaml
+                - otel-config.yaml
+                - prometheus-config.yaml
+                - tempo-config.yaml
+                - dashboards
+                    - 15983.json
+                    - 17781.json
+                    - 19924.json
+                    - 19925.json
+                    - default.yaml
+                - vault
+                    - config.sh
+                    - entrypoint.sh
+                    - full-access.hcl
+                - vault-config
+                    - credentials.json
+        - src
+            - domain
+                - Acme.Net.Microservice.Inventory.Application
+                    - Acme.Net.Microservice.Inventory.Application.csproj
+                    - Errors.cs
+                    - Startup.cs
+                    - Usings.cs
+                    - Order
+                        - Commands
+                            - UpdateStock
+                                - UpdateStockCommand.cs
+                                - UpdateStockCommandHandler.cs
+                    - Product
+                        - Commands
+                            - CreateProductUpdateProductRemoveProduct
+                                - CreateProductUpdateProductRemoveProductCommand.cs
+                                - CreateProductUpdateProductRemoveProductCommandHandler.cs
+                        - DataTransferObjects
+                            - ProductDto.cs
+                        - Queries
+                            - FindProductByIdFindProductsByCategory
+                                - FindProductByIdFindProductsByCategoryQuery.cs
+                                - FindProductByIdFindProductsByCategoryQueryHandler.cs
+                    - Setup
+                        - MapsterConfig.cs
+                - Acme.Net.Microservice.Inventory.Domain
+                    - Acme.Net.Microservice.Inventory.Domain.csproj
+                    - Errors.cs
+                    - OrderAggregate.cs
+                    - ProductAggregate.cs
+                    - Startup.cs
+                    - Usings.cs
+                    - DomainEvents
+                        - ProductCreatedDomainEvent.cs
+                        - ProductRemovedDomainEvent.cs
+                        - ProductUpdatedDomainEvent.cs
+                    - Entities
+                        - ProductCategoryEntity.cs
+                    - Repositories
+                        - IOrderRepository.cs
+                        - IProductRepository.cs
+                - Acme.Net.Microservice.Inventory.Infrastructure
+                    - Acme.Net.Microservice.Inventory.Infrastructure.csproj
+                    - Errors.cs
+                    - Startup.cs
+                    - Usings.cs
+                    - Repositories
+                        - OrderRepository.cs
+                        - ProductRepository.cs
+            - entrypoints
+                - Acme.Net.Microservice.Inventory.AsyncWorker
+                    - Acme.Net.Microservice.Inventory.AsyncWorker.csproj
+                    - appsettings.Development.json
+                    - appsettings.json
+                    - Program.cs
+                    - Usings.cs
+                    - Consumers
+                        - OrderCreatedHandler.cs
+                    - DomainEvents
+                        - OrderCreatedDomainEvent.cs
+                    - Properties
+                        - launchSettings.json
+                - Acme.Net.Microservice.Inventory.gRpc
+                    - Acme.Net.Microservice.Inventory.gRpc.csproj
+                    - Acme.Net.Microservice.Inventory.gRpc.csproj.user
+                    - appsettings.Development.json
+                    - appsettings.json
+                    - Program.cs
+                    - Usings.cs
+                    - Core
+                        - Mapster
+                            - MapsterConfig.cs
+                    - Properties
+                        - launchSettings.json
+                    - Protos
+                        - product.proto
+                    - Services
+                        - ProductService.cs
+                - Acme.Net.Microservice.Inventory.Rest
+                    - Acme.Net.Microservice.Inventory.Rest.csproj
+                    - Acme.Net.Microservice.Inventory.Rest.csproj.user
+                    - appsettings.Development.json
+                    - appsettings.json
+                    - Dockerfile
+                    - Program.cs
+                    - Usings.cs
+                    - Controllers
+                        - ProductController.cs
+                    - Core
+                        - Mapster
+                            - MapsterConfig.cs
+                    - Properties
+                        - launchSettings.json
+        - tests
+            - integration
+                - Acme.Net.Microservice.Inventory.AsyncWorker.Test
+                    - Acme.Net.Microservice.Inventory.AsyncWorker.Test.csproj
+                    - Usings.cs
+                    - Properties
+                         - launchSettings.json
+                - Acme.Net.Microservice.Inventory.gRpc.Test
+                    - Acme.Net.Microservice.Inventory.gRpc.Test.csproj
+                    - Usings.cs
+                    - Protos
+                        - product.proto
+                - Acme.Net.Microservice.Inventory.Rest.Test
+                    - Acme.Net.Microservice.Inventory.Rest.Test.csproj
+                    - Usings.cs
+                    - Properties
+                        - launchSettings.json
+            - load
+                - load-rest.js
+            - unit
+                - Acme.Net.Microservice.Inventory.Application.Test
+                    - Acme.Net.Microservice.Inventory.Application.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                    - Setup
+                        - MapsterConfigTest.cs
+                - Acme.Net.Microservice.Inventory.AsyncWorker.Test
+                    - Acme.Net.Microservice.Inventory.AsyncWorker.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                - Acme.Net.Microservice.Inventory.Default.Test
+                    - Acme.Net.Microservice.Inventory.Default.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                    - Validations
+                        - AggregateTest.cs
+                        - CommandsTests.cs
+                        - DataTransferObjectTest.cs
+                        - DomainEventTest.cs
+                        - EntityTest.cs
+                        - ErrorsTest.cs
+                        - QueryTests.cs
+                        - StartupTest.cs
+                - Acme.Net.Microservice.Inventory.Domain.Test
+                    - Acme.Net.Microservice.Inventory.Domain.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                - Acme.Net.Microservice.Inventory.gRpc.Test
+                    - Acme.Net.Microservice.Inventory.gRpc.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                    - Core
+                        - Mapster
+                            - MapsterConfigTest.cs
+                - Acme.Net.Microservice.Inventory.Infrastructure.Testw
+                    - Acme.Net.Microservice.Inventory.Infrastructure.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                - Acme.Net.Microservice.Inventory.Rest.Test
+                    - Acme.Net.Microservice.Inventory.Rest.Test.csproj
+                    - coverage.opencover.xml
+                    - Usings.cs
+                    - Core
+                        - Mapster
+                            - MapsterConfigTest.cs
+        - tools
+            - sonar.ps1
+            - sonar.sh
+            - update-packages.ps1
+            - update-packages.sh
+            - upgrade-assist.ps1
+            - upgrade-assist.sh
+        </FileTree>
+    </TabItem>
+</Tabs>
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base de un microservicio custom en la organización `acme` con el nombre `inventory`. El microservicio estará listo para ser personalizado y ampliado según las necesidades del proyecto.
+
+Pero para comprender mejor el impacto de cada una de las opciones, veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1. Este parámetro establece el nombre de la organización a nivel de la solución (.sln) y para cada uno de los proyectos (.csproj) generados.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien se refleja en los namespaces de los proyectos generados.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Por ultimo, tambien se ve reflejado en cada uno de los archivos `appsettings.json` de los proyectos de infraestructura en la propiedad `Business`.
+
+    <Image src="/images/generators/microservices/microservice-custom/3-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "inventory"`
+
+1. Este parámetro establece el nombre del microservicio a nivel de la solución (.sln) y para cada uno de los proyectos (.csproj) generados.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien se refleja en los namespaces de los proyectos generados.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. Tambien es usado en los archivos `appsettings.json` de los proyectos de infraestructura en multiples propiedades.
+
+    <Image src="/images/generators/microservices/microservice-custom/3-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+4. El nombre del microservicio tambien se refleja en el archivo `config.sh` encargado de la configuración de Vault.
+
+    <Image src="/images/generators/microservices/microservice-custom/4-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--description`
+**Flag:** `--description "Microservicio para gestionar el inventario de productos."`
+
+1. Este parámetro establece una descripción detallada del microservicio que se refleja en el archivo `appsettings.json` de los proyectos de infraestructura.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-description-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--contact-name`
+**Flag:** `--contact-name "John Smith"`
+
+1. Este parámetro establece el nombre de la persona de contacto responsable del microservicio, que se refleja en el archivo `appsettings.json` de los proyectos de infraestructura.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-contact-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--contact-email`
+**Flag:** `--contact-email "john.smith@example.com"`
+
+1. Este parámetro establece el email de contacto de la persona responsable del microservicio, que se refleja en el archivo `appsettings.json` de los proyectos de infraestructura.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-contact-email-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+
+### `--vault`
+**Flag:** `--vault "vault-acme"`
+
+1. Este parámetro establece el nombre del vault para la gestión de secretos y configuraciones, que se refleja en el archivo `config.sh` encargado de la configuración de Vault.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-vault-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien se refleja en los archivos `appsettings.json` de los proyectos de infraestructura en la propiedad `Vault`.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-vault-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--aggregate`
+**Flag:** `--aggregate "product"`
+
+1. Este parámetro establece el nombre del agregado raíz del microservicio, que se refleja en los archivos generados en la capa de dominio.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien es usado para la creación del Data Transfer Object (DTO) de la entidad `Product`.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--enable-grpc`
+**Flag:** `--enable-grpc`
+
+1. Este flag habilita la API gRPC para el microservicio, generando el servicio con base en el agregado raíz `product`.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-enable-grpc-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--enable-async-worker`
+**Flag:** `--enable-async-worker`
+
+1. Este flag habilita un worker asíncrono para el manejo de eventos y tareas en segundo plano, mejorando la escalabilidad del microservicio.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-enable-async-worker-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-name`
+**Flag:** `--consumer-name "orderCreated"`
+
+1.  Este parámetro establece el nombre del evento que el worker asíncrono consumirá, reflejándose en la creación del consumer correspondiente.
+
+     <Image src="/images/generators/microservices/microservice-custom/1-consumer-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien se refleja en el handler del consumer creado.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-consumer-name-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-aggregate`
+**Flag:** `--consumer-aggregate "order"`
+
+1. Este parámetro establece el agregado asociado al evento que se consumirá, reflejándose en el consumer creado.
+
+     <Image src="/images/generators/microservices/microservice-custom/1-consumer-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor del parametro tambien se refleja en el handler del consumer creado.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-consumer-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+3. El valor del parametro permite ordenar los casos de uso del consumer.
+
+    <Image src="/images/generators/microservices/microservice-custom/3-consumer-aggregate-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--consumer-action`
+**Flag:** `--consumer-action "update-stock"`
+
+1. Este parámetro establece la acción que realizará el consumer en respuesta al evento, reflejándose en la lógica del consumer creado.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-consumer-action-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+2. El valor indica la acción que se realizará cuando se consuma el evento, por este motivo tambien es usado para crear el comando correspondiente en la capa de aplicación.
+
+    <Image src="/images/generators/microservices/microservice-custom/2-consumer-action-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--domain-events`
+**Flag:** `--domain-events "ProductCreated,ProductUpdated,ProductRemoved"`
+
+1.  Este parámetro define los eventos de dominio que pueden ocurrir en el microservicio, generando los archivos correspondientes en la capa de dominio.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-domain-events-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--entities`
+**Flag:** `--entities "Product,Category"`
+
+1.  Este parámetro define las entidades que gestiona el microservicio, generando la estructura básica para estas entidades en la capa de dominio.
+
+    <Image src="/images/generators/microservices/microservice-custom/1-entities-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--commands`
+**Flag:** `--commands "CreateProduct,UpdateProduct,RemoveProduct"`
+
+1. Este parámetro define los comandos que el microservicio puede ejecutar, generando las estructuras de comandos y sus handlers correspondientes en la capa de aplicación.
+
+     <Image src="/images/generators/microservices/microservice-custom/1-commands-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--queries`
+**Flag:** `--queries "FindProductById,FindProductsByCategory"`
+
+1. Este parámetro define las queries que el microservicio puede ejecutar, generando las estructuras de queries y sus handlers correspondientes en la capa de aplicación.
+
+     <Image src="/images/generators/microservices/microservice-custom/1-queries-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   A diferencia de los microservicios CRUD, los microservicios custom permiten una mayor flexibilidad y personalización.
+*   Asegúrate de proporcionar una descripción clara para tu microservicio.
+*   Define bien tu agregado raíz (`--aggregate`) para organizar adecuadamente tu dominio.
+*   Considera habilitar gRPC y Workers (`--enable-grpc`) según las necesidades de tu proyecto.
+*   Configura correctamente los eventos de dominio (`--domain-events`), entidades (`--entities`), comandos (`--commands`), y queries (`--queries`).
+*   Comprender el impacto de cada parámetro te ayudará a personalizar, extender, solucionar problemas y mantener tu microservicio de forma efectiva.
+
+## Enlaces Relacionados
+
+*   [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*   [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*   [Conceptos de DDD](https://martinfowler.com/bliki/DomainDrivenDesign.html)
+*   [Yeoman](https://yeoman.io/)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice microservice` proporciona una forma flexible de generar la estructura de un microservicio custom, permitiendo un enfoque en la lógica de negocio compleja y la gestión de eventos. Utiliza las opciones disponibles para adaptar el microservicio a las necesidades específicas de tu proyecto.
+

@@ -1,0 +1,136 @@
+---
+title: Overview
+---
+
+import { LinkCard, Steps, Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components';
+
+La librería `CodeDesignPlus.Net.Serializers` proporciona un conjunto de herramientas para facilitar la serialización y deserialización de objetos en formato JSON, con un enfoque particular en el manejo de eventos de dominio. Esta librería busca simplificar la transformación de objetos complejos a JSON y viceversa, al tiempo que ofrece flexibilidad y control sobre el proceso de serialización.
+
+## Propósito y alcance
+---
+
+El principal propósito de esta librería es proporcionar una forma sencilla y consistente de serializar y deserializar objetos en formato JSON, especialmente útil en aplicaciones que utilizan eventos de dominio.  La librería incluye un `ContractResolver` personalizado que permite ignorar propiedades específicas durante la serialización, así como personalizar el nombre de las propiedades en el JSON resultante. Además, la librería proporciona métodos estáticos para simplificar el uso de la serialización y deserialización de JSON.
+
+## Principales características
+---
+
+-   **`EventContractResolver` Personalizado:** Permite controlar qué propiedades se serializan, especialmente útil para eventos de dominio donde se desea excluir metadatos.
+-   **Personalización del Nombre de Propiedades:** Permite convertir la primera letra de cada propiedad a minúscula.
+-   **Métodos Estáticos de Serialización/Deserialización:** Simplifica la serialización y deserialización a través de una clase estática `JsonSerializer`.
+-   **Flexibilidad en la Configuración:** Permite el uso de configuraciones personalizadas de `JsonSerializerSettings` para casos de uso avanzados.
+
+## Casos de uso típicos
+---
+
+-   Serialización de eventos de dominio para su almacenamiento o transporte en un sistema de mensajería.
+-   Deserialización de datos JSON desde APIs externas.
+-   Transformación de objetos a JSON con un formato específico.
+-   Control de propiedades que no deben ser serializadas o deserializadas.
+-   Serialización de objetos para logging o debugging.
+
+## Componentes Principales
+---
+
+-   **`EventContractResolver`:**
+    -   Clase que extiende `DefaultContractResolver` de Newtonsoft.Json, proporcionando la lógica para ignorar ciertas propiedades y cambiar el nombre de propiedades.
+    -   Se utiliza para personalizar el proceso de serialización y deserialización de objetos.
+
+-   **`JsonSerializer`:**
+    -   Clase estática que contiene métodos para serializar y deserializar objetos.
+    -   Simplifica el proceso de serialización y deserialización, ofreciendo métodos con opciones adicionales como formato y configuraciones.
+
+<FileTree>
+- src 
+       - CodeDesignPlus.Net.Serializers
+              - EventContractResolver.cs
+              - JsonSerializer.cs
+</FileTree>
+
+## Primeros Pasos
+---
+
+En esta sección, aprenderás a instalar y configurar la librería `CodeDesignPlus.Net.Serializers` en tu proyecto de .NET. Además, explorarás los componentes que proporciona la librería para serializar y deserializar objetos en formato JSON.
+
+### Requisitos previos
+
+- .NET 8 o superior.
+-  Newtonsoft.Json (Esta librería es una dependencia de `CodeDesignPlus.Net.Serializers`).
+
+### Instalación
+
+Para instalar la librería `CodeDesignPlus.Net.Serializers`, puedes utilizar el administrador de paquetes NuGet o la CLI de .NET. A continuación, se muestra un ejemplo de cómo instalar la librería utilizando la CLI de .NET:
+
+<Tabs>
+    <TabItem label=".Net CLI">
+    ```bash
+    dotnet add package CodeDesignPlus.Net.Serializers
+    ```
+    </TabItem>
+    <TabItem label="Nuget">
+    ```bash
+    Install-Package CodeDesignPlus.Net.Serializers
+    ```
+    </TabItem>
+    <TabItem label="Package Reference">
+    ```bash
+    <PackageReference Include="CodeDesignPlus.Net.Serializers" Version="1.0.0" />
+    ```
+    </TabItem>
+</Tabs>
+
+## Ejemplo rápido
+---
+
+La solución [CodeDesignPlus.Net.Serializers.Sample](examples/CodeDesignPlus.Net.Serializers.Sample/src/CodeDesignPlus.Net.Serializers.Sample/Program.cs) muestra cómo serializar y deserializar objetos en formato JSON utilizando la librería `CodeDesignPlus.Net.Serializers`. A continuación, se muestra un ejemplo de cómo utilizar la librería en tu proyecto:
+
+```csharp url="examples/CodeDesignPlus.Net.Serializers.Sample/src/CodeDesignPlus.Net.Serializers.Sample/Program.cs"
+```
+
+<Steps>
+1. Creamos el modelo `UserModel`:
+
+    ```csharp url="examples/CodeDesignPlus.Net.Serializers.Sample/src/CodeDesignPlus.Net.Serializers.Sample/UserModel.cs"
+    ```
+
+2. Serializamos y deserializamos un objeto `UserModel` utilizando la clase `JsonSerializer`:
+
+    ```csharp
+        
+    var json = JsonSerializer.Serialize(userModel);
+
+    Console.WriteLine(json);
+
+    var userModelDeserialized = JsonSerializer.Deserialize<UserModel>(json);
+
+    Console.WriteLine(userModelDeserialized.Name); 
+    ```
+
+</Steps>
+
+## JsonSerializer
+---
+
+La clase `JsonSerializer` proporciona métodos estáticos para serializar y deserializar objetos en formato JSON. Estos métodos simplifican el proceso de transformación de objetos a JSON y viceversa, ofreciendo opciones adicionales para personalizar la serialización y deserialización.
+
+<LinkCard title="Explora la clase JsonSerializer" href="/libs/serializers/services/json-serializer" />
+
+## EventContractResolver
+---
+
+El `EventContractResolver` es una clase que extiende `DefaultContractResolver` de Newtonsoft.Json y proporciona la lógica para personalizar el proceso de serialización y deserialización de objetos. Esta clase se utiliza para controlar qué propiedades se incluyen en el JSON resultante y cómo se nombran las propiedades.
+
+<LinkCard title="Explora la clase EventContractResolver" href="/libs/serializers/services/event-contract-resolver" />
+
+## Conclusiones
+---
+
+-   La librería `CodeDesignPlus.Net.Serializers` simplifica la serialización y deserialización de objetos en formato JSON, con un enfoque en el manejo de eventos de dominio.
+-   El uso del `EventContractResolver` permite personalizar las propiedades que se incluyen en el JSON resultante.
+-   La clase estática `JsonSerializer` ofrece métodos para simplificar la serialización y deserialización con opciones adicionales.
+-   La librería es flexible y permite el uso de `JsonSerializerSettings` para configuraciones avanzadas.
+
+## Recursos externos
+---
+
+-   [Documentación de Newtonsoft.Json](https://www.newtonsoft.com/json)
+-   [Documentación oficial de .NET](https://docs.microsoft.com/en-us/dotnet/)

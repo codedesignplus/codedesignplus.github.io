@@ -1,0 +1,104 @@
+---
+title: Rabbit PubSub
+---
+
+import { LinkCard, Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Este documento describe los servicios `IRabbitPubSubService` y `RabbitPubSubService`, que proporcionan una capa de abstracción para publicar y suscribirse a eventos de dominio utilizando RabbitMQ como broker de mensajería. `RabbitPubSubService` implementa la interfaz `IRabbitPubSubService` y ofrece métodos para la publicación y suscripción asíncrona de eventos, incluyendo el manejo de la configuración de exchanges, queues y dead-letter exchanges (DLX).
+
+<Tabs>
+    <TabItem label="IRabbitPubSubService">
+    ```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ.Abstractions/IRabbitPubSubService.cs"
+    ```
+    </TabItem>
+    <TabItem label="IMessage">
+    ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IMessage.cs"
+    ```
+    </TabItem>
+</Tabs>
+
+
+
+
+## ¿Cómo Funciona?
+---
+
+`RabbitPubSubService` facilita la comunicación asíncrona entre diferentes partes de una aplicación (o entre microservicios) mediante la publicación y suscripción de eventos de dominio. Cuando un evento se publica, el servicio lo serializa y lo envía al exchange correspondiente en RabbitMQ. Los servicios suscritos a este evento, a través del servicio, reciben el mensaje y pueden procesarlo. El servicio gestiona la configuración de exchanges, queues (incluyendo dead-letter queues - DLQ) y el binding entre ellos. También maneja la deserialización de los mensajes recibidos y el despacho de eventos a sus respectivos manejadores. Utiliza `ChannelProvider` para gestionar los canales y exchanges en RabbitMQ.
+
+## Métodos
+---
+
+`RabbitPubSubService` implementa la interfaz `IRabbitPubSubService`, que define los siguientes métodos:
+
+### PublishAsync
+**Type:** `Task PublishAsync(IDomainEvent @event, CancellationToken cancellationToken)`
+
+Publica un evento de dominio en RabbitMQ de forma asíncrona. Toma como argumento el evento a publicar y un `CancellationToken` para poder cancelar la operación. El método serializa el evento a JSON y lo publica al exchange correspondiente, previamente declarado.
+
+### PublishAsync (sobrecarga)
+**Type:** `Task PublishAsync(IReadOnlyList<IDomainEvent> @event, CancellationToken cancellationToken)`
+
+Publica una lista de eventos de dominio en RabbitMQ de forma asíncrona. Toma una lista de eventos a publicar y un `CancellationToken`. Llama al método `PublishAsync` por cada evento en la lista.
+
+### SubscribeAsync
+**Type:** `Task SubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Se suscribe de forma asíncrona a un evento de dominio específico y a su manejador.  Recibe un `CancellationToken` y el tipo del evento y su manejador.  Crea el exchange y cola correspondientes y se suscribe a la cola, procesando los mensajes que reciba. También establece un `consumerTag` en `ChannelProvider` que se usa para desuscribirse.
+
+### UnsubscribeAsync
+**Type:** `Task UnsubscribeAsync<TEvent, TEventHandler>(CancellationToken cancellationToken)`
+
+Cancela la suscripción a un evento de dominio específico utilizando el `consumerTag` en el  `ChannelProvider`.  Recibe el `CancellationToken` y el tipo del evento y su manejador.
+
+## Implementación
+---
+
+```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/RabbitPubSubService.cs"
+```
+
+El servicio `RabbitPubSubService` se implementa como una clase que hereda de `IRabbitPubSubService` y se encarga de:
+
+1.  **Recibir dependencias:** Recibe una instancia de `ILogger<RabbitPubSubService>` para logging, `IServiceProvider` para la resolución de dependencias de los handlers, `IDomainEventResolverService` para obtener el nombre del exchange, `IChannelProvider` para obtener los canales y gestionar los exchanges, `IOptions<CoreOptions>` para obtener información general de la aplicación, y `IOptions<RabbitMQOptions>` para obtener la configuración de RabbitMQ.
+2.  **Publicar eventos:** Al recibir un evento, obtiene el canal de publicación a través del `ChannelProvider`, declara el exchange si no existe, serializa el evento a JSON, y lo publica en el exchange con propiedades que incluyen `AppId`, `Type`, `Timestamp`, `MessageId` y `CorrelationId`.
+3.  **Suscribirse a eventos:** Al suscribirse a un evento, obtiene el canal de consumo a través del `ChannelProvider`, declara la cola (utilizando `QueueNameAttribute` en el event handler) y su dead-letter queue (DLQ) , realiza el binding y comienza a consumir los mensajes, que son procesados por el event handler correspondiente.
+4.   **Manejo de dead-letter queue (DLQ):** Configura un DLQ para cada queue, de forma que los mensajes que no puedan ser procesados después de múltiples intentos se envían a esta DLQ, evitando que se pierdan.
+5.  **Manejo de errores:** Captura excepciones durante el procesamiento de eventos y envía un `BasicNack` a RabbitMQ para que el mensaje sea enviado a la dead-letter queue.
+6. **Deserialización:** Deserializa los mensajes que recibe del bus a su tipo de evento correspondiente.
+7.  **Implementación de tags:** Permite establecer y obtener el tag de un consumidor específico para poder cancelar suscripciones.
+
+Las dependencias del servicio son:
+
+- `ILogger<RabbitPubSubService>`: Para el registro de eventos.
+- `IServiceProvider`: Para resolver los handlers de eventos.
+- `IDomainEventResolverService`: Para obtener el nombre del exchange a partir del tipo de evento.
+- `IChannelProvider`: Para gestionar los canales y exchanges de RabbitMQ.
+- `IOptions<CoreOptions>`: Para acceder a la configuración central de la aplicación.
+- `IOptions<RabbitMQOptions>`: Para obtener la configuración de RabbitMQ.
+
+La clase `RabbitMQOptions` contendría al menos la siguiente propiedad:
+- `QueueArguments` (`Dictionary<string, object>`): Argumentos para las queues.
+
+## Ejemplo de Uso
+---
+
+En este ejemplo, se muestra cómo la librería `CodeDesignPlus.Net.PubSub` hace uso de la interfaz `IMessage` para publicar eventos de dominio. La clase `PubSubService` implementa la interfaz `IPubSub` y se encarga de publicar eventos de dominio de forma asíncrona. Al recibir un evento, verifica si la configuración `UseQueue` está activada y, si es así, encola el evento utilizando `IEventQueueService`. De lo contrario, publica el evento directamente utilizando `IMessage`. La clase `PubSubService` recibe las dependencias necesarias en su constructor, como `IMessage`, `IOptions<PubSubOptions>`, `IServiceProvider` y `ILogger<PubSubService>`, y las utiliza para realizar la publicación de eventos.
+
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/PubSubService.cs"
+```
+
+## Conclusiones
+---
+
+`RabbitPubSubService` ofrece una solución completa y robusta para la implementación de un patrón publish/subscribe utilizando RabbitMQ como broker de mensajes en una aplicación .NET. La gestión de queues, exchanges y dlq, combinada con una abstracción para la publicación y suscripción a eventos, hace que sea sencillo desacoplar componentes y construir aplicaciones escalables y robustas. Es importante usar correctamente el scope al momento de usar el manejador de los eventos.
+
+## Referencias Adicionales
+---
+
+*   [Documentación oficial de RabbitMQ](https://www.rabbitmq.com/documentation.html)
+*   [Patrón Publish/Subscribe](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern)
+*   [Dead Letter Exchanges in RabbitMQ](https://www.rabbitmq.com/dlx.html)
+*   [Uso de Scopes en DI de .NET](https://learn.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-8.0#service-lifetimes)
+
+---
+
+Espero que esta documentación te sea de utilidad. Si tienes alguna pregunta o necesitas aclarar algo, no dudes en consultarme.

@@ -1,0 +1,146 @@
+---
+title: "Creación de Controlador"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Image } from 'astro:assets';
+
+**Command:** `yo codedesignplus:microservice controller`
+
+Este comando se utiliza para crear un controlador dentro de un microservicio existente. Los controladores son responsables de gestionar las peticiones entrantes HTTP y coordinar la ejecución de las operaciones necesarias para atender la petición. Este comando facilita la generación de la estructura básica para definir un controlador en tu microservicio.
+
+## Prerrequisitos
+
+- Instalar [Node.js](https://nodejs.org/es) y [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm) instalados.
+- Instalar [Yeoman](https://yeoman.io/) (`npm install -g yo`).
+- Instalar el generador [`codedesignplus:microservice`](/generators).
+- Tener un microservicio existente creado con:
+    - CRUD: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-crud) 
+    - Custom: [`codedesignplus:microservice`](/generators/microservice/commands/microservice-custom).
+
+## Conceptos Clave
+
+*   **Controlador (Controller):** En el contexto de microservicios, un controlador es un componente que recibe peticiones externas (ya sea HTTP o gRPC) y delega la ejecución de la lógica de negocio correspondiente.
+*   **Punto de Entrada:** Los controladores actúan como puntos de entrada a tu microservicio, exponiendo las operaciones disponibles para los clientes.
+*   **Coordinación:** Los controladores coordinan la ejecución de comandos, queries, y otras operaciones necesarias para procesar una petición.
+*   **Separación de Responsabilidades:** Los controladores deben enfocarse en la recepción de peticiones y la delegación de la lógica de negocio, evitando realizar tareas que no les corresponden.
+
+## Sintaxis del Comando
+
+El comando `yo codedesignplus:microservice controller` tiene la siguiente sintaxis:
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice controller \
+        --organization "<organization_name>" \
+        --microservice "<microservice_name>" \
+        --controller "<controller_name>"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice controller `
+        --organization "<organization_name>" `
+        --microservice "<microservice_name>" `
+        --controller "<controller_name>"
+    ```
+    </TabItem>
+</Tabs>
+
+### `--organization`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre de la organización a la que pertenece el microservicio.
+
+### `--microservice`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del microservicio donde se creará el controlador.
+
+### `--controller`
+    - **Tipo**: `string`
+    - **Obligatorio**: Sí
+    - **Descripción**: El nombre del controlador que se creará.
+
+## Ejemplos de Uso
+
+Este ejemplo crea un controlador llamado `UserProfileController` para el agregado `UserProfile` en el microservicio `users` de la organización `acme`.
+
+<Tabs>
+    <TabItem label="Bash">
+    ```bash
+    yo codedesignplus:microservice controller \
+        --organization "Acme" \
+        --microservice "User" \
+        --controller "UserProfileController"
+    ```
+    </TabItem>
+    <TabItem label="PowerShell">
+    ```powershell
+    yo codedesignplus:microservice controller `
+        --organization "Acme" `
+        --microservice "User" `
+        --controller "UserProfileController"
+    ```
+    </TabItem>
+</Tabs>
+
+### Salida del comando en consola
+
+Tras ejecutar el comando, se generará la estructura base para el controlador `UserProfileController` en el microservicio `users`, con la siguiente salida en consola:
+
+<Image src="/images/generators/microservices/controller/result.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### Directorios y Archivos Generados
+
+Si exploramos el microservicio con VS Code, veremos la estructura de directorios y archivos generados para el nuevo controlador:
+
+<Image src="/images/generators/microservices/controller/vscode.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Resultados de la Ejecución
+
+La ejecución de este comando con los parámetros proporcionados generará la estructura base para un controlador en el microservicio especificado. Veamos los resultados de la ejecución del comando:
+
+### `--organization`
+**Flag:** `--organization "acme"`
+
+1.  Este parámetro establece el nombre de la organización, que se refleja en los namespaces de los archivos generados para el controlador.
+
+    <Image src="/images/generators/microservices/controller/1-organization-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--microservice`
+**Flag:** `--microservice "users"`
+
+1.  Este parámetro establece el nombre del microservicio en el que se creará el controlador, reflejándose en los namespaces y ubicaciones de los archivos.
+
+   <Image src="/images/generators/microservices/controller/1-microservice-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+### `--controller`
+**Flag:** `--controller "UserProfileController"`
+
+1.  Este parámetro establece el nombre del controlador que se creará, reflejándose en los nombres de los archivos y clases generadas en la capa de entrada.
+
+    <Image src="/images/generators/microservices/controller/1-controller-flag.png" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
+
+## Consideraciones Adicionales
+
+*   Asegúrate de tener un microservicio existente antes de utilizar este comando.
+*   El nombre del controlador debe ser descriptivo y reflejar el agregado que gestiona.
+*   Los controladores deben encargarse de recibir las peticiones y delegar la lógica de negocio, pero no deben implementarla directamente.
+*   Un controlador se encarga de un agregado en especifico.
+
+<Aside>
+    Es importante tener en cuenta que los controladores están asociados a un agregado específico. Para este ejemplo, estamos creando el <code>UserProfileController</code> que se encargará de gestionar las peticiones relacionadas con el agregado <code>UserProfile</code>.
+</Aside>
+
+## Enlaces Relacionados
+
+*  [Documentación del arquetipo `CodeDesignPlus.Net.Microservice`](../archetypes/)
+*  [Documentación del SDK `CodeDesignPlus.Net.SDK`](../libs/introduction)
+*  [Arquitectura de Microservicios](https://martinfowler.com/articles/microservices.html)
+*  [RESTful web API design](https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design)
+
+## Conclusión
+
+El comando `yo codedesignplus:microservice controller` facilita la creación de controladores en tu microservicio, asegurando que la estructura y los principios de separación de responsabilidades se apliquen correctamente. Utiliza este comando para crear puntos de entrada claros y mantenibles para tu microservicio.

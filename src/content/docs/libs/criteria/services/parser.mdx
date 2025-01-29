@@ -1,0 +1,109 @@
+---
+title: Parser
+---
+
+
+
+import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
+
+El servicio `Parser` es una clase diseñada para convertir una lista de tokens en un Árbol de Sintaxis Abstracta (AST). Este componente es clave en la interpretación de expresiones tokenizadas, permitiendo su representación como nodos estructurados que facilitan el análisis y la ejecución de operaciones más complejas.
+
+## ¿Cómo Funciona?
+
+El `Parser` toma como entrada una lista de tokens generados previamente (por ejemplo, usando el servicio `Tokenizer`) y los procesa para construir un AST. Cada nodo del árbol representa una parte específica de la lógica, como condiciones, operadores o expresiones completas. La estructura jerárquica del árbol permite manejar dependencias y prioridades entre las operaciones.
+
+## Métodos
+---
+
+La clase `Parser` proporciona una serie de métodos para analizar y organizar los tokens en un árbol de sintaxis abstracta. A continuación, se detallan los métodos principales y su funcionalidad:
+
+### Parse
+**Type:** `public AstNode Parse()`
+
+Método principal que inicia el proceso de análisis de una lista de tokens, transformándolos en una estructura jerárquica conocida como árbol de sintaxis abstracto (AST). Este método es el punto de entrada del análisis sintáctico y coordina las siguientes fases del proceso.
+
+### ParseExpression
+**Type:** `private AstNode ParseExpression()`
+
+Interpreta y organiza expresiones, las cuales pueden incluir uno o varios operadores lógicos como `and` u `or`. Este método se encarga de construir la estructura del árbol, asegurando que las relaciones entre las condiciones y los operadores se reflejen correctamente en el árbol.
+
+### ParseCondition
+**Type:** `private AstNode ParseCondition()`
+
+Interpreta una condición simple, la cual está compuesta por una propiedad, un operador de comparación (como `=, <, >`, etc.) y un valor. Este método es responsable de verificar que la estructura de la condición sea válida y de convertirla en la unidad básica de representación dentro del árbol de sintaxis.
+
+
+## Implementación
+---
+
+El servicio `Parser` se implementa en el espacio de nombres `CodeDesignPlus.Net.Criteria`. Su constructor requiere una lista de tokens que serán analizados para generar el AST. Los principales componentes del servicio incluyen:
+
+- **Tokens:** Lista de entrada que contiene los elementos a interpretar.  
+- **Posición:** Puntero que controla el recorrido de la lista de tokens durante el análisis.  
+- **AstNode:** Clase que representa cada nodo del árbol, incluyendo su tipo, valor y posibles hijos.  
+
+El servicio lanza excepciones si el formato de las condiciones no es válido, garantizando robustez en el análisis.
+
+```csharp url="packages/CodeDesignPlus.Net.Criteria/src/CodeDesignPlus.Net.Criteria/Parser.cs" 
+```
+
+## Ejemplo de Uso
+---
+
+
+Supongamos que hemos tokenizado la siguiente expresión de filtro:
+
+```plaintext
+"age>=30|name~=John|status=active"
+```
+
+El siguiente código en C# muestra cómo construir y representar un árbol de sintaxis abstracta (AST) para esta expresión:
+
+
+```csharp
+var tokens = Tokenizer.Tokenize("age>=30|name~=John|status=active");
+var parser = new Parser(tokens);
+
+AstNode ast = parser.Parse();
+PrintAst(ast);
+
+void PrintAst(AstNode node, string indent = "")
+{
+    Console.WriteLine($"{indent}- {node.Type}: {node.Value}");
+    foreach (var child in node.Children)
+    {
+        PrintAst(child, indent + "  ");
+    }
+}
+
+// Output:
+// - Expression: 
+//   - Operator: or
+//     - Condition: age>=30
+//     - Operator: or
+//       - Condition: name~=John
+//       - Condition: status=active
+
+```
+
+Al ejecutar este código, el método Parse del Parser construirá un árbol de sintaxis abstracta que podría representarse de la siguiente manera:
+
+```mathmatica
+        Expression
+           /     \
+      Condition   Operator
+        age>=30      or
+                    /   \
+               Condition  Operator
+             name~=John      or
+                           /   \
+                     Condition Condition
+                 status=active
+```
+
+Este árbol de sintaxis abstracta representa la expresión de filtrado original de una manera estructurada y jerárquica. Esto facilita tanto su evaluación como su procesamiento en pasos posteriores.
+
+## Conclusiones
+---
+
+El servicio `Parser` es una herramienta esencial para interpretar y analizar expresiones complejas en aplicaciones que requieren lógica de filtrado o búsqueda. Al convertir una lista de tokens en un árbol de sintaxis abstracta, este componente facilita la manipulación y ejecución de operaciones lógicas avanzadas. Su estructura jerárquica y organizada permite gestionar condiciones, operadores y expresiones de manera eficiente y escalable.

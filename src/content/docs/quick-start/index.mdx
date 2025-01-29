@@ -1,0 +1,97 @@
+---
+title: Quick Start
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+Desarrollar microservicios puede ser una tarea desafiante. La necesidad de crear aplicaciones modulares, escalables y mantenibles a menudo se topa con la complejidad de configurar arquitecturas, elegir patrones de diseño y lidiar con la gestión de dependencias. Si estás buscando una manera rápida y eficiente de crear microservicios robustos en .NET, has llegado al lugar correcto.
+
+`CodeDesignPlus.Net.Sdk`, `CodeDesignPlus.Net.Microservice` y `generator-codedesignplus` están diseñados para abordar precisamente estos desafíos, ofreciendo un conjunto de librerías y herramientas que te permiten construir plataformas sólidas desde cero. Este SDK consolida las mejores prácticas, patrones de diseño probados y tecnologías ampliamente utilizadas, simplificando el proceso de desarrollo y permitiéndote enfocarte en la lógica de negocio de tu aplicación.
+
+Este **Quick Start** te guiará paso a paso en la creación de tu primer microservicio utilizando las herramientas de  **CodeDesignPlus**. Aprenderás a aprovechar el poder de los generadores de código para acelerar la creación de la estructura base, a comprender y usar el arquetipo de microservicios que promueve las mejores prácticas y a implementar funcionalidades con las librerías del SDK. Nuestro objetivo es proporcionarte una base sólida para que puedas comenzar a construir tus propios microservicios de manera rápida y efectiva.
+
+## ¿Qué aprenderás?
+
+Al completar este Quick Start, serás capaz de:
+
+*   Utilizar los [generadores](/generators/) de código de CodeDesignPlus para crear rápidamente la estructura base de tu microservicio.
+*   Comprender la estructura del arquetipo [`CodeDesignPlus.Net.Microservice`](/archetypes/) y sus convenciones, así como los patrones de diseño utilizados (DDD, CQRS, etc.).
+*   Usar [`CodeDesignPlus.Net.Sdk`](/libs/introduction) para resolver problemas comunes en el desarrollo de microservicios.
+*   Generar microservicios [`CRUD`](/generators/microservice/commands/microservice-crud) y [`Custom`](/generators/microservice/commands/microservice-custom), adaptándolos a diferentes necesidades.
+*   Comprender la [estructura de un microservicio](/archetypes/architecture) basado en el arquetipo.
+*   Extender tu microservicio con otros componentes generados.
+
+## **¿Qué necesitas?**
+
+Antes de comenzar, asegúrate de tener lo siguiente:
+
+*   Conocimientos básicos de C# y .NET.
+*   Conocimientos básicos sobre la arquitectura de microservicios.
+*   Entendimiento básico de los principios de Domain-Driven Design (DDD).
+
+## **Estructura del Quick Start**
+
+Este Quick Start está diseñado como un viaje paso a paso, compuesto por una serie de artículos interconectados. Cada artículo abordará una fase específica del proceso, desde la preparación del entorno hasta la creación y exploración de tu microservicio:
+
+<CardGrid stagger>
+  <Card title="Componentes" icon="open-book">
+    Introducción a los componentes como generadores, arquetipo y SDK.
+
+    <LinkCard title="1. Components" href="/quick-start/components" />
+  </Card>
+  <Card title="Herramientas" icon="setting">
+      Instalación de las herramientas necesarias para el desarrollo de microservicios.
+  
+      <LinkCard title="2. Tools" href="/quick-start/tools" />
+  </Card>
+  <Card title="Entorno de Desarrollo" icon="setting">
+      Configuración de tu entorno de desarrollo para trabajar con microservicios.
+  
+      <LinkCard title="3. Dev Environment" href="/quick-start/dev-environment" />
+  </Card>
+  <Card title="Crear un Microservicio" icon="seti:c-sharp">
+      Creación de un microservicio REST (CRUD) con CodeDesignPlus.
+  
+      <LinkCard title="4. Create Microservice" href="/quick-start/create-microservice" />
+  </Card>
+  <Card title="Soporte para gRPC" icon="seti:c-sharp">
+      Añadir soporte para gRPC a tu microservicio.
+  
+      <LinkCard title="5. gRPC Support" href="/quick-start/grpc-support" />
+  </Card>
+  <Card title="Eventos" icon="email">
+      Suscribirse a eventos de otros microservicios.
+  
+      <LinkCard title="6. Event Subscription" href="/quick-start/event-subscription" />
+  </Card>
+  <Card title="Pruebas con Postman" icon="approve-check">
+      Realizar pruebas con Postman.
+  
+      <LinkCard title="7. Testing" href="/quick-start/testing" />
+  </Card>
+  <Card title="Ejecutar en Docker" icon="seti:docker">
+      Ejecutar tu microservicio en Docker.
+  
+      <LinkCard title="8. Deploy Docker" href="/quick-start/deploy-docker" />
+  </Card>
+  <Card title="Logs en Grafana" icon="rocket">
+      Ver los logs de tu microservicio en Grafana + Loki.
+  
+      <LinkCard title="9. Logs Grafana" href="/quick-start/logs-grafana" />
+  </Card>
+  <Card title="Monitoreo en Grafana" icon="rocket">
+      Monitorear tu microservicio con Grafana + Prometheus.
+  
+      <LinkCard title="10. Monitoring Grafana" href="/quick-start/monitoring-grafana" />
+  </Card>
+  <Card title="Trazas en Grafana" icon="rocket">
+      Ver las trazas de tu microservicio en Grafana + Tempo.
+  
+      <LinkCard title="11. Tracing Jaeger" href="/quick-start/tracing-jaeger" />
+  </Card>
+  <Card title="Pruebas de Carga" icon="heart">
+      Realizar pruebas de carga con K6.
+  
+      <LinkCard title="12. Load Testing" href="/quick-start/load-testing" />
+  </Card>
+</CardGrid>

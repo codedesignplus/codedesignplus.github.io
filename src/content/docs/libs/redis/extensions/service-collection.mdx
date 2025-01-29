@@ -1,0 +1,111 @@
+---
+title: Service Collection
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Esta clase proporciona métodos de extensión para la interfaz `IServiceCollection` que facilitan la configuración y registro de los servicios Redis en una aplicación .NET, centralizando la inyección de dependencias y la configuración de opciones. El objetivo principal es simplificar el proceso de integración de Redis en aplicaciones .NET, promoviendo la reutilización de configuraciones y la coherencia en el acceso a Redis.
+
+## Dependencias y Requisitos Previos
+---
+- `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection`.
+- `Microsoft.Extensions.Configuration`: Necesario para la interfaz `IConfiguration`.
+- `Microsoft.Extensions.Options`: Necesario para la configuración de opciones.
+
+## Escenarios de uso
+---
+Este método de extensión es particularmente útil en aplicaciones que:
+- Utilizan Redis como caché, almacenamiento de sesiones o broker de mensajes.
+- Requieren una configuración centralizada y reutilizable de los servicios Redis.
+- Necesitan inyectar dependencias de servicios Redis en diferentes partes de la aplicación.
+- Siguen el patrón de inyección de dependencias para desacoplar componentes.
+- Desean configurar la conexión a Redis desde la configuración de la aplicación (appsettings.json, variables de entorno, etc.).
+
+## Beneficios
+---
+
+- **Configuración Simplificada:** Facilita la configuración de los servicios Redis utilizando la configuración de la aplicación.
+- **Inyección de Dependencias:** Permite la inyección sencilla de las interfaces `IRedisService` e `IRedisServiceFactory` en cualquier parte de la aplicación.
+- **Centralización de la configuración:** Asegura que todas las conexiones a Redis sean configuradas de la misma manera.
+- **Reutilización de código:** Evita la necesidad de repetir la configuración de Redis en múltiples partes de la aplicación.
+
+## Ejemplo Práctico
+---
+
+En este ejemplo, se utiliza el método `AddRedis` para configurar los servicios Redis, tomando la configuración de la aplicación (`Configuration`). Esto permite que `IRedisService` e `IRedisServiceFactory` estén disponibles para ser inyectadas como dependencias.
+
+1. Asignamos las configuraciones en el archivo `appsettings.json`:
+
+    <Tabs>
+        <TabItem label="Standalone">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Standalone + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/appsettings.json"
+        ```
+        </TabItem>
+        <TabItem label="Cluster + TLS">
+        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample/appsettings.json"
+        ```
+        </TabItem>
+    </Tabs>
+
+2. Usamos el método `AddRedis` en el archivo `Startup.cs` o `Program.cs` para configurar los servicios Redis:
+    
+    ```csharp
+    // En tu archivo Startup.cs o Program.cs
+    public void ConfigureServices(IServiceCollection services)
+    {
+        // ...
+        services.AddRedis(Configuration); 
+    }
+    ```
+
+## Métodos de extensión
+---
+
+`ServiceCollectionExtensions` proporciona los siguientes métodos de extensión para configurar y registrar servicios relacionados con MongoDB en una aplicación .NET.
+
+### AddRedis
+**Type:** `public static IServiceCollection AddRedis(this IServiceCollection services, IConfiguration configuration)`
+
+Este método extiende la interfaz `IServiceCollection` para configurar los servicios Redis en la aplicación, utilizando la configuración de la aplicación para obtener las opciones de Redis.
+
+- **Parámetros:**
+    -   `services`: (<see cref="IServiceCollection"/>) La colección de servicios a la cual agregar los servicios Redis. No puede ser nulo.
+    -   `configuration`: (<see cref="IConfiguration"/>) La configuración de la aplicación desde donde se obtendrán las opciones de Redis. No puede ser nulo.
+
+- **Tipo de retorno:**
+    -   (<see cref="IServiceCollection"/>) La misma colección de servicios para permitir el encadenamiento de llamadas a otros métodos de extensión.
+
+- **Excepciones:**
+    -   `ArgumentNullException`: Se lanza si `services` o `configuration` son nulos.
+    -   `Exceptions.RedisException`: Se lanza si la sección de configuración `RedisOptions.Section` (por defecto "Redis") no existe en la configuración.
+
+#### Descripción detallada
+
+Este método extiende la interfaz `IServiceCollection` para configurar los servicios Redis en la aplicación. Realiza los siguientes pasos:
+
+1.  **Validación de argumentos:** Se asegura de que los parámetros `services` y `configuration` no sean nulos.
+2.  **Obtención de la configuración:** Obtiene la sección de configuración de Redis (por defecto "Redis") desde la configuración de la aplicación. Si la sección no existe, lanza una excepción `Exceptions.RedisException`.
+3.  **Registro de opciones:** Registra las opciones de configuración de Redis utilizando la clase `RedisOptions` y las enlaza a la sección de configuración obtenida.
+4.  **Registro de servicios:** Registra las interfaces `IRedisService` e `IRedisServiceFactory` como singletons, permitiendo que se puedan inyectar como dependencias.
+5.  **Registro de conexión:** Registra la conexión creada mediante `IRedisServiceFactory` con un scope Singleton.
+6.  **Retorno de la colección:** Retorna la colección de servicios para permitir el encadenamiento de otras configuraciones.
+
+## Conclusiones
+---
+
+El método `AddRedis` facilita la integración de Redis en aplicaciones .NET, proporcionando una forma estandarizada de configuración e inyección de dependencias. Al utilizar este método, los desarrolladores pueden centralizar la configuración de Redis, reduciendo la complejidad y mejorando la mantenibilidad del código. Asegúrate de que la sección de configuración de Redis exista y esté correctamente configurada.
+
+## Referencias
+---
+
+-   [Documentación oficial de Microsoft.Extensions.DependencyInjection](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.dependencyinjection)
+-   [Documentación oficial de Microsoft.Extensions.Configuration](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.configuration)
+-   [Documentación oficial de Microsoft.Extensions.Options](https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.options)
