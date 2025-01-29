@@ -89,7 +89,7 @@ import Container from '../components/Container.astro';
 <script is:inline src="https://www.google.com/recaptcha/api.js" async defer></script>
 
 <script>
-    const form = document.getElementById('contact-form');
+    const form = document.getElementById('contact-form') as HTMLFormElement;
     const submitButton = document.getElementById('submit-button') as HTMLButtonElement;
 
     // Callback cuando el captcha es completado
@@ -111,7 +111,30 @@ import Container from '../components/Container.astro';
             return;
         }
 
-        // Aquí irá la lógica para enviar el formulario
-        // Incluir el token del recaptcha en la petición
+        console.log(recaptchaResponse);
+
+        // Enviar los datos del formulario y el token reCAPTCHA a la Azure Function
+        const response = await fetch('https://send-email-cdp.azurewebsites.net/api/ContactFormFunction?code=zSBggHnp1Qgwb3iIp8j-RiLM3PjXLno0XJxHqHMEtQC9AzFuqMmHLA%3D%3D', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                recaptchaResponse,
+                name: (form.querySelector('#name') as HTMLInputElement).value,
+                email: (form.querySelector('#email') as HTMLInputElement).value,
+                subject: (form.querySelector('#subject') as HTMLInputElement).value,
+                message: (form.querySelector('#message') as HTMLTextAreaElement).value
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            alert('Captcha verificado y correo enviado exitosamente');
+        } else {
+            alert('Error al verificar el captcha');
+        }
+        
     });
 </script>
