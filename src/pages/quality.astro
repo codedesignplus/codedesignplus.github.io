@@ -4,53 +4,58 @@ import Container from '../components/Container.astro';
 import QualityCard from '../components/QualityCard.astro';
 ---
 
-
 <Layout title="Calidad - CodeDesignPlus">
-  <Container>
-    <div class="relative pt-36 ml-auto text-center">
-      <div class="lg:w-2/3 mx-auto">
-        <h1 class="text-gray-900 dark:text-white font-bold text-3xl md:text-4xl xl:text-5xl mb-4">
-          Calidad del Código
-        </h1>
-        <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-8">
-          SonarCloud
-        </h3>
-        <p class="text-lg text-gray-700 dark:text-gray-300 mb-8">
-          En CodeDesignPlus, estamos comprometidos con la calidad del software. Cada una de nuestras bibliotecas es analizada exhaustivamente utilizando SonarQube para garantizar que cumplen con los más altos estándares de calidad. A continuación, se presentan los resultados de los análisis de calidad de nuestras principales bibliotecas.
-        </p>
-      </div>
+  <div class="relative" id="quality">
+    <div aria-hidden="true" class="absolute inset-0 grid grid-cols-2 -space-x-52 opacity-40 dark:opacity-20">
+      <div class="blur-[106px] h-56 bg-gradient-to-br from-primary to-purple-400 dark:from-blue-700"></div>
+      <div class="blur-[106px] h-32 bg-gradient-to-r from-cyan-400 to-sky-300 dark:to-indigo-600"></div>
     </div>
-    <div class="py-16 lg:py-20">
-      <div class="max-w-4xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <QualityCard title="Core" projectId="CodeDesignPlus.Net.Core" />
-          <QualityCard title="Criteria" projectId="CodeDesignPlus.Net.Criteria" />
-          <QualityCard title="EFCore" projectId="CodeDesignPlus.Net.EFCore" />
-          <QualityCard title="Event.Sourcing" projectId="CodeDesignPlus.Net.Event.Sourcing" />
-          <QualityCard title="EventStore" projectId="CodeDesignPlus.Net.EventStore" />
-          <QualityCard title="EventStore.PubSub" projectId="CodeDesignPlus.Net.EventStore.PubSub" />
-          <QualityCard title="Exceptions" projectId="CodeDesignPlus.Net.Exceptions" />
-          <QualityCard title="File.Storage" projectId="CodeDesignPlus.Net.File.Storage" />
-          <QualityCard title="Generator" projectId="CodeDesignPlus.Net.Generator" />
-          <QualityCard title="Kafka" projectId="CodeDesignPlus.Net.Kafka" />
-          <QualityCard title="Logger" projectId="CodeDesignPlus.Net.Logger" />
-          <QualityCard title="Microservice.Commons" projectId="CodeDesignPlus.Net.Microservice.Commons" />
-          <QualityCard title="Mongo" projectId="CodeDesignPlus.Net.Mongo" />
-          <QualityCard title="Mongo.Diagnostics" projectId="CodeDesignPlus.Net.Mongo.Diagnostics" />
-          <QualityCard title="Observability" projectId="CodeDesignPlus.Net.Observability" />
-          <QualityCard title="PubSub" projectId="CodeDesignPlus.Net.PubSub" />
-          <QualityCard title="RabbitMQ" projectId="CodeDesignPlus.Net.RabbitMQ" />
-          <QualityCard title="Redis" projectId="CodeDesignPlus.Net.Redis" />
-          <QualityCard title="Redis.PubSub" projectId="CodeDesignPlus.Net.Redis.PubSub" />
-          <QualityCard title="Security" projectId="CodeDesignPlus.Net.Security" />
-          <QualityCard title="Serializers" projectId="CodeDesignPlus.Net.Serializers" />
-          <QualityCard title="Vault" projectId="CodeDesignPlus.Net.Vault" />
-          <QualityCard title="xUnit" projectId="CodeDesignPlus.Net.xUnit" />
-          <QualityCard title="xUnit.Microservice" projectId="CodeDesignPlus.Net.xUnit.Microservice" />
+    <Container>
+      <div class="relative pt-36 ml-auto text-center">
+        <div class="lg:w-2/3 mx-auto">
+          <h1 class="text-gray-900 dark:text-white font-bold text-3xl md:text-4xl xl:text-5xl mb-4">
+            Calidad del Código
+          </h1>
+          <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-8">
+            SonarCloud
+          </h3>
+          <p class="text-lg text-gray-700 dark:text-gray-300 mb-8">
+            En CodeDesignPlus, estamos comprometidos con la calidad del software. Cada una de nuestras bibliotecas es analizada exhaustivamente utilizando SonarQube para garantizar que cumplen con los más altos estándares de calidad. A continuación, se presentan los resultados de los análisis de calidad de nuestras principales bibliotecas.
+          </p>
         </div>
       </div>
-    </div>
-  </Container>
+      <div class="py-16 lg:py-20">
+        <div class="max-w-4xl mx-auto">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <QualityCard title="Core" projectId="CodeDesignPlus.Net.Core" />
+            <QualityCard title="Criteria" projectId="CodeDesignPlus.Net.Criteria" />
+            <QualityCard title="EFCore" projectId="CodeDesignPlus.Net.EFCore" />
+            <QualityCard title="Event.Sourcing" projectId="CodeDesignPlus.Net.Event.Sourcing" />
+            <QualityCard title="EventStore" projectId="CodeDesignPlus.Net.EventStore" />
+            <QualityCard title="EventStore.PubSub" projectId="CodeDesignPlus.Net.EventStore.PubSub" />
+            <QualityCard title="Exceptions" projectId="CodeDesignPlus.Net.Exceptions" />
+            <QualityCard title="File.Storage" projectId="CodeDesignPlus.Net.File.Storage" />
+            <QualityCard title="Generator" projectId="CodeDesignPlus.Net.Generator" />
+            <QualityCard title="Kafka" projectId="CodeDesignPlus.Net.Kafka" />
+            <QualityCard title="Logger" projectId="CodeDesignPlus.Net.Logger" />
+            <QualityCard title="Microservice.Commons" projectId="CodeDesignPlus.Net.Microservice.Commons" />
+            <QualityCard title="Mongo" projectId="CodeDesignPlus.Net.Mongo" />
+            <QualityCard title="Mongo.Diagnostics" projectId="CodeDesignPlus.Net.Mongo.Diagnostics" />
+            <QualityCard title="Observability" projectId="CodeDesignPlus.Net.Observability" />
+            <QualityCard title="PubSub" projectId="CodeDesignPlus.Net.PubSub" />
+            <QualityCard title="RabbitMQ" projectId="CodeDesignPlus.Net.RabbitMQ" />
+            <QualityCard title="Redis" projectId="CodeDesignPlus.Net.Redis" />
+            <QualityCard title="Redis.PubSub" projectId="CodeDesignPlus.Net.Redis.PubSub" />
+            <QualityCard title="Security" projectId="CodeDesignPlus.Net.Security" />
+            <QualityCard title="Serializers" projectId="CodeDesignPlus.Net.Serializers" />
+            <QualityCard title="Vault" projectId="CodeDesignPlus.Net.Vault" />
+            <QualityCard title="xUnit" projectId="CodeDesignPlus.Net.xUnit" />
+            <QualityCard title="xUnit.Microservice" projectId="CodeDesignPlus.Net.xUnit.Microservice" />
+          </div>
+        </div>
+      </div>
+    </Container>
+  </div>
 </Layout>
 
 <style>
