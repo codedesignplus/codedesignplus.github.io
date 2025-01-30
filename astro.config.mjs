@@ -43,6 +43,7 @@ export default defineConfig({
                 facebook: 'https://www.facebook.com/profile.php?id=100040970353620',
                 linkedin: 'https://www.linkedin.com/in/wclg'
             },
+            lastUpdated: true,
             editLink: {
                 baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
