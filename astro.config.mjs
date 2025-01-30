@@ -7,9 +7,11 @@ import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
 import starlightImageZoom from 'starlight-image-zoom'
 
+import sitemap from '@astrojs/sitemap';
+
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://codedesignplus.github.io',
+    site: 'https://www.codedesignplus.com',
     vite: {
         plugins: [
             // @ts-ignore
@@ -23,7 +25,6 @@ export default defineConfig({
         ]
     },
     integrations: [
-        icon(),
         starlight({
             title: 'CodeDesignPlus',
             description: 'Documentación oficial de CodeDesignPlus. Encuentra guías, tutoriales y referencias para desarrollar microservicios robustos y escalables utilizando las herramientas y librerías de CodeDesignPlus.',
@@ -47,7 +48,7 @@ export default defineConfig({
             editLink: {
                 baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
-            plugins: [                
+            plugins: [
                 // @ts-ignore
                 starlightImageZoom({
                     showCaptions: true
@@ -720,6 +721,7 @@ export default defineConfig({
 
             ]
         }),
-        icon()
+        icon(),
+        sitemap()
     ]
 });

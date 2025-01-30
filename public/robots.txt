@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://https://www.codedesignplus.com/sitemap-index.xml

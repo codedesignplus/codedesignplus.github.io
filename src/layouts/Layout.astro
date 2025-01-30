@@ -1,11 +1,11 @@
 ---
-import { AstroFont } from 'astro-font';
+import { AstroFont } from "astro-font";
 import AppFooter from "../components/AppFooter.astro";
 import AppHeader from "../components/AppHeader.astro";
-import "./../tailus.css"
+import "./../tailus.css";
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
     <head>
         <meta charset="UTF-8" />
@@ -14,6 +14,8 @@ import "./../tailus.css"
         <meta name="generator" content={Astro.generator} />
         <meta name="description" content="SDK, Archetype, Generators" />
         <title>CodeDesignPlus</title>
+
+        <link rel="sitemap" href="/sitemap-index.xml" />
 
         <AstroFont
             config={[
@@ -24,8 +26,9 @@ import "./../tailus.css"
                     display: "swap",
                     selector: "html",
                     fallback: "sans-serif",
-                    googleFontsURL: 'https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap',
-                },
+                    googleFontsURL:
+                        "https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700&display=swap"
+                }
             ]}
         />
     </head>
