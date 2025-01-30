@@ -37,3 +37,7 @@ body {
 .sidebar {
 	background: rgba(15, 17, 45, 0);
 }
+
+.starlight-theme-selector {
+	display: none !important;
+}

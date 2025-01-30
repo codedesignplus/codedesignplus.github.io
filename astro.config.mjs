@@ -5,12 +5,14 @@ import remarkMermaid from 'remark-mermaidjs'
 import remarkGitHubCode from './src/plugins/remark-github-code.js';
 import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
+import starlightImageZoom from 'starlight-image-zoom'
 
 // https://astro.build/config
 export default defineConfig({
     site: 'https://codedesignplus.github.io',
     vite: {
         plugins: [
+            // @ts-ignore
             tailwindcss()
         ]
     },
@@ -26,12 +28,15 @@ export default defineConfig({
             title: 'CodeDesignPlus',
             description: 'Documentación oficial de CodeDesignPlus. Encuentra guías, tutoriales y referencias para desarrollar microservicios robustos y escalables utilizando las herramientas y librerías de CodeDesignPlus.',
             logo: {
-                light: './src/assets/logo-light.svg',
-                dark: './src/assets/logo-dark.svg'
+                src: './src/assets/logo-gray.svg'
             },
             customCss: [
                 './src/styles/custom.css',
             ],
+            disable404Route: true,
+            components: {
+                ThemeSelect: './src/components/ThemeSelect.astro'
+            },
             social: {
                 github: 'https://github.com/Codedesignplus/',
                 youtube: 'https://www.youtube.com/@CodeDesignPlus',
@@ -41,6 +46,12 @@ export default defineConfig({
             editLink: {
                 baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
+            plugins: [                
+                // @ts-ignore
+                starlightImageZoom({
+                    showCaptions: true
+                })
+            ],
             sidebar: [
                 {
                     label: 'Quick Start',
