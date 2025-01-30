@@ -24,11 +24,22 @@ export default defineConfig({
         icon(),
         starlight({
             title: 'CodeDesignPlus',
+            description: 'Documentación oficial de CodeDesignPlus. Encuentra guías, tutoriales y referencias para desarrollar microservicios robustos y escalables utilizando las herramientas y librerías de CodeDesignPlus.',
+            logo: {
+                light: './src/assets/logo-light.svg',
+                dark: './src/assets/logo-dark.svg'
+            },
             customCss: [
                 './src/styles/custom.css',
             ],
             social: {
-                github: 'https://github.com/withastro/starlight',
+                github: 'https://github.com/Codedesignplus/',
+                youtube: 'https://www.youtube.com/@CodeDesignPlus',
+                facebook: 'https://www.facebook.com/profile.php?id=100040970353620',
+                linkedin: 'https://www.linkedin.com/in/wclg'
+            },
+            editLink: {
+                baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
             sidebar: [
                 {
@@ -696,5 +707,7 @@ export default defineConfig({
                 }
 
             ]
-        }), icon()]
+        }),
+        icon()
+    ]
 });

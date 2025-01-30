@@ -2,15 +2,16 @@
 :root {
 	--sl-color-accent-low: #1b1d4d;
 	--sl-color-accent: #523efb;
-	--sl-color-accent-high: #bac4ff;
+	--sl-color-accent-high: #ffffff;
 	--sl-color-white: #ffffff;
 	--sl-color-gray-1: #ebecfd;
 	--sl-color-gray-2: #bec0d4;
 	--sl-color-gray-3: #8588ac;
 	--sl-color-gray-4: #525576;
 	--sl-color-gray-5: #333554;
-	--sl-color-gray-6: #222341;
-	--sl-color-black: #161724;
+
+	--sl-color-gray-6: #0F112D;
+	--sl-color-black: #141432;
 }
 /* Light mode colors. */
 :root[data-theme='light'] {
@@ -26,4 +27,13 @@
 	--sl-color-gray-6: #ebecfd;
 	--sl-color-gray-7: #f5f6fe;
 	--sl-color-black: #ffffff;
+}
+
+body {
+	background: rgb(15,17,45);
+	background: radial-gradient(circle, rgba(15,17,45,1) 0%, rgba(15,28,51,1) 33%, rgba(20,20,50,1) 55%, rgba(9,16,38,1) 96%);
+}
+
+.sidebar {
+	background: rgba(15, 17, 45, 0);
 }
