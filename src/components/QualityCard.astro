@@ -1,0 +1,86 @@
+---
+export interface Props {
+  title: string;
+  projectId: string;
+}
+
+const { title, projectId } = Astro.props;
+const nugetUrl = `https://www.nuget.org/packages/${projectId}/`;
+const githubUrl = `https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/main/packages/${projectId}`;
+---
+
+<div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg text-center">
+  <!-- Card Header -->
+  <div class="mb-4">
+    <h2 class="text-xl font-semibold text-gray-800 dark:text-white">{title}</h2>
+  </div>
+  <hr class="border-gray-300 dark:border-gray-600 mb-4" />
+  
+  <!-- Card Body -->
+  <div class="space-y-2">
+    <div>
+      <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+        <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=alert_status`} alt="Quality Gate Status" class="mx-auto" />
+      </a>
+    </div>
+    <div class="space-y-2 mt-4">
+      <div>
+        <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+          <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=bugs`} alt="Bugs" class="mx-auto" />
+        </a>
+      </div>
+      <div>
+        <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+          <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=code_smells`} alt="Code Smells" class="mx-auto" />
+        </a>
+      </div>
+      <div>
+        <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+          <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=coverage`} alt="Coverage" class="mx-auto" />
+        </a>
+      </div>
+      <div>
+        <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+          <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=duplicated_lines_density`} alt="Duplicated Lines (%)" class="mx-auto" />
+        </a>
+      </div>
+      <div>
+        <a href={`https://sonarcloud.io/summary/new_code?id=${projectId}`} target="_blank" rel="noopener noreferrer">
+          <img src={`https://sonarcloud.io/api/project_badges/measure?project=${projectId}&metric=vulnerabilities`} alt="Vulnerabilities" class="mx-auto" />
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Card Footer -->
+  <hr class="border-gray-300 dark:border-gray-600 mt-4 mb-4" />
+
+  <div class="mt-4 flex justify-between space-x-2">
+    <a
+      href={nugetUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="relative flex h-11 items-center justify-center px-4 before:absolute before:inset-0 before:rounded-full before:border before:border-transparent before:bg-primary/10 before:bg-gradient-to-b before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 dark:before:border-gray-700 dark:before:bg-gray-800 sm:w-max"
+    >
+      <span class="relative text-base font-semibold text-primary dark:text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-4 h-4 mr-2" viewBox="0 0 24 24">
+          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 22.5C6.201 22.5 1.5 17.799 1.5 12S6.201 1.5 12 1.5 22.5 6.201 22.5 12 17.799 22.5 12 22.5zM12 6.75c-2.897 0-5.25 2.353-5.25 5.25s2.353 5.25 5.25 5.25 5.25-2.353 5.25-5.25-2.353-5.25-5.25-5.25zm0 9c-2.071 0-3.75-1.679-3.75-3.75S9.929 8.25 12 8.25s3.75 1.679 3.75 3.75-1.679 3.75-3.75 3.75z"/>
+        </svg>
+        NuGet
+      </span>
+    </a>
+    <a
+      href={githubUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="relative flex h-11 items-center justify-center px-4 before:absolute before:inset-0 before:rounded-full before:border before:border-transparent before:bg-primary/10 before:bg-gradient-to-b before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 dark:before:border-gray-700 dark:before:bg-gray-800 sm:w-max"
+    >
+      <span class="relative text-base font-semibold text-primary dark:text-white flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="w-4 h-4 mr-2" viewBox="0 0 24 24">
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 5.303 3.438 9.8 8.205 11.387.6.111.82-.261.82-.577 0-.285-.01-1.04-.015-2.04-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.744.083-.729.083-.729 1.205.084 1.838 1.237 1.838 1.237 1.07 1.834 2.809 1.304 3.495.997.108-.775.418-1.305.76-1.605-2.665-.305-5.466-1.332-5.466-5.931 0-1.31.467-2.381 1.235-3.221-.124-.303-.535-1.523.117-3.176 0 0 1.008-.322 3.3 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.046.138 3.003.404 2.292-1.552 3.3-1.23 3.3-1.23.653 1.653.242 2.873.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.61-2.803 5.624-5.475 5.921.43.371.814 1.102.814 2.222 0 1.606-.015 2.898-.015 3.293 0 .319.218.694.825.576C20.565 21.796 24 17.299 24 12c0-6.627-5.373-12-12-12z"/>
+        </svg>
+        GitHub
+      </span>
+    </a>
+  </div>
+</div>
