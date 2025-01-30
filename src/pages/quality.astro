@@ -4,23 +4,24 @@ import Container from '../components/Container.astro';
 import QualityCard from '../components/QualityCard.astro';
 ---
 
+
 <Layout title="Calidad - CodeDesignPlus">
   <Container>
-    <div class="py-16 lg:py-20">
-      <div class="max-w-4xl mx-auto">
-
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Calidad del Código
-          </h1>
-          <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-8">
-            SonarCloud
-          </h3>
-  
-
+    <div class="relative pt-36 ml-auto text-center">
+      <div class="lg:w-2/3 mx-auto">
+        <h1 class="text-gray-900 dark:text-white font-bold text-3xl md:text-4xl xl:text-5xl mb-4">
+          Calidad del Código
+        </h1>
+        <h3 class="text-xl font-medium text-gray-700 dark:text-gray-300 mb-8">
+          SonarCloud
+        </h3>
         <p class="text-lg text-gray-700 dark:text-gray-300 mb-8">
           En CodeDesignPlus, estamos comprometidos con la calidad del software. Cada una de nuestras bibliotecas es analizada exhaustivamente utilizando SonarQube para garantizar que cumplen con los más altos estándares de calidad. A continuación, se presentan los resultados de los análisis de calidad de nuestras principales bibliotecas.
         </p>
-
+      </div>
+    </div>
+    <div class="py-16 lg:py-20">
+      <div class="max-w-4xl mx-auto">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <QualityCard title="Core" projectId="CodeDesignPlus.Net.Core" />
           <QualityCard title="Criteria" projectId="CodeDesignPlus.Net.Criteria" />
