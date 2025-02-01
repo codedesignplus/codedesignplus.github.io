@@ -6,7 +6,7 @@ export default function remarkGitHubCode() {
   return async (tree) => {
     const promises = [];
 
-    visit(tree, 'code', (node) => {
+    visit(tree, 'code', (node) => { 
       const { meta } = node;
 
       const urls = {
