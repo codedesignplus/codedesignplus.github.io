@@ -111,21 +111,21 @@ Para instalar la librería `CodeDesignPlus.Net.Redis`, puedes utilizar el admini
 ## Ejemplo rápido
 ---
 
-El repositorio del SDK, cuenta con la siguiente solución [CodeDesignPlus.Net.Redis.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample) que contiene los siguientes ejemplos:
+El repositorio del SDK, cuenta con la siguiente solución [CodeDesignPlus.Net.Redis.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Redis.Sample) que contiene los siguientes ejemplos:
 
-1. [CodeDesignPlus.Net.Redis.Standalone.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample)
+1. [CodeDesignPlus.Net.Redis.Standalone.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample)
 
     Este ejemplo es una introducción sencilla al uso del SDK de CodeDesignPlus para interactuar con Redis. Se conecta a una instancia única de Redis (standalone) sin encriptación, demostrando las operaciones básicas como guardar y obtener datos. Es el punto de partida ideal para entender cómo integrar Redis con tu aplicación .NET de la manera más simple.
 
-2. [CodeDesignPlus.Net.Redis.Standalone.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample)
+2. [CodeDesignPlus.Net.Redis.Standalone.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample)
 
     Este ejemplo eleva la seguridad de la conexión a Redis, manteniendo la misma estructura de conexión a una instancia única, pero utilizando TLS/SSL para encriptar la comunicación. En esencia, demuestra cómo establecer una conexión segura a Redis para proteger los datos transmitidos, ideal para entornos que necesitan mayor seguridad.
 
-3. [CodeDesignPlus.Net.Redis.Cluster.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample)
+3. [CodeDesignPlus.Net.Redis.Cluster.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample)
 
     Este ejemplo introduce el uso del SDK de CodeDesignPlus con un clúster de Redis. En lugar de una única instancia, se conecta a un grupo de nodos de Redis que trabajan en conjunto, demostrando cómo manejar la distribución de datos y la escalabilidad. Es ideal para aplicaciones que necesitan manejar grandes volúmenes de datos o requieren alta disponibilidad.
 
-4. [CodeDesignPlus.Net.Redis.Cluster.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample)
+4. [CodeDesignPlus.Net.Redis.Cluster.Tls.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample)
 
     Este ejemplo combina la escalabilidad de un clúster de Redis con la seguridad de TLS/SSL. Muestra cómo conectarse a un clúster de Redis, pero con todas las comunicaciones encriptadas, garantizando la protección de datos en entornos que requieren tanto alta disponibilidad como seguridad en la transmisión de información.
 
@@ -135,7 +135,7 @@ El repositorio del SDK, cuenta con la siguiente solución [CodeDesignPlus.Net.Re
 
 Vamos a analizar el ejemplo `CodeDesignPlus.Net.Redis.Standalone.Sample` para entender cómo se utiliza la librería `CodeDesignPlus.Net.Redis` en un proyecto .NET. Este ejemplo se conecta a una instancia única de Redis sin encriptación y realiza operaciones básicas de caché como guardar y obtener datos.
 
-```csharp url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/Program.cs"
 ```
 
 <Steps>
@@ -145,19 +145,19 @@ Vamos a analizar el ejemplo `CodeDesignPlus.Net.Redis.Standalone.Sample` para en
 
     <Tabs>
         <TabItem label="Standalone">
-        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/appsettings.json"
+        ```json url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/appsettings.json"
         ```
         </TabItem>
         <TabItem label="Standalone + TLS">
-        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample/appsettings.json"
+        ```json url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Tls.Sample/appsettings.json"
         ```
         </TabItem>
         <TabItem label="Cluster">
-        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/appsettings.json"
+        ```json url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Sample/appsettings.json"
         ```
         </TabItem>
         <TabItem label="Cluster + TLS">
-        ```json url="examples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample/appsettings.json"
+        ```json url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Cluster.Tls.Sample/appsettings.json"
         ```
         </TabItem>
     </Tabs>

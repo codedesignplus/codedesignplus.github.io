@@ -108,7 +108,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.RabbitMQ`, agrega el paquete NuG
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/appsettings.json"
     ```
 
 2. Registra los servicios el contenedor de dependencias de tu aplicación: 
@@ -122,7 +122,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.RabbitMQ`, agrega el paquete NuG
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [CodeDesignPlus.Net.RabbitMQ.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.RabbitMQ.Sample) contiene dos ejemplos de cómo publicar y suscribirse a mensajes en RabbitMQ.
+El proyecto de ejemplo [CodeDesignPlus.Net.RabbitMQ.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.RabbitMQ.Sample) contiene dos ejemplos de cómo publicar y suscribirse a mensajes en RabbitMQ.
 
 <Tabs>
 
@@ -130,27 +130,27 @@ El proyecto de ejemplo [CodeDesignPlus.Net.RabbitMQ.Sample](https://github.com/c
 
 Es proyecto de ejemplo `CodeDesignPlus.Net.RabbitMQ.Producer.Sample` contiene un ejemplo de cómo publicar mensajes en RabbitMQ.
 
-```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/Program.cs"
 ```
 
 <Steps>
 1. Configuración de RabbitMQ en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/appsettings.json"
     ```
 
 2. Definir la entidad de usuario:
 
     Hemos creado la entidad UserEntity, la cual estará vinculada al mensaje que se publicará en RabbitMQ. Esto proporcionará al consumidor el contexto necesario sobre la entidad que ha experimentado una modificación.
 
-    ```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/UserEntity.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/UserEntity.cs"
     ```
 
 3. Creamos los eventos de dominio:
 
     Hemos creado el evento de dominio UserCreatedDomainEvent, el cual se publicará en RabbitMQ cuando se cree un nuevo usuario.
 
-    ```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/UserCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Producer.Sample/UserCreatedDomainEvent.cs"
     ```
 
 4. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -181,27 +181,27 @@ Es proyecto de ejemplo `CodeDesignPlus.Net.RabbitMQ.Producer.Sample` contiene un
 
 El proyecto de ejemplo `CodeDesignPlus.Net.RabbitMQ.Consumer.Sample` contiene un ejemplo de cómo suscribirse a mensajes en RabbitMQ.
 
-```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/Program.cs"
 ```
 
 <Steps>
 1. Configuración de RabbitMQ en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/appsettings.json"
     ```
 
 2. Definir la entidad de usuario:
 
     Hemos creado la entidad UserEntity, que almacenará la información del evento y contendrá solo los datos necesarios para proporcionar el contexto requerido por el consumidor (proyección).
 
-    ```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserEntity.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserEntity.cs"
     ```
 
 3. Creamos los eventos de dominio:
 
     Hemos creado el evento de dominio UserCreatedDomainEvent, que representa la estructura del evento de dominio a ser consumido.
 
-    ```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserCreatedEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserCreatedEvent.cs"
     ```
 
 4. Creamos el event handler:
@@ -210,7 +210,7 @@ El proyecto de ejemplo `CodeDesignPlus.Net.RabbitMQ.Consumer.Sample` contiene un
 
     El event handler es registrado en el contenedor de dependencias automaticamente por la librería `CodeDesignPlus.Net.PubSub`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserCreatedEventHandler.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.RabbitMQ.Sample/src/CodeDesignPlus.Net.RabbitMQ.Consumer.Sample/UserCreatedEventHandler.cs"
     ```
 
 5. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -278,7 +278,7 @@ La librería `CodeDesignPlus.Net.RabbitMQ` proporciona una solución completa pa
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.RabbitMQ)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.RabbitMQ.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.RabbitMQ.Sample)
 - [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven)
 - [Pub/Sub Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
 - [RabbitMQ](https://www.rabbitmq.com/)

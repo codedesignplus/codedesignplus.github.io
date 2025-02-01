@@ -100,7 +100,7 @@ Para instalar la librería `CodeDesignPlus.Net.Event.Sourcing` en tu proyecto de
 
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/appsettings.json"
     ```
 2. Registra los servicios el contenedor de dependencias de tu aplicación y La implementación de `IEventSourcingService`:
 
@@ -115,9 +115,9 @@ Para instalar la librería `CodeDesignPlus.Net.Event.Sourcing` en tu proyecto de
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [`CodeDesignPlus.Net.Event.Sourcing.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Event.Sourcing.Sample) expone como hacer uso de la librería.
+El proyecto de ejemplo [`CodeDesignPlus.Net.Event.Sourcing.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Event.Sourcing.Sample) expone como hacer uso de la librería.
 
-```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Program.cs"
 ```
 
 <Steps>
@@ -150,27 +150,27 @@ El proyecto de ejemplo [`CodeDesignPlus.Net.Event.Sourcing.Sample`](https://gith
 
     La clase `OrderAggregate` representa un agregado raíz en el sistema de Event Sourcing. Esta clase hereda de `AggregateRoot` y define propiedades como `Name`, `IdUser` y `Products`. Además, define métodos como `Create`, `UpdateName` y `AddProduct` para modificar el estado del agregado y aplicar eventos de dominio.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Aggregates/OrderAggregate.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Aggregates/OrderAggregate.cs"
     ```
 
 3. Implementación de los Eventos de Dominio
 
     Se definen eventos de dominio como `NameUpdatedDomainEvent`, `OrderCreatedDomainEvent` y `ProductAddedDomainEvent` que representan cambios en el estado del agregado. Estos eventos heredan de `DomainEvent` y definen propiedades como `Name`, `IdUser` y `Product` para almacenar información relevante.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/NameUpdatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/NameUpdatedDomainEvent.cs"
     ```
 
-    ```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/OrderCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/OrderCreatedDomainEvent.cs"
     ```
 
-    ```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/ProductAddedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Events/ProductAddedDomainEvent.cs"
     ```
 
 4. Implementación de `InMemoryEventSourcingService.cs` 
 
     Este es un ejemplo Fake para el servicio de Event Sourcing, esto se debe a `CodeDesignPlus.Net.Event.Store` tiene una implementación real para almacenar eventos en la bsae de datos Event Store.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Services/InMemoryEventSourcingService.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Event.Sourcing.Sample/src/CodeDesignPlus.Net.Event.Sourcing.Sample/Services/InMemoryEventSourcingService.cs"
     ```
 
 5. Registrar Servicios
@@ -285,7 +285,7 @@ En esta guía, aprendiste a instalar y configurar la librería `CodeDesignPlus.N
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.Event.Sourcing)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Event.Sourcing.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Event.Sourcing.Sample)
 - [Documentación de Microsoft sobre Event Sourcing](https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing)
 - [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.Event.Sourcing)
 

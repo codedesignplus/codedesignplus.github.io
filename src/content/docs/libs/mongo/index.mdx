@@ -97,7 +97,7 @@ Para instalar la librería `CodeDesignPlus.Net.Mongo`, puedes utilizar el admini
 
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
     ```
 
 2. Registrar los servicios en el contenedor de dependencias:
@@ -111,42 +111,42 @@ Para instalar la librería `CodeDesignPlus.Net.Mongo`, puedes utilizar el admini
 ## Ejemplo rápido
 ---
 
-En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Mongo.Sample), se muestra cómo utilizar la librería `CodeDesignPlus.Net.Mongo` para realizar operaciones CRUD en una colección de MongoDB. 
+En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Mongo.Sample), se muestra cómo utilizar la librería `CodeDesignPlus.Net.Mongo` para realizar operaciones CRUD en una colección de MongoDB. 
 
 <Tabs>
   <TabItem label="Repository Base">
-  ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Program.cs"
+  ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Program.cs"
   ```
     
   <Steps>
 
   1. Configuración de Mongo en `appsettings.json`:
 
-      ```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
+      ```json url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/appsettings.json"
       ```
 
   2. Creamos las entidades:
 
       Procedemos a crear las entidades que representarán los documentos en la colección de MongoDB, estas entidades deben implementar la interfaz `IEntity` de `CodeDesignPlus.Net.Core.Abstractions`.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/ProductEntity.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/ProductEntity.cs"
       ```
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/UserEntity.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/UserEntity.cs"
       ```
 
   3. Creamos el repositorio:
 
       Para efectos de este ejemplo, procederemos a crear el repositorio `UserRepository` que hereda de `RepositoryBase`.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Respositories/UserRepository.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Respositories/UserRepository.cs"
       ```
 
   4. Creamos la clase Startup:
 
       Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Startup.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Startup.cs"
       ```
 
   5. Registramos los servicios en el contenedor de dependencias:
@@ -179,7 +179,7 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
 
   </TabItem>
   <TabItem label="Operation Base">
-  ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Program.cs"
+  ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Program.cs"
   ```
 
   
@@ -187,35 +187,35 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
 
   1. Configuración de Mongo en `appsettings.json`:
 
-      ```json url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/appsettings.json"
+      ```json url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/appsettings.json"
       ```
 
   2. Creamos la entidad para el ejemplo:
 
       Procedemos a crear la entidad que representará los documentos en la colección de MongoDB, esta entidad debe implementar la interfaz `IEntity` de `CodeDesignPlus.Net.Core.Abstractions`.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/UserEntity.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/UserEntity.cs"
       ```
 
   3. Creamos el repositorio:
 
       Para efectos de este ejemplo, procederemos a crear el repositorio `UserRepository` que hereda de `OperationBase`.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Respositories/UserRepository.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Respositories/UserRepository.cs"
       ```
 
   4. Creamos la clase Startup:
 
       Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Startup.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Startup.cs"
       ```
 
   5. Creamos el servicio de usuario:
 
       Para efectos de este ejemplo, procederemos a crear el servicio `FakeUserContext` que implementa `IUserContext`. Este servicio se utiliza para obtener información del usuario autenticado. Para un uso en producción se debe usar la implementación que provee la libreria `CodeDesignPlus.Net.Security`.
 
-      ```csharp url="examples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Services/FakeUserContext.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Services/FakeUserContext.cs"
       ```
 
   6. Registramos los servicios en el contenedor de dependencias:
@@ -294,7 +294,7 @@ En este documento, se ha presentado una visión general de la librería `CodeDes
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/main/packages/CodeDesignPlus.Net.Mongo)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EFCore.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EFCore.Sample)
 - [Documentación oficial de MongoDB](https://docs.mongodb.com/)
 - [SQL to MongoDB Mapping Chart](https://www.mongodb.com/docs/manual/reference/sql-comparison/)
 - [MongoDB & C Sharp: CRUD Operations Tutorial](https://www.mongodb.com/developer/languages/csharp/csharp-crud-tutorial/)

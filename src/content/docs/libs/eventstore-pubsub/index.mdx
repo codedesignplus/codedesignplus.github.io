@@ -96,7 +96,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore.PubSub`, agrega el pa
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
     ```
 
 2. Registra los servicios el contenedor de dependencias de tu aplicación: 
@@ -110,9 +110,9 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore.PubSub`, agrega el pa
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.PubSub.Sample) contiene los diferentes casos de uso para hacer uso de la biblioteca.
+El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EventStore.PubSub.Sample) contiene los diferentes casos de uso para hacer uso de la biblioteca.
 
-```csharp url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Program.cs"
 ```
 
 <Steps>
@@ -120,27 +120,27 @@ El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.PubSub.Sample`](https://g
 
     El archivo `appsettings.json` contiene la configuración de EventStore Pub/Sub.
 
-    ```json url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
     ```
 
 2. Creación del `OrderAggregate`
 
     Los eventos de dominio que serán publicados o consumidos, modifican el estado de la aplicación, ya sea un Aggregate o Entidad. En este caso, se crea el `OrderAggregate` que representa una orden.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Aggregates/OrderAggregate.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Aggregates/OrderAggregate.cs"
     ```
 
 3. Creación de los eventos de dominio
 
     Los eventos de dominio representan los cambios en el estado de la aplicación. En este caso, se crean los eventos `OrderCreatedDomainEvent`, `NameUpdatedDomainEvent` y `ProductAddedDomainEvent`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/OrderCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/OrderCreatedDomainEvent.cs"
     ``` 
     
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/NameUpdatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/NameUpdatedDomainEvent.cs"
     ``` 
     
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/ProductAddedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/ProductAddedDomainEvent.cs"
     ```
 
 4. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -224,7 +224,7 @@ La biblioteca `CodeDesignPlus.Net.EventStore.PubSub` proporciona varios servicio
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.EventStore.PubSub)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.PubSub.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EventStore.PubSub.Sample)
 - [Documentación oficial de EventStore](https://developers.eventstore.com/clients/grpc/getting-started.html)
 - [Documentación oficial de Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
 - [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.EventStore.PubSub)

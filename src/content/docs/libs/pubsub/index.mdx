@@ -122,7 +122,7 @@ Para instalar la librería CodeDesignPlus.Net.PubSub en tu proyecto de .NET, pue
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/appsettings.json"
     ```
 2. Registra los servicios el contenedor de dependencias de tu aplicación: 
 
@@ -135,31 +135,31 @@ Para instalar la librería CodeDesignPlus.Net.PubSub en tu proyecto de .NET, pue
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [`CodeDesignPlus.Net.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.PubSub.Sample) muestra cómo publicar y suscribir eventos de dominio. De igual forma se muestra cómo implementar un broker en memoria para el ejemplo.
+El proyecto de ejemplo [`CodeDesignPlus.Net.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.PubSub.Sample) muestra cómo publicar y suscribir eventos de dominio. De igual forma se muestra cómo implementar un broker en memoria para el ejemplo.
 
-```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Program.cs"
 ```
 
 
 <Steps>
 1. Creamos la entidad `UserEntity` que sera utilizada en el evento `UserCreatedEvent`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Entities/UserEntity.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Entities/UserEntity.cs"
     ```
 
 2. Creamos el evento `UserCreatedEvent` que hereda de `DomainEvent`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEvent.cs"
     ```
 
 3. Creamos el manejador `UserCreatedEventHandler` que implementa `IEventHandler<UserCreatedEvent>`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEventHandler.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Handlers/UserCreatedEventHandler.cs"
     ```
 
 4. Creamos el servidor `InMemoryBroker` que implementa `IMessage`. 
 
-    ```csharp url="examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Server/InMemoryBroker.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample/Server/InMemoryBroker.cs"
     ```
 
     <Aside>
@@ -261,7 +261,7 @@ La librería `CodeDesignPlus.Net.PubSub` es una herramienta poderosa para los de
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.PubSub)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.PubSub.Sample/src/CodeDesignPlus.Net.PubSub.Sample)
 - [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven)
 - [Pub/Sub Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
 - [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.PubSub)

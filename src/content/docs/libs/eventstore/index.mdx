@@ -99,7 +99,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore`, puedes utilizar el 
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
     ```
 
 2. Registra los servicios en el contenedor de dependencias de tu aplicación: 
@@ -113,9 +113,9 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore`, puedes utilizar el 
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs) hace uso de la biblioteca `CodeDesignPlus.Net.EventStore` para gestionar eventos de manera eficiente. 
+El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs) hace uso de la biblioteca `CodeDesignPlus.Net.EventStore` para gestionar eventos de manera eficiente. 
 
-```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Program.cs"
 ```
 
 <Steps>
@@ -123,26 +123,26 @@ El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.Sample`](https://github.c
 
     El archivo `appsettings.json` contiene la configuración de EventStore, incluyendo los detalles del servidor, la autenticación y la configuración de la conexión.
 
-    ```json url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/appsettings.json"
     ```
 2. Creación de los eventos de dominio:
 
     Las clases `NameUpdatedDomainEvent`, `OrderCreatedDomainEvent` y `ProductAddedDomainEvent` representan eventos de dominio que se utilizan para gestionar eventos en la aplicación.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/NameUpdatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/NameUpdatedDomainEvent.cs"
     ```
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/OrderCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/OrderCreatedDomainEvent.cs"
     ```
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/ProductAddedDomainEvent.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Events/ProductAddedDomainEvent.cs" 
     ```
 
 3. Creación del OrderAggregate 
 
     La clase `OrderAggregate` representa un agregado de eventos que se utiliza para gestionar eventos de pedidos.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Aggregates/OrderAggregate.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.Sample/src/CodeDesignPlus.Net.EventStore.Sample/Aggregates/OrderAggregate.cs"
     ```
 
 4. Registrar Servicios
@@ -234,7 +234,7 @@ La biblioteca `CodeDesignPlus.Net.EventStore` proporciona una solución completa
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.EventStore)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.EventStore.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EventStore.Sample)
 - [Documentación oficial de EventStore](https://developers.eventstore.com/clients/grpc/getting-started.html)
 - [Documentación oficial de Event Sourcing](https://martinfowler.com/eaaDev/EventSourcing.html)
 - [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.EventStore/)

@@ -89,14 +89,14 @@ Para este ejemplo, primero debemos llevar a cabo la creación de una serie de re
 
     Lo primero que debemos hacer es crear una clase que represente el agregado de ordenes en nuestra aplicación. En este caso, crearemos una clase `OrderAggregate` que defina las propiedades y métodos necesarios para gestionar las ordenes en nuestra base de datos.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Entities/OrderAggregate.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Entities/OrderAggregate.cs" 
     ```
    
 2. Creación del Repositorio
 
     A continuación, crearemos una interfaz `IOrderRepository` que defina las operaciones básicas para gestionar las ordenes en nuestra base de datos. Esta interfaz heredará de la interfaz `IOperationBase` para utilizar las operaciones de creación, actualización y eliminación proporcionadas por la clase `OperationBase`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Repositories/IOrderRepository.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Repositories/IOrderRepository.cs" 
     ```
    
 
@@ -104,21 +104,21 @@ Para este ejemplo, primero debemos llevar a cabo la creación de una serie de re
 
     A continuación, implementaremos la interfaz `IOrderRepository` en la clase `OrderRepository`. En esta clase, utilizaremos la clase `OperationBase` para gestionar las operaciones de creación, actualización y eliminación de ordenes en nuestra base de datos.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Repositories/OrderRepository.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Repositories/OrderRepository.cs" 
     ```
 
 4. Configuración del Repositorio
 
     Continuamos con la configuración de la entidad `OrderAggregate` en el contexto de la base de datos. Para ello, creamos una clase `OrderConfiguration` que implemente la interfaz `IEntityTypeConfiguration<OrderAggregate>`. En esta clase, configuramos las propiedades y relaciones de la entidad `OrderAggregate` en la base de datos.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/EntityConfiguration/OrderConfiguration.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/EntityConfiguration/OrderConfiguration.cs" 
     ```
 
 5. Configuración del Contexto
 
     Por último, configuramos el contexto de la base de datos en la clase `OrderContext`. En esta clase, registramos la entidad `OrderAggregate` y su configuración en el modelo de datos.
 
-    ```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/OrderContext.cs" 
+    ```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/OrderContext.cs" 
     ```
 
 </Steps>
@@ -127,7 +127,7 @@ Para este ejemplo, primero debemos llevar a cabo la creación de una serie de re
 
 Al finalizar la creación de los recursos necesarios, podemos ahora registrar el repositorio en el contenedor de dependencias de .NET Core y utilizar la clase `OperationBase` para gestionar las ordenes en nuestra base de datos, asegurando que la información del usuario autenticado se asigne correctamente a las propiedades transversales de la entidad durante las operaciones de creación y actualización.
 
-```csharp url="examples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Program.cs" 
+```csharp url="samples/CodeDesignPlus.Net.EFCore.Sample/src/CodeDesignPlus.Net.EFCore.Sample.OperationBase/Program.cs" 
 ```
 
 <Aside>

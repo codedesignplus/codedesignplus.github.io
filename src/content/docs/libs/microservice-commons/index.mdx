@@ -98,28 +98,28 @@ Para instalar la librería `CodeDesignPlus.Net.Microservice.Commons`, puedes uti
 ## Ejemplo rápido
 ---
 
-La solución [CodeDesignPlus.Net.Microservice.Commons.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Microservice.Commons.Sample) muestra cómo configurar y utilizar la librería `CodeDesignPlus.Net.Microservice.Commons` en una aplicación .NET Core. A continución, se muestra un ejemplo de cómo configurar y utilizar la librería en tu proyecto:
+La solución [CodeDesignPlus.Net.Microservice.Commons.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Microservice.Commons.Sample) muestra cómo configurar y utilizar la librería `CodeDesignPlus.Net.Microservice.Commons` en una aplicación .NET Core. A continución, se muestra un ejemplo de cómo configurar y utilizar la librería en tu proyecto:
 
 ### Rest
 
 Este es un ejemplo de cómo configurar una API REST con la librería `CodeDesignPlus.Net.Microservice.Commons`:
 
-```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Program.cs"
 ```
 
 <Steps>
 1. Agregar configuración en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/appsettings.json"
     ```
 
 2. Creamos la clase Startup que se utiliza para configurar los servicios personalizados y obtener una referencia al ensamblado de la aplicación.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Startup.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Startup.cs"
     ```
 3. Creamos un controlador de ejemplo con métodos vacios y documentados para probar la configuración de Swagger.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Controllers/UserController.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.Rest.Sample/Controllers/UserController.cs"
     ```
 
 4. Registramos los servicios:
@@ -146,22 +146,22 @@ Este es un ejemplo de cómo configurar una API REST con la librería `CodeDesign
 
 Este es un ejemplo de cómo configurar un servicio gRPC con la librería `CodeDesignPlus.Net.Microservice.Commons`:
 
-```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Program.cs"
 ```
 
 <Steps>
 1. Agregar configuración en `appsettings.json`
 
-    ```json url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/appsettings.json"
     ```
 
 2. Creamos el archivo `greet.proto` que define el servicio gRPC.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Protos/greet.proto"
+    ```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Protos/greet.proto"
     ```
 3. Creamos el servicio `GreeterService` que implementa el servicio gRPC definido en `greet.proto`. 
 
-    ```csharp url="examples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Services/GreeterService.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Microservice.Commons.Sample/src/CodeDesignPlus.Net.Microservice.gRPC.Sample/Services/GreeterService.cs"
     ```
 
 4. Registramos los servicios:

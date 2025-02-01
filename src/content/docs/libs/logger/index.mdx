@@ -89,24 +89,24 @@ Para instalar la librería `CodeDesignPlus.Net.Logger`, puedes utilizar el admin
 ## Ejemplo rápido
 ---
 
-El ejemplo [CodeDesignPlus.Net.Logger.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Logger.Sample) muestra cómo configurar el logger en una aplicación .NET Core. A continuación, se muestra un ejemplo de cómo configurar el logger en tu proyecto:
+El ejemplo [CodeDesignPlus.Net.Logger.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Logger.Sample) muestra cómo configurar el logger en una aplicación .NET Core. A continuación, se muestra un ejemplo de cómo configurar el logger en tu proyecto:
 
-```csharp url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/Program.cs"
 ```
 
 <Steps>
 1. Agregar configuración en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/appsettings.json"
     ```	
 2. Ejecutar Docker Compose para levantar el contenedor de OTel:
 
-    ```yaml url="examples/CodeDesignPlus.Net.Logger.Sample/docker-compose.yaml"
+    ```yaml url="samples/CodeDesignPlus.Net.Logger.Sample/docker-compose.yaml"
     ```
 
 3. Creamos el servicio `FakeBackgroundService` que escribira logs cuando se inicie el programa.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/FakeBackgroundService.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Logger.Sample/src/CodeDesignPlus.Net.Logger.Sample/FakeBackgroundService.cs"
     ```
 
 4. Regisrramos los servicios del log en el host
@@ -123,7 +123,7 @@ El ejemplo [CodeDesignPlus.Net.Logger.Sample](https://github.com/codedesignplus/
 
 5. En la contenedor de OTel, podemos ver los logs generados por la aplicación.
 
-    ```txt url="examples/CodeDesignPlus.Net.Logger.Sample/output.otel"
+    ```txt url="samples/CodeDesignPlus.Net.Logger.Sample/output.otel"
     ```
 </Steps>
 

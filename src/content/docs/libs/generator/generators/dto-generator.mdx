@@ -74,7 +74,7 @@ Este método se llama cuando se visita un nodo de sintaxis. Agrega tipos que est
 
 A continuación, se muestra un ejemplo de cómo utilizar el generador de DTOs en una aplicación .NET Core:
 
-```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
 ```
 
 <Steps>
@@ -98,12 +98,12 @@ A continuación, se muestra un ejemplo de cómo utilizar el generador de DTOs en
     dotnet add package CodeDesignPlus.Net.Generator --version 0.5.0-beta.14
     ```
 
-    ```xml url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CodeDesignPlus.Net.Generator.Application.csproj"
+    ```xml url="samples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CodeDesignPlus.Net.Generator.Application.csproj"
     ```
 
 3. Crear un comando que representa la acción de crear un usuario en la aplicación y decorarlo con el atributo `DtoGeneratorAttribute`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CreateUserCommand.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Application/CreateUserCommand.cs"
     ```
 
     4. Compilar el proyecto y verificar que se generó la clase DTO correspondiente al comando.
@@ -114,7 +114,7 @@ A continuación, se muestra un ejemplo de cómo utilizar el generador de DTOs en
 
 5. Verificar que se generó la clase `CreateUserDto` en el proyecto. Este se encuentra disponible en el namespace `CodeDesignPlus.Microservice.Api.Dtos`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Generator.Sample/src/CodeDesignPlus.Net.Generator.Sample/Program.cs"
     ```
 
 </Steps>

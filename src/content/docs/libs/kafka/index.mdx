@@ -91,7 +91,7 @@ Para instalar `CodeDesignPlus.Net.Kafka`, agrega el paquete NuGet a tu proyecto:
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/appsettings.json"
     ```
 
 2. Registra los servicios el contenedor de dependencias de tu aplicación: 
@@ -105,7 +105,7 @@ Para instalar `CodeDesignPlus.Net.Kafka`, agrega el paquete NuGet a tu proyecto:
 ## Ejemplo rápido
 ---
 
-El proyecto de ejemplo [CodeDesignPlus.Net.Kafka.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Kafka.Sample) contiene dos ejemplos, uno para productores y otro para consumidores, que ilustran cómo utilizar `CodeDesignPlus.Net.Kafka` en una aplicación .NET Core.
+El proyecto de ejemplo [CodeDesignPlus.Net.Kafka.Sample](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Kafka.Sample) contiene dos ejemplos, uno para productores y otro para consumidores, que ilustran cómo utilizar `CodeDesignPlus.Net.Kafka` en una aplicación .NET Core.
 
 
 <Tabs>
@@ -114,27 +114,27 @@ El proyecto de ejemplo [CodeDesignPlus.Net.Kafka.Sample](https://github.com/code
 
 El proyecto de ejemplo `CodeDesignPlus.Net.Kafka.Producer.Sample` contiene un ejemplo de cómo publicar mensajes en Apache Kafka.
 
-```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/Program.cs"
 ```
 
 <Steps>
 1. Configuración de Kafka en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/appsettings.json"
     ```
 
 2. Definir la entidad de usuario:
 
     Hemos creado la entidad `UserEntity`, la cual estará vinculada al mensaje que se publicará en Kafka. Esto proporcionará al consumidor el contexto necesario sobre la entidad que ha experimentado una modificación.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/UserEntity.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/UserEntity.cs"
     ```
 
 3. Creamos los eventos de dominio:
 
     Hemos creado el evento de dominio `UserCreatedDomainEvent`, el cual se publicará en Kafka cuando se cree un nuevo usuario.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/UserCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Producer.Sample/UserCreatedDomainEvent.cs"
     ```
 
 4. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -165,27 +165,27 @@ El proyecto de ejemplo `CodeDesignPlus.Net.Kafka.Producer.Sample` contiene un ej
 
 El proyecto de ejemplo `CodeDesignPlus.Net.Kafka.Consumer.Sample` contiene un ejemplo de cómo suscribirse a mensajes en Apache Kafka.
 
-```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/Program.cs"
 ```
 
 <Steps>
 1. Configuración de Kafka en `appsettings.json`:
 
-    ```json url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/appsettings.json"
     ```
 
 2. Definir la entidad de usuario:
 
     Hemos creado la entidad `UserEntity`, que almacenará la información del evento y contendrá solo los datos necesarios para proporcionar el contexto requerido por el consumidor (proyección).
 
-    ```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserEntity.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserEntity.cs"
     ```
 
 3. Creamos los eventos de dominio:
 
     Hemos creado el evento de dominio `UserCreatedDomainEvent`, que representa la estructura del evento de dominio a ser consumido.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserCreatedEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserCreatedEvent.cs"
     ```
 
 4. Creamos el event handler:
@@ -194,7 +194,7 @@ El proyecto de ejemplo `CodeDesignPlus.Net.Kafka.Consumer.Sample` contiene un ej
 
     El event handler es registrado en el contenedor de dependencias automaticamente por la librería `CodeDesignPlus.Net.PubSub`.
 
-    ```csharp url="examples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserCreatedEventHandler.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.Kafka.Sample/src/CodeDesignPlus.Net.Kafka.Consumer.Sample/UserCreatedEventHandler.cs"
     ```
 
 5. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -251,7 +251,7 @@ La librería `CodeDesignPlus.Net.Kafka` proporciona una serie de servicios para 
 ---
 
 - [Repositorio oficial en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/packages/CodeDesignPlus.Net.Kafka)
-- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/examples/CodeDesignPlus.Net.Kafka.Sample)
+- [Repositorio de ejemplos en GitHub](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.Kafka.Sample)
 - [Event Driven Architecture](https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/event-driven)
 - [Pub/Sub Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/publisher-subscriber)
 - [Paquete NuGet](https://www.nuget.org/packages/CodeDesignPlus.Net.Kafka)
