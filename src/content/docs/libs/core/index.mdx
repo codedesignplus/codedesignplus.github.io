@@ -31,7 +31,7 @@ El objetivo principal de `CodeDesignPlus.Net.Core` es ofrecer una base sólida y
 ## Componentes Principales
 ---
 
-- **Servicios**: Gestiona la resolución y la propagación de eventos de dominio a través de la interfaz `IDomainEventResolverService`.
+- **Servicios**: Gestiona la resolución y la propagación de eventos de dominio a través de la interfaz `IDomainEventResolver`.
 - **Opciones**: Permite configurar el comportamiento de la librería mediante las clases `CoreOptions` y `ContactOptions`.
 - **Métodos de Extensión**: Simplifica el registro de servicios y la configuración en el contenedor de dependencias.
 - **Abstracciones**: Proporciona interfaces y clases base para patrones como `AggregateRoot`, `Entity`, `Dto` y `DomainEvent`.
@@ -51,11 +51,11 @@ El objetivo principal de `CodeDesignPlus.Net.Core` es ofrecer una base sólida y
         - DomainEvent.cs
         - IAggregateRoot.cs
         - IDomainEvent.cs
-        - IDomainEventResolverService.cs
+        - IDomainEventResolver.cs
         - IDto.cs
         - IEntity.cs
         - IErrorCodes.cs
-        - IStartupServices.cs
+        - IStartup.cs
         - Attributes
             - EventKeyAttribute.cs
         - Models
@@ -128,7 +128,7 @@ public class Startup
         services.AddCore(Configuration);
 
         // Ejemplo de uso de un servicio
-        services.AddTransient<IDomainEventResolverService, DomainEventResolverService>();
+        services.AddTransient<IDomainEventResolver, DomainEventResolverService>();
         
         // ... otros servicios
     }

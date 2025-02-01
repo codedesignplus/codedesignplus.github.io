@@ -17,7 +17,7 @@ Este documento describe las clases `MediatRExtensions` y `ValidationPipeline`, l
 - `MediatR`: Necesario para la implementación del patrón Mediator y el envío de mensajes.
 - `Microsoft.Extensions.DependencyInjection`: Necesario para la interfaz `IServiceCollection` y para el registro de servicios en el contenedor de inyección de dependencias.
 - `FluentValidation`: Necesario para definir validadores y utilizarlos en el pipeline de MediatR.
-- `CodeDesignPlus.Net.Core.Abstractions`: Necesario para la interfaz `IStartupServices` utilizada en la configuración.
+- `CodeDesignPlus.Net.Core.Abstractions`: Necesario para la interfaz `IStartup` utilizada en la configuración.
 
 ## Escenarios de uso
 ---
@@ -69,13 +69,13 @@ var app = builder.Build();
 La clase `MediatRExtensions` proporciona un método de extensión llamado `AddMediatR` que simplifica la configuración de MediatR en aplicaciones .NET. La clase `ValidationPipeline` implementa un pipeline de MediatR que intercepta las solicitudes para validarlas antes de ejecutar la lógica de negocio.
 
 ### AddMediatR
-**Type:** `public static IServiceCollection AddMediatR<TApplication>(this IServiceCollection services) where TApplication : IStartupServices`
+**Type:** `public static IServiceCollection AddMediatR<TApplication>(this IServiceCollection services) where TApplication : IStartup`
 
 Este método de extensión configura MediatR, registrando todos los handlers de la asamblea de la aplicación y agregando el pipeline de validación (`ValidationPipeline`) para todas las solicitudes.
 
 - **Parámetros:**
     - `services`: La instancia de `IServiceCollection` a la cual se agregarán los servicios de MediatR.
-    - `TApplication`: Tipo que implementa la interface `IStartupServices`. El Assembly de esta clase se utiliza para el registro automatico de handlers
+    - `TApplication`: Tipo que implementa la interface `IStartup`. El Assembly de esta clase se utiliza para el registro automatico de handlers
 - **Tipo de retorno:**
    -  `IServiceCollection`: La misma instancia de `IServiceCollection` para permitir el encadenamiento de llamadas a métodos.
 

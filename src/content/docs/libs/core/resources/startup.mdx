@@ -2,17 +2,17 @@
 title: Startup
 ---
 
-La correcta configuración y registro de servicios es un aspecto esencial en cualquier microservicio. En `CodeDesignPlus.Net.Core`, proporcionamos una interfaz llamada `IStartupServices` que se utiliza para inicializar y registrar servicios durante el arranque de la aplicación. Esto permite una integración fluida y organizada de las diferentes capas del patrón de arquitectura hexagonal.
+La correcta configuración y registro de servicios es un aspecto esencial en cualquier microservicio. En `CodeDesignPlus.Net.Core`, proporcionamos una interfaz llamada `IStartup` que se utiliza para inicializar y registrar servicios durante el arranque de la aplicación. Esto permite una integración fluida y organizada de las diferentes capas del patrón de arquitectura hexagonal.
 
-## ¿Qué es IStartupServices?
+## ¿Qué es IStartup?
 
-La interfaz `IStartupServices` define un contrato para la inicialización de servicios en el microservicio. Esta interfaz puede ser implementada en cada una de las capas del patrón, lo que permite a los desarrolladores personalizar el registro de sus servicios de acuerdo con las necesidades específicas de su aplicación.
+La interfaz `IStartup` define un contrato para la inicialización de servicios en el microservicio. Esta interfaz puede ser implementada en cada una de las capas del patrón, lo que permite a los desarrolladores personalizar el registro de sus servicios de acuerdo con las necesidades específicas de su aplicación.
 
 ### Definición de la Interfaz
 
 A continuación, se muestra la definición de la interfaz:
 
-```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IStartupServices.cs" 
+```csharp url="packages/CodeDesignPlus.Net.Core/src/CodeDesignPlus.Net.Core.Abstractions/IStartup.cs" 
 ```
 
 ### Método Initialize
@@ -25,14 +25,14 @@ El método `Initialize` recibe dos parámetros:
 ## Ejemplo Práctico
 ---
 
-A continuación, se presenta un ejemplo de cómo implementar la interfaz IStartupServices en una clase personalizada:
+A continuación, se presenta un ejemplo de cómo implementar la interfaz IStartup en una clase personalizada:
 
-```csharp url="samples/CodeDesignPlus.Net.Core.Sample/Resources/Startup/StartupCustom.cs" 
+```csharp url="samples/CodeDesignPlus.Net.Core.Sample/src/CodeDesignPlus.Net.Core.Sample/Resources/Startup/StartupCustom.cs" 
 ```
 
 Dentro del método `Initialize`, puedes registrar cualquier servicio que tu aplicación necesite. Esto incluye la inyección de dependencias para servicios, repositorios, controladores y cualquier otro componente necesario para el funcionamiento del microservicio.
 
-## Ventajas de Usar IStartupServices
+## Ventajas de Usar IStartup
 ---
 - **Organización**: Permite una separación clara de las responsabilidades en el proceso de inicialización, lo que mejora la organización del código.
 - **Flexibilidad**: Cada capa de la arquitectura puede tener su propia implementación de la interfaz, adaptándose a las necesidades específicas de cada una.
@@ -41,6 +41,6 @@ Dentro del método `Initialize`, puedes registrar cualquier servicio que tu apli
 ## Conclusiones
 ---
 
-La interfaz `IStartupServices` es una herramienta poderosa para gestionar la inicialización de servicios en microservicios construidos con `CodeDesignPlus.Net.Core`. Al proporcionar un mecanismo flexible y organizado para registrar servicios en el contenedor de dependencias, esta interfaz permite a los desarrolladores personalizar la configuración de su aplicación de manera efectiva.
+La interfaz `IStartup` es una herramienta poderosa para gestionar la inicialización de servicios en microservicios construidos con `CodeDesignPlus.Net.Core`. Al proporcionar un mecanismo flexible y organizado para registrar servicios en el contenedor de dependencias, esta interfaz permite a los desarrolladores personalizar la configuración de su aplicación de manera efectiva.
 
-Para obtener más información sobre cómo implementar y utilizar `IStartupServices` en tu proyecto, no dudes en ponerte en contacto con nosotros. ¡Estamos aquí para ayudarte!
+Para obtener más información sobre cómo implementar y utilizar `IStartup` en tu proyecto, no dudes en ponerte en contacto con nosotros. ¡Estamos aquí para ayudarte!

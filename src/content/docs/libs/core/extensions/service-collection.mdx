@@ -19,7 +19,7 @@ Este método de extensión es particularmente útil en aplicaciones que:
 
 - Siguen principios de diseño como DDD (Domain-Driven Design) o arquitectura hexagonal.
 - Necesitan validar y enlazar configuraciones directamente desde el archivo de configuración.
-- Requieren la integración de servicios básicos como `IDomainEventResolverService`.
+- Requieren la integración de servicios básicos como `IDomainEventResolver`.
 
 ## Beneficios
 ---
@@ -33,7 +33,7 @@ Este método de extensión es particularmente útil en aplicaciones que:
 
 El siguiente ejemplo práctico ilustra cómo utilizar la extensión `AddCore` en una aplicación de consola. El objetivo es demostrar cómo cargar la configuración desde un archivo `appsettings.json`, registrar los servicios en el contenedor de dependencias y resolver un tipo de evento de dominio.
 
-```csharp url="samples/CodeDesignPlus.Net.Core.Sample/Program.cs" 
+```csharp url="samples/CodeDesignPlus.Net.Core.Sample/src/CodeDesignPlus.Net.Core.Sample/src/CodeDesignPlus.Net.Core.Sample/Program.cs" 
 ```
 
 <Steps>
@@ -67,10 +67,10 @@ El siguiente ejemplo práctico ilustra cómo utilizar la extensión `AddCore` en
 
 4. **Resolución de Servicios**:
 
-    Se utiliza `GetRequiredService` para obtener una instancia del ``IDomainEventResolverService``. Este servicio es clave para el manejo de eventos en la aplicación, permitiendo identificar y gestionar los eventos de dominio de manera efectiva.
+    Se utiliza `GetRequiredService` para obtener una instancia del `IDomainEventResolver`. Este servicio es clave para el manejo de eventos en la aplicación, permitiendo identificar y gestionar los eventos de dominio de manera efectiva.
 
     ```csharp
-    var domainEventResolverService = services.BuildServiceProvider().GetRequiredService<IDomainEventResolverService>();
+    var domainEventResolverService = services.BuildServiceProvider().GetRequiredService<IDomainEventResolver>();
     ```
 
 5. **Salida de la Consola**:

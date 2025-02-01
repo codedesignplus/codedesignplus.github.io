@@ -4,15 +4,15 @@ title: Overview
 
 import { Tabs, TabItem, FileTree, LinkCard, Steps, Aside } from '@astrojs/starlight/components';
 
-La librería `CodeDesignPlus.Net.Redis` es una pieza fundamental en el ecosistema de CodeDesignPlus, diseñada para gestionar de manera robusta y coherente las conexiones a Redis. Proporciona interfaces, clases base y métodos de extensión para estandarizar la gestión de conexiones a Redis, ya sea con o sin TLS, y para la creación de instancias `IRedisService` a través de `IRedisServiceFactory`. Estas instancias son esenciales para que las librerías `CodeDesignPlus.Net.Redis.PubSub` y `CodeDesignPlus.Net.Redis.Cache` puedan interactuar con Redis de forma consistente, facilitando la creación de aplicaciones escalables y mantenibles.
+La librería `CodeDesignPlus.Net.Redis` es una pieza fundamental en el ecosistema de CodeDesignPlus, diseñada para gestionar de manera robusta y coherente las conexiones a Redis. Proporciona interfaces, clases base y métodos de extensión para estandarizar la gestión de conexiones a Redis, ya sea con o sin TLS, y para la creación de instancias `IRedis` a través de `IRedisFactory`. Estas instancias son esenciales para que las librerías `CodeDesignPlus.Net.Redis.PubSub` y `CodeDesignPlus.Net.Redis.Cache` puedan interactuar con Redis de forma consistente, facilitando la creación de aplicaciones escalables y mantenibles.
 
 ## Propósito y alcance
 ---
-El propósito principal de `CodeDesignPlus.Net.Redis` es gestionar de manera centralizada y estandarizada las conexiones a Redis y proveer instancias de `IRedisService`. Esta librería actúa como el núcleo para que otras librerías de CodeDesignPlus (como PubSub y Cache) puedan usar Redis de manera consistente, independientemente de la configuración específica de la conexión (TLS o no). Su alcance incluye:
+El propósito principal de `CodeDesignPlus.Net.Redis` es gestionar de manera centralizada y estandarizada las conexiones a Redis y proveer instancias de `IRedis`. Esta librería actúa como el núcleo para que otras librerías de CodeDesignPlus (como PubSub y Cache) puedan usar Redis de manera consistente, independientemente de la configuración específica de la conexión (TLS o no). Su alcance incluye:
 
 1. Gestión de conexiones Redis: Proporcionar un mecanismo estandarizado para establecer y gestionar conexiones a Redis, tanto simples como con TLS.
 
-2. Creación de instancias `IRedisService`: Implementar una fábrica (`IRedisServiceFactory`) que permite la creación y configuración de instancias de `IRedisService` para su uso en otras librerías.
+2. Creación de instancias `IRedis`: Implementar una fábrica (`IRedisFactory`) que permite la creación y configuración de instancias de `IRedis` para su uso en otras librerías.
 
 3. Estandarización de la conexión: Asegurar que todas las conexiones a Redis dentro del ecosistema CodeDesignPlus sean gestionadas de forma consistente y eficiente.
 
@@ -51,9 +51,9 @@ El propósito principal de `CodeDesignPlus.Net.Redis` es gestionar de manera cen
 -   **`ServiceCollectionExtensions`:** Define métodos de extensión para registrar los servicios en el contenedor de dependencias.
 -   **`RedisOptions`:** Define las opciones de configuración para la conexión a Redis.
 -   **`RedisService`:** Implementa la lógica para la conexión y el manejo de Redis.
--   **`RedisServiceFactory`:** Implementa la fábrica para la creación de instancias de `IRedisService`.
--   **`IRedisService`:** Interfaz para los servicios de Redis.
--   **`IRedisServiceFactory`:** Interfaz para la fábrica de servicios de Redis.
+-   **`RedisServiceFactory`:** Implementa la fábrica para la creación de instancias de `IRedis`.
+-   **`IRedis`:** Interfaz para los servicios de Redis.
+-   **`IRedisFactory`:** Interfaz para la fábrica de servicios de Redis.
 -   **`FactoryConst`**: Define constantes para los nombres de instancias de Redis.
    -   **`Instance`**: Define la configuración de una instancia de redis.
 
@@ -72,8 +72,8 @@ El propósito principal de `CodeDesignPlus.Net.Redis` es gestionar de manera cen
     - CodeDesignPlus.Net.Redis.Abstractions
         - FactoryConst.cs
         - Instance.cs
-        - IRedisService.cs
-        - IRedisServiceFactory.cs
+        - IRedis.cs
+        - IRedisFactory.cs
 </FileTree>
 
 ## Primeros Pasos
@@ -168,10 +168,10 @@ Vamos a analizar el ejemplo `CodeDesignPlus.Net.Redis.Standalone.Sample` para en
     serviceCollection.AddRedis(configuration);
     ```
 
-3. Obtenemos la instancia de nuestra factoria y creamos una instancia de `IRedisService`:
+3. Obtenemos la instancia de nuestra factoria y creamos una instancia de `IRedis`:
 
     ```csharp
-    var factory = serviceProvider.GetRequiredService<IRedisServiceFactory>();
+    var factory = serviceProvider.GetRequiredService<IRedisFactory>();
 
     var service = factory.Create(FactoryConst.RedisCore);
     ```
@@ -209,13 +209,13 @@ La librería utiliza la clase `RedisOptions` para configurar la conexión a Redi
 
 ### RedisService
 
-La clase `RedisService` es la implementación concreta de `IRedisService` y proporciona métodos para interactuar con Redis. Esta clase se encarga de establecer la conexión a Redis, configurar la base de datos y el suscriptor, y gestionar los eventos de conexión.
+La clase `RedisService` es la implementación concreta de `IRedis` y proporciona métodos para interactuar con Redis. Esta clase se encarga de establecer la conexión a Redis, configurar la base de datos y el suscriptor, y gestionar los eventos de conexión.
 
 <LinkCard title="Explora el servicio RedisService" href="/libs/redis/services/redis-service" />
 
 ### RedisServiceFactory
 
-La clase `RedisServiceFactory` es una fábrica que crea instancias de `IRedisService` basadas en la configuración de la instancia de Redis. Permite gestionar múltiples conexiones a Redis y proporciona una abstracción para la creación de servicios Redis.
+La clase `RedisServiceFactory` es una fábrica que crea instancias de `IRedis` basadas en la configuración de la instancia de Redis. Permite gestionar múltiples conexiones a Redis y proporciona una abstracción para la creación de servicios Redis.
 
 <LinkCard title="Explora la fábrica RedisServiceFactory" href="/libs/redis/services/redis-factory" />
 

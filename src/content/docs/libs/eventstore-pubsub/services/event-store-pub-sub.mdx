@@ -4,7 +4,7 @@ title: EventStore PubSub
 
 import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
 
-El `IEventStorePubSubService` es una interfaz que hereda de `IMessage` que se encuentra en `CodeDesignPlus.Net.PubSub.Abstractions` . Esta interfaz proporciona un conjunto de métodos para publicar y suscribirse a eventos del Event Store.
+El `IEventStorePubSub` es una interfaz que hereda de `IMessage` que se encuentra en `CodeDesignPlus.Net.PubSub.Abstractions` . Esta interfaz proporciona un conjunto de métodos para publicar y suscribirse a eventos del Event Store.
 
 <Tabs>
     <TabItem label="IMessage">
@@ -13,10 +13,10 @@ El `IEventStorePubSubService` es una interfaz que hereda de `IMessage` que se en
         ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IMessage.cs"
         ```
     </TabItem>
-    <TabItem label="IEventStorePubSubService">
-        <p>La interfaz <code>IEventStorePubSubService</code> hereda de <code>IMessage</code> y proporciona un conjunto de métodos para publicar y suscribirse a eventos del Event Store.</p>
+    <TabItem label="IEventStorePubSub">
+        <p>La interfaz <code>IEventStorePubSub</code> hereda de <code>IMessage</code> y proporciona un conjunto de métodos para publicar y suscribirse a eventos del Event Store.</p>
 
-        ```csharp url="packages/CodeDesignPlus.Net.EventStore.PubSub/src/CodeDesignPlus.Net.EventStore.PubSub.Abstractions/IEventStorePubSubService.cs"
+        ```csharp url="packages/CodeDesignPlus.Net.EventStore.PubSub/src/CodeDesignPlus.Net.EventStore.PubSub.Abstractions/IEventStorePubSub.cs"
         ```
     </TabItem>
 </Tabs>
@@ -51,7 +51,7 @@ La libreria `CodeDesignPlus.Net.EventStore.PubSub`, es un marco robusto diseñad
 ## Implementacaión
 ---
 
-La interfaz `IEventStorePubSubService` se implementa en la clase `EventStorePubSubService`, que proporciona la lógica para publicar y suscribirse a eventos del Event Store. La clase `EventStorePubSubService` se encuentra en el espacio de nombres `CodeDesignPlus.Net.EventStore.PubSub.Services`.
+La interfaz `IEventStorePubSub` se implementa en la clase `EventStorePubSubService`, que proporciona la lógica para publicar y suscribirse a eventos del Event Store. La clase `EventStorePubSubService` se encuentra en el espacio de nombres `CodeDesignPlus.Net.EventStore.PubSub.Services`.
 
 ```csharp url="packages/CodeDesignPlus.Net.EventStore.PubSub/src/CodeDesignPlus.Net.EventStore.PubSub/Services/EventStorePubSubService.cs"
 ```
@@ -59,7 +59,7 @@ La interfaz `IEventStorePubSubService` se implementa en la clase `EventStorePubS
 ## Ejemplo
 ---
 
-Una vez que se ha implementado la interfaz `IEventStorePubSubService`, se puede utilizar para publicar y suscribirse a eventos del Event Store.
+Una vez que se ha implementado la interfaz `IEventStorePubSub`, se puede utilizar para publicar y suscribirse a eventos del Event Store.
 
 <Steps>
 1. Agregar las propiedades de configuración al archivo `appsettings.json`:
@@ -81,7 +81,7 @@ Una vez que se ha implementado la interfaz `IEventStorePubSubService`, se puede 
         }
     }
     ```
-2. Registrar la interfaz `IEventStorePubSubService` en el contenedor de dependencias:
+2. Registrar la interfaz `IEventStorePubSub` en el contenedor de dependencias:
 
     ```csharp
     public class Startup
@@ -89,7 +89,7 @@ Una vez que se ha implementado la interfaz `IEventStorePubSubService`, se puede 
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IMessage, EventStorePubSubService>();
-            services.AddSingleton<IEventStorePubSubService, EventStorePubSubService>();
+            services.AddSingleton<IEventStorePubSub, EventStorePubSubService>();
             services.AddLogging();
         }
     }
@@ -115,10 +115,10 @@ Una vez que se ha implementado la interfaz `IEventStorePubSubService`, se puede 
 </Steps>
 
 <Aside>
-Este ejemplo es una guía básica para implementar la interfaz `IEventStorePubSubService` en una aplicación .NET Core. Los desarrolladores pueden personalizar la implementación según sus necesidades y requisitos específicos. Sin embargo, recuerda que la librearía `CodeDesignPlus.Net.EventStore.PubSub` proporciona una implementación robusta y escalable de la interfaz `IEventStorePubSubService` que facilita la gestión de eventos en aplicaciones .NET Core ademas de los metodos de extensión para facilitar la configuración y el uso de EventStore Pub/Sub en aplicaciones .NET Core.
+Este ejemplo es una guía básica para implementar la interfaz `IEventStorePubSub` en una aplicación .NET Core. Los desarrolladores pueden personalizar la implementación según sus necesidades y requisitos específicos. Sin embargo, recuerda que la librearía `CodeDesignPlus.Net.EventStore.PubSub` proporciona una implementación robusta y escalable de la interfaz `IEventStorePubSub` que facilita la gestión de eventos en aplicaciones .NET Core ademas de los metodos de extensión para facilitar la configuración y el uso de EventStore Pub/Sub en aplicaciones .NET Core.
 </Aside>
 
 ## Conclusiones
 ---
 
-El `IEventStorePubSubService` es una interfaz que proporciona métodos para publicar y suscribirse a eventos del Event Store. Al implementar esta interfaz en una clase de servicio, los desarrolladores pueden interactuar con el Event Store de forma eficiente y desacoplada, lo que facilita la construcción de sistemas escalables y robustos basados en eventos. Además, al ser una interfaz, permite la implementación de diferentes estrategias de publicación/suscripción y facilita la prueba unitaria mediante el uso de mocks. Por lo tanto, el `IEventStorePubSubService` es una herramienta poderosa para gestionar eventos en aplicaciones .NET Core y construir sistemas desacoplados y escalables basados en eventos.
+El `IEventStorePubSub` es una interfaz que proporciona métodos para publicar y suscribirse a eventos del Event Store. Al implementar esta interfaz en una clase de servicio, los desarrolladores pueden interactuar con el Event Store de forma eficiente y desacoplada, lo que facilita la construcción de sistemas escalables y robustos basados en eventos. Además, al ser una interfaz, permite la implementación de diferentes estrategias de publicación/suscripción y facilita la prueba unitaria mediante el uso de mocks. Por lo tanto, el `IEventStorePubSub` es una herramienta poderosa para gestionar eventos en aplicaciones .NET Core y construir sistemas desacoplados y escalables basados en eventos.

@@ -52,7 +52,7 @@ public void ConfigureServices(IServiceCollection services)
 `ServiceCollectionExtensions` proporciona los siguientes métodos de extensión para configurar y registrar servicios relacionados con MongoDB en una aplicación .NET.
 
 ### AddMongo
-**Type:** `public static IServiceCollection AddMongo<TStartup>(this IServiceCollection services, IConfiguration configuration) where TStartup : IStartupServices`
+**Type:** `public static IServiceCollection AddMongo<TStartup>(this IServiceCollection services, IConfiguration configuration) where TStartup : IStartup`
 
 El método `AddMongo` registra los servicios necesarios para interactuar con MongoDB en el contenedor de servicios de la aplicación.
 
@@ -68,7 +68,7 @@ El método `AddMongo` registra los servicios necesarios para interactuar con Mon
     - `MongoException`: Si la sección MongoOptions no se encuentra en la configuración.
 
 ### AddRepositories
-**Type:** `public static void AddRepositories<TStartup>(this IServiceCollection services) where TStartup : IStartupServices`
+**Type:** `public static void AddRepositories<TStartup>(this IServiceCollection services) where TStartup : IStartup`
 
 El método `AddRepositories` registra automáticamente los repositorios que implementan la interfaz `IRepositoryBase` en el contenedor de servicios.
 

@@ -55,7 +55,7 @@ Cancela la suscripción de un evento y su manejador de un topic de kafka. Recibe
 
 El servicio `KafkaPubSub` se implementa como una clase que hereda de `IKafkaPubSub` y se encarga de:
 
-1.  **Recibir dependencias:**  Recibe una instancia de `ILogger<KafkaPubSub>` para logging,  `IDomainEventResolverService` para obtener el nombre del topic,  `IOptions<KafkaOptions>` para obtener la configuración de Kafka y `IServiceProvider` para resolver dependencias (productores y consumidores).
+1.  **Recibir dependencias:**  Recibe una instancia de `ILogger<KafkaPubSub>` para logging,  `IDomainEventResolver` para obtener el nombre del topic,  `IOptions<KafkaOptions>` para obtener la configuración de Kafka y `IServiceProvider` para resolver dependencias (productores y consumidores).
 2.  **Publicar eventos:** Al recibir un evento, se obtiene el topic asociado al tipo del evento, se crea un mensaje con metadata y se utiliza un productor de Kafka (`IProducer<string, IDomainEvent>`) para enviar el mensaje al topic.
 3.  **Suscribirse a eventos:** Al suscribirse a un evento, se obtiene el topic a partir del tipo del evento, se verifica que el topic exista y se crea un consumidor de Kafka (`ConsumerBuilder<string, TEvent>`) para recibir los mensajes del topic,  procesándolos y entregándolos al event handler correspondiente.
 4.  **Manejo de topics:** Se asegura de que el topic exista antes de iniciar el consumidor, esperando hasta que el topic sea creado o hasta que se alcance el número máximo de intentos.
@@ -65,7 +65,7 @@ El servicio `KafkaPubSub` se implementa como una clase que hereda de `IKafkaPubS
 Las dependencias del servicio son:
 
 - `ILogger<KafkaPubSub>`: Para el registro de eventos.
-- `IDomainEventResolverService`: Para obtener el nombre del topic a partir del tipo de evento.
+- `IDomainEventResolver`: Para obtener el nombre del topic a partir del tipo de evento.
 - `IOptions<KafkaOptions>`: Para la configuración de Kafka.
 - `IServiceProvider`: Para la resolución de dependencias, como el productor y el consumidor.
 
@@ -77,7 +77,7 @@ La clase `KafkaOptions` contendría al menos las siguientes propiedades:
 ## Ejemplo de Uso
 ---
 
-En este ejemplo, se muestra cómo la librería `CodeDesignPlus.Net.PubSub` hace uso de la interfaz `IMessage` para publicar eventos de dominio de forma asíncrona. La clase `PubSubService` implementa la interfaz `IPubSub` y utiliza la inyección de dependencias para obtener una instancia de `IMessage` y otros servicios necesarios. El método `PublishAsync` se encarga de publicar eventos de dominio, verificando si se debe usar una cola para encolar los eventos o si se deben publicar directamente. Si se usa una cola, se obtiene una instancia de `IEventQueueService` y se encola el evento; de lo contrario, se publica directamente utilizando `IMessage`. 
+En este ejemplo, se muestra cómo la librería `CodeDesignPlus.Net.PubSub` hace uso de la interfaz `IMessage` para publicar eventos de dominio de forma asíncrona. La clase `PubSubService` implementa la interfaz `IPubSub` y utiliza la inyección de dependencias para obtener una instancia de `IMessage` y otros servicios necesarios. El método `PublishAsync` se encarga de publicar eventos de dominio, verificando si se debe usar una cola para encolar los eventos o si se deben publicar directamente. Si se usa una cola, se obtiene una instancia de `IEventQueue` y se encola el evento; de lo contrario, se publica directamente utilizando `IMessage`. 
 
 ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/PubSubService.cs"
 

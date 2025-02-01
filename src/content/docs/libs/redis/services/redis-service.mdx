@@ -6,7 +6,7 @@ import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
 
 El servicio `RedisService` proporciona una interfaz y una implementación para gestionar la conexión a un servidor Redis. Su propósito principal es centralizar la gestión de la conexión, el acceso a la base de datos, la suscripción a canales pub/sub y el manejo de eventos de conexión, permitiendo un uso consistente de Redis en la aplicación.
 
-```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/IRedisService.cs"
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/IRedis.cs"
 ```
 
 ## ¿Cómo Funciona?
@@ -63,7 +63,7 @@ El manejo de SSL/TLS incluye la selección y validación del certificado, buscan
 ## Ejemplo de Uso
 ---
 
-Este ejemplo muestra cómo inicializar y utilizar `IRedisService` en una aplicación de consola a través de `IRedisServiceFactory` y la inyección de dependencias de .NET.
+Este ejemplo muestra cómo inicializar y utilizar `IRedis` en una aplicación de consola a través de `IRedisFactory` y la inyección de dependencias de .NET.
 
 ```csharp url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/Program.cs"
 ```

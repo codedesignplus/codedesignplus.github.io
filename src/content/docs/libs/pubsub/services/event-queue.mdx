@@ -1,16 +1,16 @@
 ---
-title: IEventQueueService
+title: IEventQueue
 ---
 
-`IEventQueueService` es una interfaz que define los métodos necesarios para gestionar una cola de eventos de dominio. Esta interfaz permite agregar eventos a la cola y procesarlos de manera asíncrona.
+`IEventQueue` es una interfaz que define los métodos necesarios para gestionar una cola de eventos de dominio. Esta interfaz permite agregar eventos a la cola y procesarlos de manera asíncrona.
 
-```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IEventQueueService.cs"
+```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub.Abstractions/IEventQueue.cs"
 ```
 
 ## Métodos
 ---
 
-Los métodos que se pueden utilizar con la interfaz `IEventQueueService` son los siguientes:
+Los métodos que se pueden utilizar con la interfaz `IEventQueue` son los siguientes:
 
 ### EnqueueAsync
 **Type:** `Task EnqueueAsync(IDomainEvent @event, CancellationToken cancellationToken)`
@@ -25,7 +25,7 @@ Intenta eliminar y devolver el evento al principio de la cola concurrente.
 ## Implementación
 ---
 
-La implementación de la interfaz `IEventQueueService` se muestra a continuación. Esta implementación es responsable de almacenar los eventos en una cola en memoria antes de ser procesados.
+La implementación de la interfaz `IEventQueue` se muestra a continuación. Esta implementación es responsable de almacenar los eventos en una cola en memoria antes de ser procesados.
 
 ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/EventQueueService.cs"
 ```
@@ -33,7 +33,7 @@ La implementación de la interfaz `IEventQueueService` se muestra a continuació
 ## Ejemplo de Uso
 ---
 
-Para comprender el funcionamiento y el uso de la interfaz `IEventQueueService`, se muestra la clase `PubSubService` que implementa la interfaz `IPubSub` y utiliza el servicio `IEventQueueService` para encolar eventos de dominio cuando `UseQueue` es `true`.
+Para comprender el funcionamiento y el uso de la interfaz `IEventQueue`, se muestra la clase `PubSubService` que implementa la interfaz `IPubSub` y utiliza el servicio `IEventQueue` para encolar eventos de dominio cuando `UseQueue` es `true`.
 
 ```csharp url="packages/CodeDesignPlus.Net.PubSub/src/CodeDesignPlus.Net.PubSub/Services/PubSubService.cs"
 ```

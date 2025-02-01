@@ -51,7 +51,7 @@ El propósito de `CodeDesignPlus.Net.EventStore.PubSub` es administrar y gestion
     - Services
       - EventStorePubSubService.cs
   - CodeDesignPlus.Net.EventStore.PubSub.Abstractions
-    - IEventStorePubSubService.cs
+    - IEventStorePubSub.cs
     - Options
       - EventStorePubSubOptions.cs
 </FileTree>
@@ -96,7 +96,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore.PubSub`, agrega el pa
 <Steps>
 1. Asignar las opciones de configuración en el `appsettings.json`:
 
-    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/appsettings.json"
     ```
 
 2. Registra los servicios el contenedor de dependencias de tu aplicación: 
@@ -112,7 +112,7 @@ Para instalar la biblioteca `CodeDesignPlus.Net.EventStore.PubSub`, agrega el pa
 
 El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.PubSub.Sample`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/feature/fix-duplicate-key/samples/CodeDesignPlus.Net.EventStore.PubSub.Sample) contiene los diferentes casos de uso para hacer uso de la biblioteca.
 
-```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Program.cs"
+```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/Program.cs"
 ```
 
 <Steps>
@@ -120,27 +120,27 @@ El proyecto de ejemplo [`CodeDesignPlus.Net.EventStore.PubSub.Sample`](https://g
 
     El archivo `appsettings.json` contiene la configuración de EventStore Pub/Sub.
 
-    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/appsettings.json"
+    ```json url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/appsettings.json"
     ```
 
 2. Creación del `OrderAggregate`
 
     Los eventos de dominio que serán publicados o consumidos, modifican el estado de la aplicación, ya sea un Aggregate o Entidad. En este caso, se crea el `OrderAggregate` que representa una orden.
 
-    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Aggregates/OrderAggregate.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/Aggregates/OrderAggregate.cs"
     ```
 
 3. Creación de los eventos de dominio
 
     Los eventos de dominio representan los cambios en el estado de la aplicación. En este caso, se crean los eventos `OrderCreatedDomainEvent`, `NameUpdatedDomainEvent` y `ProductAddedDomainEvent`.
 
-    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/OrderCreatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/Events/OrderCreatedDomainEvent.cs"
     ``` 
     
-    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/NameUpdatedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/Events/NameUpdatedDomainEvent.cs"
     ``` 
     
-    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Sample/Events/ProductAddedDomainEvent.cs"
+    ```csharp url="samples/CodeDesignPlus.Net.EventStore.PubSub.Sample/src/CodeDesignPlus.Net.EventStore.PubSub.Producer.Sample/Events/ProductAddedDomainEvent.cs"
     ```
 
 4. Registraremos los servicios necesarios en el contenedor de dependencias.
@@ -209,11 +209,11 @@ La biblioteca `CodeDesignPlus.Net.EventStore.PubSub` proporciona opciones de con
 
 La biblioteca `CodeDesignPlus.Net.EventStore.PubSub` proporciona varios servicios esenciales, llevando a cabo la implementación del servicio `CodeDesignPlus.Net.PubSub.Abstractions.IMessage` para la publicación y suscripción de eventos. Estos servicios están diseñados para facilitar la gestión de eventos y garantizar una comunicación eficiente y desacoplada entre los componentes de la aplicación.
 
-### IEventStorePubSubService
+### IEventStorePubSub
 
-`IEventStorePubSubService` hereda de `IMessage`, una interfaz base que encapsula las operaciones fundamentales de mensajería como el envío y recepción de mensajes asíncronos. Esta herencia proporciona una base sólida para implementar servicios de publicación/suscripción robustos y escalables.
+`IEventStorePubSub` hereda de `IMessage`, una interfaz base que encapsula las operaciones fundamentales de mensajería como el envío y recepción de mensajes asíncronos. Esta herencia proporciona una base sólida para implementar servicios de publicación/suscripción robustos y escalables.
 
-<LinkCard title="Explora la implementación y uso IEventStorePubSubService" href="/libs/eventstore-pubsub/services/event-store-pub-sub" />
+<LinkCard title="Explora la implementación y uso IEventStorePubSub" href="/libs/eventstore-pubsub/services/event-store-pub-sub" />
 
 ## Conclusiones
 ---

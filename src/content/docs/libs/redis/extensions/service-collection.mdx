@@ -25,14 +25,14 @@ Este método de extensión es particularmente útil en aplicaciones que:
 ---
 
 - **Configuración Simplificada:** Facilita la configuración de los servicios Redis utilizando la configuración de la aplicación.
-- **Inyección de Dependencias:** Permite la inyección sencilla de las interfaces `IRedisService` e `IRedisServiceFactory` en cualquier parte de la aplicación.
+- **Inyección de Dependencias:** Permite la inyección sencilla de las interfaces `IRedis` e `IRedisFactory` en cualquier parte de la aplicación.
 - **Centralización de la configuración:** Asegura que todas las conexiones a Redis sean configuradas de la misma manera.
 - **Reutilización de código:** Evita la necesidad de repetir la configuración de Redis en múltiples partes de la aplicación.
 
 ## Ejemplo Práctico
 ---
 
-En este ejemplo, se utiliza el método `AddRedis` para configurar los servicios Redis, tomando la configuración de la aplicación (`Configuration`). Esto permite que `IRedisService` e `IRedisServiceFactory` estén disponibles para ser inyectadas como dependencias.
+En este ejemplo, se utiliza el método `AddRedis` para configurar los servicios Redis, tomando la configuración de la aplicación (`Configuration`). Esto permite que `IRedis` e `IRedisFactory` estén disponibles para ser inyectadas como dependencias.
 
 1. Asignamos las configuraciones en el archivo `appsettings.json`:
 
@@ -94,8 +94,8 @@ Este método extiende la interfaz `IServiceCollection` para configurar los servi
 1.  **Validación de argumentos:** Se asegura de que los parámetros `services` y `configuration` no sean nulos.
 2.  **Obtención de la configuración:** Obtiene la sección de configuración de Redis (por defecto "Redis") desde la configuración de la aplicación. Si la sección no existe, lanza una excepción `Exceptions.RedisException`.
 3.  **Registro de opciones:** Registra las opciones de configuración de Redis utilizando la clase `RedisOptions` y las enlaza a la sección de configuración obtenida.
-4.  **Registro de servicios:** Registra las interfaces `IRedisService` e `IRedisServiceFactory` como singletons, permitiendo que se puedan inyectar como dependencias.
-5.  **Registro de conexión:** Registra la conexión creada mediante `IRedisServiceFactory` con un scope Singleton.
+4.  **Registro de servicios:** Registra las interfaces `IRedis` e `IRedisFactory` como singletons, permitiendo que se puedan inyectar como dependencias.
+5.  **Registro de conexión:** Registra la conexión creada mediante `IRedisFactory` con un scope Singleton.
 6.  **Retorno de la colección:** Retorna la colección de servicios para permitir el encadenamiento de otras configuraciones.
 
 ## Conclusiones

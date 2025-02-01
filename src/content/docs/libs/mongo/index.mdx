@@ -132,7 +132,7 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
       ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/ProductEntity.cs"
       ```
 
-      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/UserEntity.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Entities/UserAggregate.cs"
       ```
 
   3. Creamos el repositorio:
@@ -144,7 +144,7 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
 
   4. Creamos la clase Startup:
 
-      Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
+      Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartup`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
 
       ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.RepositoryBase/Startup.cs"
       ```
@@ -194,7 +194,10 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
 
       Procedemos a crear la entidad que representará los documentos en la colección de MongoDB, esta entidad debe implementar la interfaz `IEntity` de `CodeDesignPlus.Net.Core.Abstractions`.
 
-      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/UserEntity.cs"
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/ProductEntity.cs"
+      ```
+
+      ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Entities/UserAggregate.cs"
       ```
 
   3. Creamos el repositorio:
@@ -206,7 +209,7 @@ En este ejemplo [CodeDesignPlus.Net.Mongo.Sample](https://github.com/codedesignp
 
   4. Creamos la clase Startup:
 
-      Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartupService`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
+      Al utilizar el SDK de CodeDesignPlus, generalmente es necesario crear una clase `Startup` que implemente la interfaz `IStartup`. Esto facilita una mejor organización de los servicios que se desean registrar en el contenedor de dependencias de la aplicación, para cada una de las capas del servicio.
 
       ```csharp url="samples/CodeDesignPlus.Net.Mongo.Sample/src/CodeDesignPlus.Net.Mongo.Sample.OperationBase/Startup.cs"
       ```

@@ -62,7 +62,7 @@ Obtiene el tag del consumidor asociado a un tipo de evento y manejador.
 
 El servicio `ChannelProvider` se implementa como una clase que hereda de `IChannelProvider` y se encarga de:
 
-1.  **Recibir dependencias:** Recibe la conexión a RabbitMQ (`IRabbitConnection`), el servicio de resolución de eventos de dominio (`IDomainEventResolverService`) y las opciones de la aplicación (`IOptions<CoreOptions>`).
+1.  **Recibir dependencias:** Recibe la conexión a RabbitMQ (`IRabbitConnection`), el servicio de resolución de eventos de dominio (`IDomainEventResolver`) y las opciones de la aplicación (`IOptions<CoreOptions>`).
 2.  **Gestión de canales:** Utiliza un `ConcurrentDictionary<string, ChannelModel>` para almacenar los canales creados y poder reutilizarlos.
 3.  **Gestión de exchanges:** Utiliza un `ConcurrentDictionary<string, string>` para almacenar los exchanges declarados y poder reutilizarlos.
 4.  **Creación de exchanges:** Al solicitar un exchange, se verifica si ya existe. Si no, se crea uno nuevo con tipo *fanout* y se almacena.
@@ -73,7 +73,7 @@ El servicio `ChannelProvider` se implementa como una clase que hereda de `IChann
 Las dependencias del servicio son:
 
 -  `IRabbitConnection`: Para la conexión a RabbitMQ.
--  `IDomainEventResolverService`: Para obtener el nombre del exchange basado en el evento de dominio.
+-  `IDomainEventResolver`: Para obtener el nombre del exchange basado en el evento de dominio.
 -  `IOptions<CoreOptions>`: Para obtener información general de la aplicación, como el nombre del negocio y el microservicio.
 
 La clase `ChannelModel` es una clase interna que guarda el `IModel` y un `ConsumerTag`.
@@ -81,7 +81,7 @@ La clase `ChannelModel` es una clase interna que guarda el `IModel` y un `Consum
 ## Ejemplo de Uso
 ---
 
-En este ejemplo, se muestra como se pueden usar los métodos de `ChannelProvider` para publicar y consumir eventos de dominio en RabbitMQ. La clase `RabbitPubSubService` se encarga de publicar eventos de dominio y suscribirse a ellos utilizando `ChannelProvider` para obtener los canales y exchanges necesarios. La implementación de `RabbitPubSubService` utiliza la inyección de dependencias para obtener las instancias necesarias, como `IDomainEventResolverService` y `IOptions<CoreOptions>`. Además, se muestra cómo se configuran los exchanges y las colas en RabbitMQ para los eventos de dominio, y cómo se procesan los eventos recibidos por los consumidores.
+En este ejemplo, se muestra como se pueden usar los métodos de `ChannelProvider` para publicar y consumir eventos de dominio en RabbitMQ. La clase `RabbitPubSubService` se encarga de publicar eventos de dominio y suscribirse a ellos utilizando `ChannelProvider` para obtener los canales y exchanges necesarios. La implementación de `RabbitPubSubService` utiliza la inyección de dependencias para obtener las instancias necesarias, como `IDomainEventResolver` y `IOptions<CoreOptions>`. Además, se muestra cómo se configuran los exchanges y las colas en RabbitMQ para los eventos de dominio, y cómo se procesan los eventos recibidos por los consumidores.
 
 ```csharp url="packages/CodeDesignPlus.Net.RabbitMQ/src/CodeDesignPlus.Net.RabbitMQ/Services/RabbitPubSubService.cs"
 ```

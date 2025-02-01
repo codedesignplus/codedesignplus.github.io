@@ -4,36 +4,36 @@ title: RedisServiceFactory
 
 import { LinkCard, Steps, Aside } from '@astrojs/starlight/components';
 
-El servicio `RedisServiceFactory` proporciona una fábrica para crear y gestionar instancias de `IRedisService`. Su propósito principal es abstraer la creación de los servicios Redis, permitiendo que la aplicación pueda solicitar instancias específicas de `IRedisService` basadas en nombres configurados, facilitando el uso de múltiples conexiones a Redis en la misma aplicación.
+El servicio `RedisServiceFactory` proporciona una fábrica para crear y gestionar instancias de `IRedis`. Su propósito principal es abstraer la creación de los servicios Redis, permitiendo que la aplicación pueda solicitar instancias específicas de `IRedis` basadas en nombres configurados, facilitando el uso de múltiples conexiones a Redis en la misma aplicación.
 
-```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/IRedisServiceFactory.cs"
+```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis.Abstractions/IRedisFactory.cs"
 ```
 
 ## ¿Cómo Funciona?
 ---
 
-`RedisServiceFactory` funciona como un punto central para la creación de servicios Redis (`IRedisService`). La fábrica toma un nombre como entrada, busca la configuración correspondiente en las opciones de Redis (configuradas a través de `RedisOptions`), y crea una instancia de `IRedisService` con esa configuración. Esto permite gestionar múltiples conexiones a Redis con diferentes configuraciones, todo gestionado centralmente por la fábrica. La creación de cada instancia es controlada por la fábrica, asegurando que los servicios Redis sean inicializados correctamente antes de ser utilizados por la aplicación.
+`RedisServiceFactory` funciona como un punto central para la creación de servicios Redis (`IRedis`). La fábrica toma un nombre como entrada, busca la configuración correspondiente en las opciones de Redis (configuradas a través de `RedisOptions`), y crea una instancia de `IRedis` con esa configuración. Esto permite gestionar múltiples conexiones a Redis con diferentes configuraciones, todo gestionado centralmente por la fábrica. La creación de cada instancia es controlada por la fábrica, asegurando que los servicios Redis sean inicializados correctamente antes de ser utilizados por la aplicación.
 
 ## Métodos
 ---
 
-`RedisServiceFactory` proporciona un único método para crear instancias de `IRedisService` basadas en un nombre específico.
+`RedisServiceFactory` proporciona un único método para crear instancias de `IRedis` basadas en un nombre específico.
 
 ### Create
-**Type:** `public IRedisService Create(string name)`
+**Type:** `public IRedis Create(string name)`
 
-Este método es responsable de crear y devolver una instancia de `IRedisService`. Toma como parámetro el nombre de la instancia de Redis que se desea crear. El método realiza los siguientes pasos:
+Este método es responsable de crear y devolver una instancia de `IRedis`. Toma como parámetro el nombre de la instancia de Redis que se desea crear. El método realiza los siguientes pasos:
 
 1. **Validación del nombre:** Verifica que el nombre proporcionado no sea nulo o vacío.
 2. **Obtención de la configuración:** Busca en las opciones de Redis la configuración de instancia con el nombre proporcionado.
-3. **Creación de `RedisService`:** Crea una instancia de `RedisService`, que es la implementación concreta de `IRedisService`.
+3. **Creación de `RedisService`:** Crea una instancia de `RedisService`, que es la implementación concreta de `IRedis`.
 4. **Inicialización de la instancia:** Llama al método `Initialize` de `RedisService` con la configuración de la instancia.
-5. **Retorno de la instancia:** Retorna la instancia creada y configurada de `IRedisService`.
+5. **Retorno de la instancia:** Retorna la instancia creada y configurada de `IRedis`.
 
 ## Implementación
 ---
 
-La implementación de `RedisServiceFactory` se encarga de la lógica de creación e inicialización de las instancias de `IRedisService`. Internamente, utiliza las opciones de configuración registradas en el contenedor de inyección de dependencias (`IOptions<RedisOptions>`) para recuperar la configuración de la instancia Redis requerida. El método `Create` busca la configuración por nombre y crea una instancia del `RedisService` correspondiente, pasando la configuración de instancia que corresponda.
+La implementación de `RedisServiceFactory` se encarga de la lógica de creación e inicialización de las instancias de `IRedis`. Internamente, utiliza las opciones de configuración registradas en el contenedor de inyección de dependencias (`IOptions<RedisOptions>`) para recuperar la configuración de la instancia Redis requerida. El método `Create` busca la configuración por nombre y crea una instancia del `RedisService` correspondiente, pasando la configuración de instancia que corresponda.
 
 ```csharp url="packages/CodeDesignPlus.Net.Redis/src/CodeDesignPlus.Net.Redis/Services/RedisServiceFactory.cs"
 ```
@@ -41,7 +41,7 @@ La implementación de `RedisServiceFactory` se encarga de la lógica de creació
 ## Ejemplo de Uso
 ---
 
-Este ejemplo muestra cómo inicializar y utilizar `IRedisService` en una aplicación de consola a través de `IRedisServiceFactory` y la inyección de dependencias de .NET.
+Este ejemplo muestra cómo inicializar y utilizar `IRedis` en una aplicación de consola a través de `IRedisFactory` y la inyección de dependencias de .NET.
 
 ```csharp url="samples/CodeDesignPlus.Net.Redis.Sample/src/CodeDesignPlus.Net.Redis.Standalone.Sample/Program.cs"
 ```
@@ -49,7 +49,7 @@ Este ejemplo muestra cómo inicializar y utilizar `IRedisService` en una aplicac
 ## Conclusiones
 ---
 
-`RedisServiceFactory` centraliza la creación de instancias de `IRedisService`, permitiendo manejar múltiples conexiones a Redis dentro de la aplicación de manera organizada. Al desacoplar la creación de los servicios Redis, la fábrica facilita la gestión de configuraciones y promueve la reutilización de código. Es un componente fundamental para las aplicaciones que necesitan conectarse a múltiples instancias de Redis, o cuando se requiere un nivel de abstracción en la creación de los servicios de Redis.
+`RedisServiceFactory` centraliza la creación de instancias de `IRedis`, permitiendo manejar múltiples conexiones a Redis dentro de la aplicación de manera organizada. Al desacoplar la creación de los servicios Redis, la fábrica facilita la gestión de configuraciones y promueve la reutilización de código. Es un componente fundamental para las aplicaciones que necesitan conectarse a múltiples instancias de Redis, o cuando se requiere un nivel de abstracción en la creación de los servicios de Redis.
 
 ## Referencias Adicionales
 ---

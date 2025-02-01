@@ -48,7 +48,7 @@ La librería `CodeDesignPlus.Net.PubSub` tiene como objetivo estandarizar la imp
 - `IMessage`: Interfaz que define el contrato para los servicios de mensajería que se utilizan para publicar eventos a un broker externo como RabbitMQ, Kafka o Redis Pub/Sub.
 - `IEventHandler<TEvent>`: Interfaz que define el contrato para los manejadores de eventos. Los manejadores de eventos son responsables de procesar los eventos recibidos.
 - `IPubSub`: Interfaz que define el contrato para la publicación de eventos de dominio y es usada por los clientes para publicar eventos.
-- `IEventQueueService`: Interfaz que define el contrato para el servicio de cola de eventos. Este servicio se utiliza para almacenar eventos en una cola en memoria antes de ser procesados.
+- `IEventQueue`: Interfaz que define el contrato para el servicio de cola de eventos. Este servicio se utiliza para almacenar eventos en una cola en memoria antes de ser procesados.
 - `IActivityService`: Interfaz que define el contrato para el servicio de actividad. Este servicio se utiliza para registrar y rastrear actividades dentro del sistema que serán expuestas usando OpenTelemetry.
 - `EventQueueBackgroundService`: Clase que implementa `BackgroundService` y se encarga de procesar los eventos en segundo plano cuando se activa el sistema de queue en memoria.
 
@@ -74,7 +74,7 @@ La librería `CodeDesignPlus.Net.PubSub` tiene como objetivo estandarizar la imp
     - CodeDesignPlus.Net.PubSub.Abstractions
         - IActivityService.cs
         - IEventHandler.cs
-        - IEventQueueService.cs
+        - IEventQueue.cs
         - IMessage.cs
         - IPubSub.cs
         - IQueueService.cs
@@ -240,11 +240,11 @@ La librería `CodeDesignPlus.Net.PubSub` proporciona una serie de métodos de ex
 
     <LinkCard title="Explora IEventHandler" href="/libs/pubsub/services/event-handler" />
 
-### IEventQueueService
+### IEventQueue
 
     Esta interfaz define el contrato para el servicio de cola de eventos. Este servicio se utiliza para almacenar eventos en una cola en memoria antes de ser procesados.
 
-    <LinkCard title="Explora IEventQueueService" href="/libs/pubsub/services/event-queue" />
+    <LinkCard title="Explora IEventQueue" href="/libs/pubsub/services/event-queue" />
 
 ### IActivityService
 
