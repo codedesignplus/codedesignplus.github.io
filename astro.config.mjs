@@ -542,7 +542,7 @@ export default defineConfig({
                                 },
                             ]
                         },
-                        { label: 'File Storage', link: 'libs/file-storage' },
+                        
                         {
                             label: 'Generator',
                             collapsed: true,
