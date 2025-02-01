@@ -10,8 +10,8 @@ export default function remarkGitHubCode() {
       const { meta } = node;
 
       const urls = {
-        "Sdk": 'https://raw.githubusercontent.com/codedesignplus/CodeDesignPlus.Net.Sdk/refs/heads/feature/fix-duplicate-key',
-        "Archetype": 'https://raw.githubusercontent.com/codedesignplus/CodeDesignPlus.Net.Microservice/refs/heads/feature/package',
+        "Sdk": 'https://raw.githubusercontent.com/codedesignplus/CodeDesignPlus.Net.Sdk/refs/heads/main',
+        "Archetype": 'https://raw.githubusercontent.com/codedesignplus/CodeDesignPlus.Net.Microservice/refs/heads/main',
         "DevEnv": 'https://raw.githubusercontent.com/codedesignplus/CodeDesignPlus.Environment.Dev/refs/heads/main',
         "ms-suscription": 'https://raw.githubusercontent.com/codedesignplus/Acme.Net.Microservice.Subscriptions/refs/heads/main',
         "ms-clients": 'https://raw.githubusercontent.com/codedesignplus/Acme.Net.Microservice.Clients/refs/heads/main',
