@@ -210,10 +210,6 @@ export default defineConfig({
                             link: 'archetypes/layer-validation'
                         },
                         {
-                            label: 'Seguridad',
-                            link: 'archetypes/security'
-                        },
-                        {
                             label: 'Unit Test',
                             link: 'archetypes/unit-test'
                         },
