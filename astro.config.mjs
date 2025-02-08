@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import remarkMermaid from 'remark-mermaidjs'
 import remarkGitHubCode from './src/plugins/remark-github-code.js';
+import starlightOpenAPI, { openAPISidebarGroups } from 'starlight-openapi'
 import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
 import starlightImageZoom from 'starlight-image-zoom'
@@ -52,7 +53,14 @@ export default defineConfig({
                 // @ts-ignore
                 starlightImageZoom({
                     showCaptions: true
-                })
+                }),
+                starlightOpenAPI([
+                    {
+                     base: 'api',
+                     label: 'My API',
+                     schema: 'http://localhost:5000/swagger/v1/swagger.json',
+                    },
+                ])
             ],
             sidebar: [
                 {
@@ -713,8 +721,8 @@ export default defineConfig({
                             ]
                         }
                     ]
-                }
-
+                },
+                ...openAPISidebarGroups
             ]
         }),
         icon(),
