@@ -15,8 +15,8 @@
     /* Default body and sidebar backgrounds (Dark Mode) */
     --body-background: rgb(15,17,45);
     --body-background-gradient: radial-gradient(circle, rgba(15,17,45,1) 0%, rgba(15,28,51,1) 33%, rgba(20,20,50,1) 55%, rgba(9,16,38,1) 96%);
-    --sidebar-background: rgba(15, 17, 45, 0); 
-
+    --sidebar-background: rgba(15, 17, 45, 0); /* or whatever the dark sidebar color should be */
+	--site-title-color: #ffffff;
 }
 
 /* Light mode colors. */
@@ -38,9 +38,14 @@
     --body-background: #f0f0f0; 
     --body-background-gradient: none;  
     --sidebar-background: #f0f0f0; 
+	--site-title-color: #000;
 }
 
 body {
     background: var(--body-background);
     background: var(--body-background-gradient);
+}
+
+.site-title {
+    color: var(--site-title-color);
 }
