@@ -29,7 +29,8 @@ export default defineConfig({
             title: 'CodeDesignPlus',
             description: 'Documentación oficial de CodeDesignPlus. Encuentra guías, tutoriales y referencias para desarrollar microservicios robustos y escalables utilizando las herramientas y librerías de CodeDesignPlus.',
             logo: {
-                src: './src/assets/logo-gray.svg'
+                light: './src/assets/logo-light.svg',
+                dark: './src/assets/logo-gray.svg'
             },
             customCss: [
                 './src/styles/custom.css',

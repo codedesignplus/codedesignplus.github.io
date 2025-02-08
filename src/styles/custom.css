@@ -15,7 +15,7 @@
     /* Default body and sidebar backgrounds (Dark Mode) */
     --body-background: rgb(15,17,45);
     --body-background-gradient: radial-gradient(circle, rgba(15,17,45,1) 0%, rgba(15,28,51,1) 33%, rgba(20,20,50,1) 55%, rgba(9,16,38,1) 96%);
-    --sidebar-background: rgba(15, 17, 45, 0); /* or whatever the dark sidebar color should be */
+    --sidebar-background: rgba(15, 17, 45, 0); 
 
 }
 
@@ -35,20 +35,12 @@
     --sl-color-black: #ffffff;
 
     /* Light Mode specific backgrounds */
-    --body-background: #f0f0f0; /* Replace with your light mode body color */
-    --body-background-gradient: none;  /* Remove the gradient if desired, or specify a new one */
-    --sidebar-background: rgba(240, 240, 240, 0.8); /* Replace with your light mode sidebar color (and opacity if needed) */
+    --body-background: #f0f0f0; 
+    --body-background-gradient: none;  
+    --sidebar-background: #f0f0f0; 
 }
 
 body {
     background: var(--body-background);
     background: var(--body-background-gradient);
-}
-
-.sidebar {
-    background: var(--sidebar-background);
-}
-
-.starlight-theme-selector {
-    display: none !important;
 }
