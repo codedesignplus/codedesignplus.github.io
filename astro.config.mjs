@@ -35,9 +35,7 @@ export default defineConfig({
                 './src/styles/custom.css',
             ],
             disable404Route: true,
-            components: {
-                ThemeSelect: './src/components/ThemeSelect.astro'
-            },
+          
             social: {
                 github: 'https://github.com/Codedesignplus/',
                 youtube: 'https://www.youtube.com/@CodeDesignPlus',

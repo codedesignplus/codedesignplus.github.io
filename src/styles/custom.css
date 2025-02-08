@@ -1,43 +1,54 @@
 /* Dark mode colors. */
 :root {
-	--sl-color-accent-low: #1b1d4d;
-	--sl-color-accent: #523efb;
-	--sl-color-accent-high: #ffffff;
-	--sl-color-white: #ffffff;
-	--sl-color-gray-1: #ebecfd;
-	--sl-color-gray-2: #bec0d4;
-	--sl-color-gray-3: #8588ac;
-	--sl-color-gray-4: #525576;
-	--sl-color-gray-5: #333554;
+    --sl-color-accent-low: #1b1d4d;
+    --sl-color-accent: #523efb;
+    --sl-color-accent-high: #ffffff;
+    --sl-color-white: #ffffff;
+    --sl-color-gray-1: #ebecfd;
+    --sl-color-gray-2: #bec0d4;
+    --sl-color-gray-3: #8588ac;
+    --sl-color-gray-4: #525576;
+    --sl-color-gray-5: #333554;
+    --sl-color-gray-6: #0F112D;
+    --sl-color-black: #141432;
 
-	--sl-color-gray-6: #0F112D;
-	--sl-color-black: #141432;
+    /* Default body and sidebar backgrounds (Dark Mode) */
+    --body-background: rgb(15,17,45);
+    --body-background-gradient: radial-gradient(circle, rgba(15,17,45,1) 0%, rgba(15,28,51,1) 33%, rgba(20,20,50,1) 55%, rgba(9,16,38,1) 96%);
+    --sidebar-background: rgba(15, 17, 45, 0); /* or whatever the dark sidebar color should be */
+
 }
+
 /* Light mode colors. */
 :root[data-theme='light'] {
-	--sl-color-accent-low: #ccd4ff;
-	--sl-color-accent: #5341fd;
-	--sl-color-accent-high: #262472;
-	--sl-color-white: #161724;
-	--sl-color-gray-1: #222341;
-	--sl-color-gray-2: #333554;
-	--sl-color-gray-3: #525576;
-	--sl-color-gray-4: #8588ac;
-	--sl-color-gray-5: #bec0d4;
-	--sl-color-gray-6: #ebecfd;
-	--sl-color-gray-7: #f5f6fe;
-	--sl-color-black: #ffffff;
+    --sl-color-accent-low: #ccd4ff;
+    --sl-color-accent: #5341fd;
+    --sl-color-accent-high: #262472;
+    --sl-color-white: #161724;
+    --sl-color-gray-1: #222341;
+    --sl-color-gray-2: #333554;
+    --sl-color-gray-3: #525576;
+    --sl-color-gray-4: #8588ac;
+    --sl-color-gray-5: #bec0d4;
+    --sl-color-gray-6: #ebecfd;
+    --sl-color-gray-7: #f5f6fe;
+    --sl-color-black: #ffffff;
+
+    /* Light Mode specific backgrounds */
+    --body-background: #f0f0f0; /* Replace with your light mode body color */
+    --body-background-gradient: none;  /* Remove the gradient if desired, or specify a new one */
+    --sidebar-background: rgba(240, 240, 240, 0.8); /* Replace with your light mode sidebar color (and opacity if needed) */
 }
 
 body {
-	background: rgb(15,17,45);
-	background: radial-gradient(circle, rgba(15,17,45,1) 0%, rgba(15,28,51,1) 33%, rgba(20,20,50,1) 55%, rgba(9,16,38,1) 96%);
+    background: var(--body-background);
+    background: var(--body-background-gradient);
 }
 
 .sidebar {
-	background: rgba(15, 17, 45, 0);
+    background: var(--sidebar-background);
 }
 
 .starlight-theme-selector {
-	display: none !important;
+    display: none !important;
 }
