@@ -55,11 +55,12 @@ export default defineConfig({
                     },
                     postCount: 5,
                     recentPostCount: 10,
+                    prevNextLinksOrder: 'chronological',
                     authors: {
                         wclg: {
                             name: 'Wilzon Liscano Galindo',
                             title: 'Founder of CodeDesignPlus',
-                            picture: '/wliscano.png',
+                            picture: '/wliscano.jpeg',
                             url: 'https://hideoo.dev',
                         }
                     }

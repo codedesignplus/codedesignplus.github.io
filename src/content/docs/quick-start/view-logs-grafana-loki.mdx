@@ -3,7 +3,11 @@ title: Visualizando Logs de Microservicios en Grafana
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, aprenderemos cómo visualizar los logs generados por los microservicios de CodeDesignPlus utilizando Grafana. Explicaremos el flujo de datos desde los microservicios, a través de OpenTelemetry y Loki, hasta la visualización final en Grafana. Esto nos permitirá monitorear y analizar el comportamiento de nuestros microservicios de forma eficiente.
 

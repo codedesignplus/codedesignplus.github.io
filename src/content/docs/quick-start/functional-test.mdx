@@ -3,7 +3,11 @@ title: Probando los microservicios
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, aprenderemos cómo probar el microservicio **Clients** utilizando los diferentes métodos de comunicación que hemos implementado: REST, gRPC y eventos de dominio con RabbitMQ.  Veremos cómo realizar pruebas de extremo a extremo para asegurar que nuestro microservicio funciona correctamente en todos sus aspectos. Usaremos Postman para las pruebas REST y gRPC, y la interfaz de RabbitMQ para la prueba de eventos.
 

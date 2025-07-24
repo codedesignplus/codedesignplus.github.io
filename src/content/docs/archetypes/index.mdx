@@ -2,7 +2,11 @@
 title: Introducción
 ---
 
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 <Image src="/images/archetype/archetype.svg" alt="Archetype" width="1600" height="900" decoding="async" loading="lazy" />
 
