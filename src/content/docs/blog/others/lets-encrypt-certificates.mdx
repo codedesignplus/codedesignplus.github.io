@@ -1,11 +1,195 @@
 ---
-title: "lets-encrypt-certificates"
-date: 2024-06-15
-lastUpdated: 2024-06-15
-tags: ["SSL", "Let's Encrypt", "Seguridad", "Certificados"]
-excerpt: "Aprende a configurar certificados SSL gratuitos con Let's Encrypt para asegurar tus aplicaciones web."
+title: "Guía Visual: Certificados Wildcard con Let's Encrypt y GoDaddy"
+date: 2025-07-09
+lastUpdated: 2025-07-09
+tags: ["Let's Encrypt", "Certbot", "TLS", "SSL", "Seguridad", "DNS", "Wildcard", "GoDaddy", "Visual"]
+excerpt: "Aprende a asegurar todos tus subdominios con un solo certificado. Esta guía visual te lleva paso a paso a generar un certificado wildcard gratuito de Let's Encrypt usando el desafío DNS-01 en GoDaddy, incluyendo cómo superar los problemas comunes de propagación."
 authors:
     - wclg
-readingTime: 120
-featured: true
+readingTime: 250
 ---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+Asegurar un sitio web con HTTPS es fundamental, pero gestionar certificados para múltiples subdominios puede ser una tarea compleja. La solución más eficiente es un **certificado wildcard**, que asegura tu dominio principal (ej. `example.com`) y todos sus subdominios (`*.example.com`) con una sola configuración.
+
+En esta guía visual, te mostraremos cómo generar un certificado wildcard gratuito de la autoridad certificadora **Let's Encrypt** utilizando su herramienta oficial, `certbot`. Para probar que somos los dueños del dominio, usaremos el método de validación **DNS-01**, que consiste en crear un registro TXT temporal en nuestro proveedor de DNS, que en este caso será **GoDaddy**.
+
+### Parte 1: Preparación del Servidor
+
+<Steps>
+
+1.  **Instalar Certbot**
+    Primero, nos conectamos a nuestro servidor Linux (en este caso, Ubuntu) por SSH e instalamos `certbot`.
+
+    ```bash
+    sudo apt install certbot -y
+    ```
+    <Image src="/images/blogs/lets-encrypt/1-letsencrypt.png" alt="Instalando certbot con apt"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Preparar la Estructura de Directorios**
+    Crearemos una estructura de carpetas organizada para mantener nuestros archivos de certificados ordenados.
+
+    ```bash
+    mkdir -p ~/certs/inventory
+    cd ~/certs/inventory
+    touch inventory.cnf
+    ```
+    <Image src="/images/blogs/lets-encrypt/2-letsencrypt.png" alt="Creando la estructura de directorios para los certificados"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Crear el Archivo de Configuración de OpenSSL**
+    Crearemos un archivo de configuración (`inventory.cnf`) que le dirá a OpenSSL qué información incluir en nuestra solicitud de certificado.
+
+    ```bash
+    nano inventory.cnf
+    ```
+    Pega el siguiente contenido, personalizando los datos de `distinguished_name` con tu información:
+    ```ini
+    [req]
+    default_bits = 2048
+    prompt = no
+    default_md = sha256
+    req_extensions = req_ext
+    distinguished_name = dn
+
+    [dn]
+    C = CO
+    ST = Bogota
+    L = Puente Aranda
+    O = codedesignplus
+    OU = IT
+    CN = *.codedesignplus.app
+
+    [req_ext]
+    subjectAltName = @alt_names
+
+    [alt_names]
+    DNS.1 = *.codedesignplus.app
+    DNS.2 = codedesignplus.app
+    ```
+    La sección `alt_names` es crucial: aquí definimos que el certificado debe ser válido para el dominio raíz y para cualquier subdominio (el wildcard `*`).
+
+    <Image src="/images/blogs/lets-encrypt/3-letsencrypt.png" alt="Editando el archivo de configuración de OpenSSL"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Generar la Clave Privada**
+    Creamos la clave privada que se asociará con nuestro certificado. Esta debe mantenerse segura y secreta.
+
+    ```bash
+    openssl genrsa -out inventory.key 2048
+    ```
+    <Image src="/images/blogs/lets-encrypt/4-letsencrypt.png" alt="Generando la clave privada con OpenSSL"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Crear la Solicitud de Firma de Certificado (CSR)**
+    El CSR es un archivo que contiene nuestra información y nuestra clave pública. Se lo enviaremos a Let's Encrypt para que lo firme y genere el certificado.
+
+    ```bash
+    openssl req -new -key inventory.key -out inventory.csr -config inventory.cnf
+    ```
+    <Image src="/images/blogs/lets-encrypt/5-letsencrypt.png" alt="Creando la solicitud de firma de certificado (CSR)"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+6.  **Ajustar Permisos de Archivos**
+    Por seguridad, restringimos los permisos de nuestra clave privada para que solo el propietario pueda leerla.
+
+    ```bash
+    chmod 644 inventory.cnf
+    chmod 600 inventory.key
+    ls -la
+    ```
+    <Image src="/images/blogs/lets-encrypt/6-letsencrypt.png" alt="Ajustando los permisos de los archivos generados"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: El Desafío DNS-01 con Certbot
+
+Ahora empieza la interacción con Let's Encrypt. Este es un proceso manual que requiere paciencia.
+
+<Steps>
+
+1.  **Ejecutar Certbot en Modo Manual**
+    Ejecutamos el siguiente comando para iniciar el proceso de validación.
+
+    ```bash
+    sudo certbot certonly --manual --preferred-challenges dns --csr inventory.csr -d "*.codedesignplus.app" -d "codedesignplus.app"
+    ```
+    *   `--manual`: Indica que realizaremos los pasos de validación nosotros mismos.
+    *   `--preferred-challenges dns`: Especifica que usaremos el método de validación por DNS.
+    *   `--csr`: Le pasamos nuestra solicitud de firma.
+
+2.  **El Primer Desafío**
+    Certbot nos pedirá nuestro email y que aceptemos los términos. Luego, se detendrá y nos mostrará un **valor TXT** que debemos desplegar en nuestro DNS.
+
+    <Image src="/images/blogs/lets-encrypt/7-letsencrypt.png" alt="Primer desafío DNS-01 presentado por Certbot"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="caution" title="¡PAUSA AQUÍ!">
+    **No presiones Enter todavía.** Primero debemos crear el registro TXT en nuestro panel de GoDaddy y verificar que se ha propagado.
+    </Aside>
+
+3.  **Crear el Registro TXT en GoDaddy**
+    Vamos a nuestro panel de DNS en GoDaddy y creamos un nuevo registro TXT con los datos que nos dio Certbot:
+    *   **Tipo:** `TXT`
+    *   **Nombre:** `_acme-challenge`
+    *   **Valor:** El valor largo y aleatorio proporcionado (en este caso, empieza con `c89wBe5u...`).
+
+    <Image src="/images/blogs/lets-encrypt/8-letsencrypt.png" alt="Creando el primer registro TXT en GoDaddy"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/lets-encrypt/9-letsencrypt.png" alt="Registro TXT creado y listado"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Verificar la Propagación del DNS**
+    Este es el paso más importante y donde la paciencia es clave. Usamos herramientas como **Google Admin Toolbox (Dig)** y **DNSChecker.org** para confirmar que el nuevo registro TXT es visible en Internet.
+
+    <Image src="/images/blogs/lets-encrypt/10-letsencrypt.png" alt="Verificando el registro TXT con Google Dig"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/lets-encrypt/11-letsencrypt.png" alt="Verificando el registro TXT con DNSChecker"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside title="La Verdad sobre la Propagación de DNS">
+    Los cambios de DNS no son instantáneos. Pueden tardar desde unos minutos hasta varias horas en propagarse por completo. Aunque las herramientas muestren que el registro es visible en muchos lugares, es posible que el servidor específico de Let's Encrypt aún no lo vea.
+    </Aside>
+
+5.  **El Intento (y el Fallo)**
+    Una vez que las herramientas de verificación muestran el registro, volvemos a la terminal y presionamos Enter para que Certbot continúe.
+
+    <Image src="/images/blogs/lets-encrypt/12-letsencrypt.png" alt="Continuando el proceso en la terminal" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    **¡Falló!** Como se ve en la imagen, Certbot no pudo encontrar el registro TXT. Esto es **extremadamente común**. La propagación del DNS no fue lo suficientemente rápida.
+
+6.  **Segundo Intento y Segundo Fallo**
+    Certbot nos da la opción de intentarlo de nuevo. Al hacerlo, nos proporciona un **NUEVO** valor TXT (empieza con `LO_94SHS7...`). Repetimos el proceso: editamos el registro TXT en GoDaddy con el nuevo valor, guardamos, y esperamos pacientemente verificando con las herramientas de DNS.
+
+    <Image src="/images/blogs/lets-encrypt/13-letsencrypt.png" alt="Editando el registro TXT con el segundo valor"    width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/lets-encrypt/14-letsencrypt.png" alt="Segundo registro TXT guardado"   width="2550" height="1314" decoding="async" loading="lazy" />
+    <Image src="/images/blogs/lets-encrypt/15-letsencrypt.png" alt="Verificando el segundo valor con Google Dig"   width="2550" height="1314" decoding="async" loading="lazy" />
+    <Image src="/images/blogs/lets-encrypt/16-letsencrypt.png" alt="Verificando el segundo valor con DNSChecker"   width="2550" height="1314" decoding="async" loading="lazy" />
+    <Image src="/images/blogs/lets-encrypt/17-letsencrypt.png" alt="Verificando el segundo valor con DNSChecker (2)"   width="2550" height="1314" decoding="async" loading="lazy" />
+    <Image src="/images/blogs/lets-encrypt/20-letsencrypt.png" alt="Verificando el segundo valor con Google Dig (2)" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Lamentablemente, en nuestro caso, el segundo intento también falló por la misma razón.
+    
+    <Image src="/images/blogs/lets-encrypt/19-letsencrypt.png" alt="Segundo intento fallido de validación" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+7.  **Tercer Intento: ¡El Éxito!**
+    La tercera es la vencida. Repetimos el proceso una vez más. Certbot nos da un tercer valor TXT (empieza con `YQETC-Lj...`).
+
+    <Image src="/images/blogs/lets-encrypt/21-letsencrypt.png" alt="Tercer desafío de Certbot" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    Actualizamos el registro TXT en GoDaddy por tercera vez, esperamos unos minutos extra para asegurar una buena propagación y verificamos de nuevo.
+
+    <Image src="/images/blogs/lets-encrypt/22-letsencrypt.png" alt="Editando el registro TXT por tercera vez" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/lets-encrypt/23-letsencrypt.png" alt="Verificando el tercer valor con Google Dig" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Volvemos a la terminal, cruzamos los dedos y presionamos Enter...
+
+    **¡ÉXITO!** Finalmente, Let's Encrypt pudo verificar el registro TXT y procedió a firmar y emitir nuestro certificado.
+
+    <Image src="/images/blogs/lets-encrypt/24-letsencrypt.png" alt="Certificado generado exitosamente por Let's Encrypt" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+¡Lo has conseguido! A pesar de los desafíos de la propagación de DNS, has generado con éxito un certificado TLS/SSL wildcard de Let's Encrypt para tu dominio gestionado en GoDaddy. Ahora posees los archivos (`cert.pem`, `chain.pem`, `fullchain.pem`, y tu `inventory.key`) necesarios para asegurar cualquier servicio web.
+
+Este proceso, aunque a veces tedioso, es fundamental para la seguridad en Internet. Has aprendido una lección valiosa sobre la paciencia y la verificación en el mundo del DNS. Ahora estás listo para usar estos archivos para habilitar HTTPS en tus servidores web, balanceadores de carga o, como en nuestra serie principal, en un Gateway de Istio.
