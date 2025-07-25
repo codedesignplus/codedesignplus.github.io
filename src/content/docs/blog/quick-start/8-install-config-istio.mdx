@@ -18,7 +18,7 @@ import { Image } from 'astro:assets';
 
 Hemos construido nuestro servidor y montado el clúster de Kubernetes con MicroK8s. Ahora, necesitamos una forma inteligente, segura y controlada de exponer nuestros servicios a Internet. Aquí es donde entra en juego **Istio**, nuestro **Service Mesh**.
 
-Istio es mucho más que un simple Ingress Controller; es una capa de infraestructura completa que se encarga de la seguridad, la observabilidad y la gestión del tráfico entre nuestros microservicios. En este artículo, instalaremos los componentes esenciales de Istio y desplegaremos su **Ingress Gateway**, que actuará como la única puerta de entrada a nuestro clúster.
+Istio es mucho más que un simple Ingress Controller; es una capa de infraestructura completa que se encarga de la seguridad, la observabilidad y la gestión del tráfico entre nuestros microservicios. En este artículo, instalaremos los componentes esenciales de Istio, desplegaremos su **Ingress Gateway** y, lo más importante, lo aseguraremos con un **certificado TLS** para habilitar HTTPS.
 
 ### Prerrequisitos
 
@@ -41,7 +41,10 @@ Asegúrate de tener estas herramientas instaladas en tu máquina de desarrollo.
     <LinkCard title="Instalar kubectl dependiendo de tu sistema operativo" href="https://kubernetes.io/docs/tasks/tools/" />
 *   **Helm:** El gestor de paquetes para Kubernetes.
     <LinkCard title="Instalar Helm" href="https://helm.sh/docs/intro/install/" />
-*   **(Opcional) Certificados TLS/SSL:** Para configurar HTTPS en nuestro Gateway, necesitaremos certificados. Para aprender a generarlos, puedes consultar el artículo sobre [Creación de Certificados con Let's Encrypt](https://codedesignplus.app/docs/blog/5-lets-encrypt-certificates/).
+*   **(Opcional) Certificados TLS/SSL:** Para configurar HTTPS en nuestro Gateway, necesitaremos certificados.
+    <LinkCard title="Certificados SSL con Let's Encrypt" href="/blog/others/lets-encrypt-certificates/" />
+*   **Lens:** Una herramienta visual para gestionar Kubernetes. Aunque no es estrictamente necesaria, facilita mucho la visualización y gestión de recursos.
+    <LinkCard title="Instalar Lens" href="https://k8slens.dev/" />
 
 ### Parte 1: Configurando el Acceso Local a Kubernetes
 
@@ -220,14 +223,67 @@ Es crucial entender la diferencia:
 
 
 <Aside title="Certificados TLS/SSL">
-*   Recuerda que para que el Gateway funcione en HTTPS, necesitamos certificados válidos. En este ejemplo, hemos usado un `credentialName` llamado `tls-inventory`, que debe coincidir con un secreto de Kubernetes que contenga los certificados. 
+*   En el archivo YAML del `Gateway`, hemos especificado `credentialName: tls-inventory`. Esto le dice a Istio que busque un **secreto de Kubernetes** con ese nombre, que debe contener nuestros certificados TLS. En la siguiente parte, crearemos ese secreto.
 
-*   Para aprender a generarlos automáticamente, puedes consultar el artículo sobre [Creación de Certificados con Let's Encrypt](https://codedesignplus.app/docs/blog/5-lets-encrypt-certificates/).
-
+*   Para aprender a generarlos automáticamente, puedes consultar el artículo sobre [Creación de Certificados con Let's Encrypt](/blog/others/lets-encrypt-certificates/).
 </Aside>
+
+
+
+### Parte 4: Creando el Secreto TLS en Kubernetes
+
+Con nuestros certificados generados en el artículo [Creando Certificados con Let's Encrypt](/blog/others/lets-encrypt-certificates), ahora debemos cargarlos en nuestro clúster de una forma segura. Kubernetes gestiona este tipo de datos sensibles a través de un recurso llamado **Secret**.
+
+<Steps>
+
+1.  **Preparar los Archivos de Certificado**
+    Primero, asegúrate de tener los archivos generados por Let's Encrypt en tu máquina de desarrollo. Deberías haberlos transferido de forma segura desde el servidor (usando `scp`, por ejemplo).
+
+    <Image src="/images/blogs/install-config-istio/15.png" alt="Archivos de certificado en el explorador de Windows" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="note" title="¿Qué es cada archivo?">
+    *   `inventory.key`: Tu **Clave Privada**. La parte secreta.
+    *   `0000_cert.pem`: El **Certificado del Servidor**, emitido para tu dominio.
+    *   `0001_chain.pem`: El **Certificado Intermedio**, necesario para que los navegadores construyan la cadena de confianza.
+    *   Los archivos `.csr` y `.cnf` fueron usados para la solicitud y ya no son necesarios para la operación.
+    </Aside>
+
+2.  **Crear el Secreto con `kubectl`**
+    Abre una terminal en el directorio donde tienes los archivos del certificado. Usaremos el comando `kubectl create secret` para empaquetar nuestra clave y certificados en un secreto de Kubernetes.
+
+    ```bash
+    kubectl create secret tls tls-inventory --cert=0000_cert.pem --key=inventory.key -n istio-ingress
+    ```
+    Desglosemos este comando:
+    *   `create secret tls`: Le dice a `kubectl` que cree un secreto de tipo TLS.
+    *   `tls-inventory`: Es el nombre que le damos a nuestro secreto. **Debe coincidir exactamente** con el `credentialName` que especificamos en nuestro recurso `Gateway`.
+    *   `--cert=0000_cert.pem`: Especifica el archivo que contiene el certificado del servidor. *Nota: Aunque el archivo se llame `0000_cert.pem`, `kubectl` a menudo espera la cadena completa. Si tienes problemas, usar el archivo `fullchain.pem` de Let's Encrypt suele ser más robusto.*
+    *   `--key=inventory.key`: Especifica nuestra clave privada.
+    *   `-n istio-ingress`: Crea el secreto en el mismo namespace donde corre nuestro Ingress Gateway, `istio-ingress`.
+
+    <Image src="/images/blogs/install-config-istio/16.png" alt="Creando el secreto TLS con kubectl" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Verificar el Secreto en Lens**
+    Para confirmar visualmente que el secreto se ha creado correctamente, vamos a Lens.
+    *   En el menú de la izquierda, navega a `Config > Secrets`.
+    *   Asegúrate de tener seleccionado el namespace `istio-ingress`.
+    *   Verás nuestro nuevo secreto, `tls-inventory`, en la lista.
+    
+    Al hacer clic en él, Lens nos muestra sus detalles, incluyendo su `Type` (`kubernetes.io/tls`) y los datos codificados en base64 para `tls.crt` y `tls.key`. Incluso decodifica el certificado para mostrarnos información útil como el `Common Name` (CN) y las fechas de expiración.
+
+    <Image src="/images/blogs/install-config-istio/17.png" alt="Verificando la creación del secreto TLS en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
 
 ### Conclusión
 
-¡Felicidades! Has desplegado y configurado con éxito el Ingress Gateway de Istio. Ahora tienes una única puerta de entrada a tu clúster, segura, inteligente y programable.
+¡Misión cumplida! Has completado el ciclo completo de seguridad para el punto de entrada de tu clúster.
 
-Hemos instalado el "portero" (`istio-ingress`) y le hemos dado sus primeras instrucciones (`Gateway`). Sin embargo, todavía no le hemos dicho a dónde dirigir el tráfico que llega. Ese es el trabajo del recurso **`VirtualService`**, que veremos en un próximo artículo de esta serie.
+1.  **Instalaste Istio**, el cerebro de tu red.
+2.  **Desplegaste el Ingress Gateway**, el portero.
+3.  **Lo configuraste** con un recurso `Gateway`.
+4.  **Lo aseguraste** cargando tus certificados en un **Secreto TLS**.
+
+Ahora tienes una única puerta de entrada a tu clúster, segura, inteligente y lista para dirigir el tráfico. El Gateway está escuchando en el puerto 443, pero todavía no sabe a qué servicio interno enviar las peticiones que llegan.
+
+Ese es el trabajo del recurso **`VirtualService`**, el "director de tráfico", que configuraremos en próximos artículos cuando empecemos a desplegar nuestras aplicaciones.
