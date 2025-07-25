@@ -1,0 +1,233 @@
+---
+title: "La Puerta de Entrada: Instalación de Istio en Kubernetes"
+date: 2025-07-08
+lastUpdated: 2025-07-08
+tags: ["Istio", "Service Mesh", "Kubernetes", "Helm", "Gateway", "Ingress", "Visual"]
+excerpt: "Instalamos el corazón de nuestra red: Istio. Aprende con esta guía visual a desplegar el Ingress Gateway de Istio usando Helm y a crear tu primera configuración de puerta de entrada."
+authors:
+    - wclg
+readingTime: 250
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Hemos construido nuestro servidor y montado el clúster de Kubernetes con MicroK8s. Ahora, necesitamos una forma inteligente, segura y controlada de exponer nuestros servicios a Internet. Aquí es donde entra en juego **Istio**, nuestro **Service Mesh**.
+
+Istio es mucho más que un simple Ingress Controller; es una capa de infraestructura completa que se encarga de la seguridad, la observabilidad y la gestión del tráfico entre nuestros microservicios. En este artículo, instalaremos los componentes esenciales de Istio y desplegaremos su **Ingress Gateway**, que actuará como la única puerta de entrada a nuestro clúster.
+
+### Prerrequisitos
+
+Antes de comenzar, asegúrate de tener todo lo siguiente listo.
+
+#### Conocimientos Previos
+
+Es recomendable tener una comprensión básica de los siguientes conceptos. No te preocupes si no eres un experto; iremos explicando sobre la marcha y crearemos artículos de profundización más adelante.
+
+*   **Kubernetes Básico:** Entender qué son los Pods, Services, Namespaces y Deployments.
+*   **Helm:** Saber qué es un Chart de Helm y cómo se utiliza para instalar aplicaciones en Kubernetes.
+*   **Istio (Conceptual):** Tener una idea general de qué es un Service Mesh y para qué sirve (Gateway, VirtualService).
+*   **Línea de Comandos:** Sentirte cómodo trabajando en una terminal como Windows PowerShell o Bash.
+
+#### Herramientas Necesarias
+
+Asegúrate de tener estas herramientas instaladas en tu máquina de desarrollo.
+
+*   **kubectl:** La herramienta de línea de comandos para interactuar con clústeres de Kubernetes.
+    <LinkCard title="Instalar kubectl dependiendo de tu sistema operativo" href="https://kubernetes.io/docs/tasks/tools/" />
+*   **Helm:** El gestor de paquetes para Kubernetes.
+    <LinkCard title="Instalar Helm" href="https://helm.sh/docs/intro/install/" />
+*   **(Opcional) Certificados TLS/SSL:** Para configurar HTTPS en nuestro Gateway, necesitaremos certificados. Para aprender a generarlos, puedes consultar el artículo sobre [Creación de Certificados con Let's Encrypt](https://codedesignplus.app/docs/blog/5-lets-encrypt-certificates/).
+
+### Parte 1: Configurando el Acceso Local a Kubernetes
+
+En el artículo anterior, usamos Lens para conectarnos. Ahora, vamos a configurar `kubectl` en nuestra máquina Windows para gestionar el clúster desde la terminal.
+
+<Steps>
+
+1.  **Obtener y Guardar el Kubeconfig**
+    Nos conectamos por SSH a nuestro servidor y ejecutamos `microk8s config`. Este comando nos muestra la configuración necesaria para conectarnos. Copiamos todo el contenido.
+
+    <Image src="/images/blogs/install-config-istio/1.png" alt="Obteniendo el kubeconfig de MicroK8s" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    En nuestra máquina Windows, navegamos a la carpeta de nuestro usuario (`C:\Users\tu_usuario`), entramos al directorio `.kube` y pegamos el contenido en un archivo llamado `config`.
+
+    <Image src="/images/blogs/install-config-istio/2.png" alt="Guardando el archivo kubeconfig en Windows" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar la Conexión**
+    Abrimos una terminal (Windows PowerShell) y ejecutamos un par de comandos para confirmar que `kubectl` puede ver nuestro clúster de MicroK8s.
+
+    ```bash
+    kubectl config get-contexts
+    kubectl get nodes
+    ```
+    Si ves tu contexto actual y el nodo "vm-microk8s" con estado "Ready", ¡la conexión es un éxito!
+
+    <Image src="/images/blogs/install-config-istio/3.png" alt="Verificando la conexión a Kubernetes con kubectl" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: Instalación de Istio con Helm
+
+Istio se instala en varios componentes. Usaremos Helm para desplegarlos de forma ordenada.
+
+<Steps>
+
+1.  **Añadir el Repositorio de Helm de Istio**
+    Primero, le decimos a Helm dónde encontrar los charts de Istio.
+
+    ```bash
+    helm repo add istio https://istio-release.storage.googleapis.com/charts
+    ```
+
+2.  **Instalar `istio-base`**
+    Este chart instala los `Custom Resource Definitions` (CRDs) de Istio. Son las "definiciones" que le enseñan a nuestro clúster a entender nuevos tipos de recursos como `Gateway` y `VirtualService`.
+
+    ```bash
+    helm install istio-base istio/base -n istio-system --create-namespace
+    ```
+    El estado "deployed" nos confirma que ha sido exitoso.
+
+    <Image src="/images/blogs/install-config-istio/4.png" alt="Instalando el chart istio-base con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    En Lens, bajo la sección de "Releases", podemos ver `istio-base` desplegado en su propio namespace `istio-system`.
+
+    <Image src="/images/blogs/install-config-istio/5.png" alt="Verificando la release de istio-base en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Instalar `istiod` (Plano de Control)**
+    Este es el "cerebro" de Istio. `istiod` se encarga de configurar todos los proxies, gestionar los certificados y aplicar las políticas de tráfico que definamos.
+
+    ```bash
+    helm install istiod istio/istiod -n istio-system --wait
+    ```
+    Usamos `--wait` para que Helm espere a que el despliegue esté completamente listo.
+
+    <Image src="/images/blogs/install-config-istio/6.png" alt="Instalando el chart istiod con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    En Lens, ahora vemos la release de `istiod` junto a la de `istio-base`.
+
+    <Image src="/images/blogs/install-config-istio/7.png" alt="Verificando la release de istiod en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Instalar `istio-ingress` (Plano de Datos)**
+    Este es el "portero". Despliega un proxy Envoy que se encargará de recibir todo el tráfico externo y dirigirlo hacia nuestros servicios.
+
+    ```bash
+    helm install istio-ingress istio/gateway -n istio-ingress --create-namespace
+    ```
+    Lo instalamos en su propio namespace, `istio-ingress`, para mantenerlo aislado.
+
+    <Image src="/images/blogs/install-config-istio/9.png" alt="Instalando el chart istio-ingress con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos la release en Lens.
+
+    <Image src="/images/blogs/install-config-istio/10.png" alt="Verificando la release de istio-ingress en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación y Creación del Gateway
+
+<Steps>
+
+1.  **Verificar los Pods de Istio**
+    Si vamos a la vista de Pods en Lens y filtramos por todos los namespaces, veremos el pod `istiod` en `istio-system` y el nuevo pod `istio-ingress` en el namespace `istio-ingress`, ambos en estado "Running".
+
+    <Image src="/images/blogs/install-config-istio/11.png" alt="Verificando los pods de Istio en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el Servicio del Ingress**
+    Este es el momento "¡Aha!". Si navegamos a "Network > Services", veremos el servicio `istio-ingress`. Fíjate en dos cosas:
+    *   **Type:** `LoadBalancer`
+    *   **External IP:** `192.168.0.30`
+    ¡Esa es una de las IPs del rango que le dimos a **MetalLB** en el artículo anterior! MetalLB ha hecho su trabajo y le ha asignado una IP de nuestra red LAN al servicio de Istio, haciéndolo accesible.
+
+    <Image src="/images/blogs/install-config-istio/12.png" alt="Verificando el servicio LoadBalancer de istio-ingress en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Crear el Recurso `Gateway`**
+    El pod `istio-ingress` está corriendo, pero no sabe qué hacer. Necesitamos decírselo creando un recurso `Gateway`. Este archivo YAML es una **configuración** que le ordena al Ingress que escuche en el puerto 443 (HTTPS) para los dominios que alojaremos.
+
+    Creamos un archivo `inventory-gateway.yaml`:
+
+    <Tabs>
+    <TabItem label="Gateway + TLS" active>
+    ```yaml
+    apiVersion: networking.istio.io/v1
+    kind: Gateway
+    metadata:
+      name: istio-inventory-gateway
+      namespace: istio-ingress
+    spec:
+      selector:
+        istio: ingress
+      servers:  
+      - port:
+          number: 443
+          name: https
+          protocol: HTTPS
+        tls:
+          mode: SIMPLE
+          credentialName: tls-inventory
+        hosts:
+        - vault.codedesignplus.app
+        - rabbitmq.codedesignplus.app
+        - services.codedesignplus.app
+    ```
+    </TabItem>
+    <TabItem label="Gateway sin TLS">
+    ```yaml
+    apiVersion: networking.istio.io/v1
+    kind: Gateway
+    metadata:
+      name: istio-inventory-gateway
+      namespace: istio-ingress
+    spec:
+      selector:
+        istio: ingress
+      servers:
+      - port:
+          number: 80
+          name: http
+          protocol: HTTP
+        hosts:
+        - vault.codedesignplus.app
+        - rabbitmq.codedesignplus.app
+        - services.codedesignplus.app
+    ```
+    </TabItem>
+    </Tabs>
+
+    Y lo aplicamos con `kubectl`:
+
+    ```bash
+    kubectl apply -f .\inventory-gateway.yaml
+    ```
+    <Image src="/images/blogs/install-config-istio/13.png" alt="Aplicando el manifiesto del Gateway de Istio" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Verificar la Creación del Gateway**
+    En Lens, si vamos a la sección de recursos de Istio (`Network > Gateway`), veremos nuestro `istio-inventory-gateway` creado correctamente.
+
+    <Image src="/images/blogs/install-config-istio/14.png" alt="Verificando la creación del recurso Gateway en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+<Aside title="Gateway vs. Ingress Pod">
+Es crucial entender la diferencia:
+*   El **Pod `istio-ingress`** es el software que corre, el proxy Envoy, el *plano de datos*.
+*   El **recurso `Gateway`** es la configuración que le aplicamos, la *declaración* de puertos y hosts que debe escuchar.
+</Aside>
+
+
+<Aside title="Certificados TLS/SSL">
+Recuerda que para que el Gateway funcione en HTTPS, necesitamos certificados válidos. En este ejemplo, hemos usado un `credentialName` llamado `tls-inventory`, que debe coincidir con un secreto de Kubernetes que contenga los certificados. 
+
+Para aprender a generarlos automáticamente, puedes consultar el artículo sobre [Creación de Certificados con Let's Encrypt](https://codedesignplus.app/docs/blog/5-lets-encrypt-certificates/).
+
+</Aside>
+
+### Conclusión
+
+¡Felicidades! Has desplegado y configurado con éxito el Ingress Gateway de Istio. Ahora tienes una única puerta de entrada a tu clúster, segura, inteligente y programable.
+
+Hemos instalado el "portero" (`istio-ingress`) y le hemos dado sus primeras instrucciones (`Gateway`). Sin embargo, todavía no le hemos dicho a dónde dirigir el tráfico que llega. Ese es el trabajo del recurso **`VirtualService`**, que veremos en un próximo artículo de esta serie.
