@@ -1,0 +1,290 @@
+---
+title: "Delegando la Identidad: Microsoft Entra External ID"
+date: 2025-07-06
+lastUpdated: 2025-07-06
+tags: ["Microsoft Entra ID", "Autenticación", "Seguridad", "RBAC", "Custom Authentication Extensions", "Tutorial"]
+excerpt: "Delegar la identidad es clave. En esta guía, no solo configuramos un inicio de sesión con Microsoft Entra ID; vamos un paso más allá. Aprende a usar Custom Authentication Extensions para desacoplar tu ecosistema, sincronizar usuarios con tus microservicios y enriquecer los tokens JWT con roles y IDs internos para un control total."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Con nuestro servidor y DNS listos, es hora de abordar uno de los pilares de cualquier aplicación moderna: la **identidad**. En lugar de construir nuestro propio sistema de autenticación (una tarea compleja y propensa a errores), delegaremos esta responsabilidad a un proveedor de identidad de nivel mundial: **Microsoft Entra External ID**.
+
+En esta guía visual, no solo configuraremos un simple inicio de sesión. Iremos un paso más allá para construir un sistema de identidad flexible, extensible y, lo más importante, **desacoplado de nuestro ecosistema**, gracias al poder de las Custom Authentication Extensions.
+
+<Aside type="note">
+Para seguir esta guía, necesitarás acceso a un tenant de Microsoft Entra. Puedes crear uno de forma gratuita.
+</Aside>
+
+## Guía de Configuración Visual
+
+Esta guía está diseñada para ser un recorrido visual paso a paso por el proceso de configuración de Microsoft Entra ID, desde la creación de grupos hasta la implementación de extensiones personalizadas que enriquecen la experiencia del usuario.
+
+
+### Fase 1: Preparando el Terreno - Grupos y Roles
+
+Antes de registrar aplicaciones, crearemos un grupo que nos servirá en el futuro para gestionar el control de acceso basado en roles (RBAC).
+
+<Steps>
+1. **Panel Principal de Microsoft Entra**
+    Esta es la página de bienvenida de nuestro tenant de Entra ID, "CodeDesignPlus-Dev". Desde aquí, navegaremos a las diferentes secciones de configuración.
+    <Image src="/images/blogs/microsoft-entra-external-id/1.png" alt="Panel principal de Microsoft Entra" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2. **Sección de Grupos**
+    En el menú de la izquierda, navegamos a `Identity > Groups` y hacemos clic en el botón **"New group"**.
+    <Image src="/images/blogs/microsoft-entra-external-id/2.png" alt="Sección de Grupos en Entra ID" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3. **Creando el Grupo "Super Admin"**
+    Configuramos nuestro primer grupo, que representará a los administradores del sistema:
+    *   **Group type:** `Security`
+    *   **Group name:** `Super Admin`
+    *   **Membership type:** `Assigned` (asignaremos miembros manualmente).
+    Hacemos clic en "Create".
+    <Image src="/images/blogs/microsoft-entra-external-id/3.png" alt="Creando un nuevo grupo de seguridad" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4. **Verificación del Grupo Creado**
+    Tras una breve notificación de éxito, podemos ver nuestro nuevo grupo "Super Admin" listado en la sección "All groups". Este grupo será crucial más adelante para proteger nuestras APIs y funcionalidades administrativas.
+    <Image src="/images/blogs/microsoft-entra-external-id/4.png" alt="Notificación de grupo creado exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/5.png" alt="Grupo Super Admin listado" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside title="La Base del RBAC">
+    Este grupo es el primer paso para un robusto sistema de permisos. En el futuro, los usuarios dentro de este grupo tendrán acceso a microservicios de gestión como `ms-users`, `ms-roles`, `ms-location`, `ms-license`, y muchos otros que forman la base del ecosistema CodeDesignPlus.
+    </Aside>
+</Steps>
+
+### Fase 2: Registrando Nuestra Aplicación Frontend
+
+Ahora, registraremos nuestra aplicación de inventario como una entidad que Entra ID puede reconocer y autenticar.
+
+<Steps>
+
+5. **Sección de Registro de Aplicaciones**
+    Navegamos a `Identity > Applications > App registrations` y hacemos clic en **"+ New registration"**.
+    <Image src="/images/blogs/microsoft-entra-external-id/6.png" alt="Sección de Registro de Aplicaciones" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+6. **Configurando el Registro de la App**
+    *   **Name:** `InventoryApp`
+    *   **Supported account types:** Dejamos la opción por defecto, "Accounts in this organizational directory only".
+    *   **Redirect URI:** Seleccionamos `Single-page application (SPA)` e introducimos `http://localhost:4200`, que es la dirección donde correrá nuestra app de Angular durante el desarrollo.
+    Hacemos clic en "Register".
+    <Image src="/images/blogs/microsoft-entra-external-id/7.png" alt="Formulario de registro de una nueva aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+7. **Panel de la Aplicación Registrada**
+    ¡Nuestra `InventoryApp` ya existe en Entra ID! Esta pantalla nos muestra información crucial como el `Application (client) ID` y el `Directory (tenant) ID`, que usaremos en la configuración de nuestro frontend.
+    <Image src="/images/blogs/microsoft-entra-external-id/8.png" alt="Panel de control de la aplicación InventoryApp" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Fase 3: Personalizando la Información del Usuario
+
+Entra ID nos permite extender el esquema de usuario estándar con atributos personalizados que son relevantes para nuestra aplicación.
+
+<Steps>
+
+8. **Navegando a Atributos Personalizados**
+    Desde el menú principal, vamos a `External Identities > Custom user attributes`. Aquí podemos definir campos de datos adicionales que se solicitarán al usuario.
+    <Image src="/images/blogs/microsoft-entra-external-id/9.png" alt="Navegando a External Identities" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/10.png" alt="Panel de Custom user attributes" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+9. **Añadiendo el Atributo "Phone"**
+    Hacemos clic en **"+ Add"** para crear un nuevo atributo. Lo llamamos `Phone` con un `Data Type` de `String`. Tras crearlo, aparecerá en nuestra lista de atributos personalizados.
+    <Image src="/images/blogs/microsoft-entra-external-id/11.png" alt="Añadiendo un nuevo atributo personalizado" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/12.png" alt="Atributo Phone añadido a la lista" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Fase 4: Creando el Flujo de Usuario
+
+El "User Flow" define la experiencia de registro e inicio de sesión que verán nuestros usuarios.
+
+<Steps>
+
+10. **Sección de Flujos de Usuario**
+    Vamos a `External Identities > User flows` y hacemos clic en **"+ New user flow"**.
+    <Image src="/images/blogs/microsoft-entra-external-id/13.png" alt="Sección de User Flows" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+11. **Configurando el Flujo de Registro**
+    *   **Name:** `InventoryApp-SignUp`
+    *   **Identity providers:** Marcamos `Email with password`.
+    *   **User attributes:** Seleccionamos los campos que queremos que el usuario rellene al registrarse y que queremos que se devuelvan en el token. Marcamos: `Display Name`,  `Given Name`, `Surname` y nuestro atributo personalizado `Phone`.
+    <Image src="/images/blogs/microsoft-entra-external-id/14.png" alt="Configurando un nuevo User Flow" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/15.png" alt="Seleccionando los atributos del usuario para el flujo" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+12. **Flujo de Usuario Creado**
+    Hacemos clic en "Create" y nuestro flujo `InventoryApp-SignUp` (de tipo "Sign up and sign in") está listo para ser usado y personalizado.
+    <Image src="/images/blogs/microsoft-entra-external-id/16.png" alt="User Flow creado exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Fase 5: Custom Authentication Extensions
+
+Aquí es donde integramos profundamente Entra ID con nuestro ecosistema CodeDesignPlus. Crearemos "webhooks" que se dispararán en momentos clave del proceso de autenticación para ejecutar nuestra propia lógica.
+<Aside type="caution" title="¿Por qué usar Custom Extensions? La Clave del Desacoplamiento">
+    *   **Sincronización de Usuarios (`AttributeCollectionSubmit`):** Cuando un usuario se registra, queremos crear una réplica en nuestra propia base de datos. Esta extensión llamará a nuestro microservicio `ms-microsoft-graph`, que creará el usuario internamente y le asignará un **ID único de nuestro ecosistema**. Esto es vital: nos desacopla del `Object ID` (OID) de Azure. Si en el futuro cambiamos a otro proveedor de identidad, nuestro sistema seguirá funcionando con sus propios IDs.
+    *   **Enriquecimiento del Token (`TokenIssuanceStart`):** Justo antes de que Entra ID genere el token JWT para el usuario, esta extensión se disparará. Volverá a llamar a nuestro `ms-microsoft-graph` para que este inyecte nuestro **ID de usuario interno** como un `claim` en el token. De esta forma, todos nuestros microservicios backend podrán identificar al usuario usando nuestro ID interno, no el de Azure.
+</Aside>
+
+    
+<Steps>
+
+13. **Sub-fase 5.1: Creando la Extensión de Sincronización**
+    Navegamos a `External Identities > Custom authentication extensions` y hacemos clic en `+ Create a custom extension`. Seleccionamos el evento `AttributeCollectionSubmit`.
+    <Image src="/images/blogs/microsoft-entra-external-id/17.png" alt="Navegando a Custom authentication extensions" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/18.png" alt="Seleccionando el evento AttributeCollectionSubmit" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+14. **Configurando el Endpoint**
+    *   **Name:** `InventoryApp - AttributeCollectionSubmit`
+    *   **Target URL:** La URL de nuestro microservicio: `https://services.codedesignplus.app/ms-microsoft-graph/api/identity/provider/AttributeCollectionSubmit`
+    *   Hacemos clic en "Next".
+    <Image src="/images/blogs/microsoft-entra-external-id/19.png" alt="Configurando el endpoint de la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+15. **Registrando la App para la Extensión**
+    La extensión necesita su propia identidad para llamar a nuestra API de forma segura. Seleccionamos `Create new app registration` y le damos un nombre, `InventoryApp - CustomAuthenticationExtension`.
+    <Image src="/images/blogs/microsoft-entra-external-id/20.png" alt="Creando un nuevo registro de app para la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+16. **Revisión y Concesión de Permisos**
+    Revisamos la configuración y creamos la extensión. **Importante:** Se nos pedirá conceder permisos para que la extensión pueda llamar a nuestra API. Hacemos clic en `Grant permission` y aceptamos en la ventana emergente.
+    <Image src="/images/blogs/microsoft-entra-external-id/21.png" alt="Revisando y creando la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/22.png" alt="Otorgando permisos a la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/23.png" alt="Ventana de consentimiento de permisos" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+17. **Permiso Configurado**
+    El estado del permiso ahora es "Configured". ¡Nuestra primera extensión está lista!
+    <Image src="/images/blogs/microsoft-entra-external-id/24.png" alt="Estado del permiso configurado" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+18. **Sub-fase 5.2: Creando la Extensión de Enriquecimiento del Token**
+    Repetimos el proceso, pero esta vez seleccionamos el evento `TokenIssuanceStart`. Le damos un nombre (`InventoryApp - Token Issuance`) y la URL correspondiente de nuestro microservicio.
+    <Image src="/images/blogs/microsoft-entra-external-id/25.png" alt="Lista de extensiones creadas" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/26.png" alt="Seleccionando el evento TokenIssuanceStart" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/27.png" alt="Configurando el endpoint de la extensión Token Issuance" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+19. **Reutilizando el Registro de App**
+    Esta vez, en lugar de crear una nueva app, seleccionamos `Select an existing app registration` y elegimos la app que creamos en el paso anterior (`InventoryApp - CustomAuthenticationExtension`), ya que es la misma entidad la que llama a nuestra API.
+    <Image src="/images/blogs/microsoft-entra-external-id/28.png" alt="Seleccionando un registro de app existente" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/29.png" alt="Eligiendo la app de extensión existente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+20. **Configurando los Claims**
+    En la pestaña "Claims", definimos qué datos devolverá nuestra API. Añadimos un claim llamado `userId`. Revisamos y creamos la extensión. Como ya dimos permisos a la app, el estado aparecerá como "Configured" directamente.
+    <Image src="/images/blogs/microsoft-entra-external-id/30.png" alt="Añadiendo el claim userId a la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/31.png" alt="Revisando y creando la extensión Token Issuance" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/32.png" alt="Extensión Token Issuance creada y configurada" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+21. **Ambas Extensiones Listas**
+    Ahora tenemos nuestras dos extensiones listas para ser asociadas a nuestro flujo de usuario.
+    <Image src="/images/blogs/microsoft-entra-external-id/33.png" alt="Lista de las dos extensiones personalizadas" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+22. **Sub-fase 5.3: Asociando la Extensión al Flujo de Usuario**
+    Volvemos a nuestro `User Flow` (`InventoryApp-SignUp`), vamos a la sección `Custom authentication extensions`, y en el paso "When a user submits their information", seleccionamos nuestra extensión `InventoryApp - AttributeCollectionSubmit`. Guardamos los cambios.
+    <Image src="/images/blogs/microsoft-entra-external-id/34.png" alt="Navegando al User Flow" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/35.png" alt="Entrando a las extensiones del User Flow" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/36.png" alt="Asociando la extensión AttributeCollectionSubmit" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/37.png" alt="Guardando la asociación de la extensión" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/38.png" alt="Notificación de guardado exitoso" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Fase 6: Configurando los Claims del Token
+
+El último paso es asegurarnos de que toda la información que necesitamos (incluyendo nuestros claims personalizados y los grupos de roles) se incluya en el token JWT final.
+
+<Steps>
+
+23. **Navegando a Enterprise Applications**
+    Volvemos a `App registrations`, pero esta vez entramos a nuestra app `InventoryApp` y hacemos clic en el enlace bajo "Managed application in local directory". Esto nos lleva a la "Enterprise Application", que es donde se configuran los claims y el SSO.
+    <Image src="/images/blogs/microsoft-entra-external-id/39.png" alt="Lista de App Registrations" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/40.png" alt="Panel de la App Registration con enlace a la Enterprise App" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+24. **Configurando Claims OIDC**
+    Vamos a `Single sign-on` y en la sección "Attributes & Claims", hacemos clic en "Edit".
+    <Image src="/images/blogs/microsoft-entra-external-id/41.png" alt="Panel de Single sign-on de la Enterprise App" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/42.png" alt="Panel de Attributes & Claims" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+25. **Conectando el Proveedor de Claims Personalizado**
+    En "Custom claims provider", hacemos clic en "Configure". En el desplegable, seleccionamos nuestra extensión `InventoryApp - Token Issuance` y guardamos. Con esto, le decimos a Entra que, antes de emitir un token, debe llamar a nuestra API para obtener datos adicionales.
+    <Image src="/images/blogs/microsoft-entra-external-id/43.png" alt="Configurando el Custom claims provider" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/44.png" alt="Seleccionando la extensión Token Issuance" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/45.png" alt="Proveedor de claims personalizado configurado" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+26. **Mapeando los Claims**
+    Ahora, añadimos nuevos claims (+ Add new claim) y los mapeamos a los atributos que nos devuelve nuestro proveedor personalizado:
+    *   `givenname` -> `customclaimsprovider.user.givenname`
+    *   `surname` -> `customclaimsprovider.user.surname`
+    *   `displayName` -> `customclaimsprovider.user.displayName`
+    *   `phone` -> `customclaimsprovider.user.mobilePhone`
+    *   `userid` -> `customclaimsprovider.userId` (¡El más importante!)
+    <Image src="/images/blogs/microsoft-entra-external-id/46.png" alt="Añadiendo el claim givenname" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/47.png" alt="Añadiendo el claim surname" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/48.png" alt="Añadiendo el claim displayName" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/49.png" alt="Añadiendo el claim phone" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/50.png" alt="Añadiendo el claim userid" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+27. **Lista Final de Claims Adicionales**
+    Nuestra configuración de claims ahora está completa, incluyendo nuestro `userid` interno.
+    <Image src="/images/blogs/microsoft-entra-external-id/52.png" alt="Lista final de claims adicionales configurados" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+28. **Añadiendo el Claim de Grupos**
+    Volvemos al registro de la app original (`InventoryApp`), vamos a `Token configuration`, hacemos clic en `+ Add groups claim`, seleccionamos `Security groups` y personalizamos el `ID` para que se emita como `groups`. Esto incluirá los roles del usuario (como "Super Admin") en el token.
+    <Image src="/images/blogs/microsoft-entra-external-id/53.png" alt="Navegando a Token configuration" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/54.png" alt="Añadiendo un groups claim" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/55.png" alt="Configurando el groups claim" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/56.png" alt="Claim de grupos añadido" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+29. **Vista Final de Claims**
+    Ahora, al volver a la sección de claims de la Enterprise App, vemos que el claim `groups` también aparece, completando nuestra configuración.
+    <Image src="/images/blogs/microsoft-entra-external-id/57.png" alt="Vista final de todos los claims configurados" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Fase 7: Configurando Permisos de API para la Extensión
+Finalmente, nuestra extensión (`InventoryApp - CustomAuthenticationExtension`) necesita permisos para leer información de los usuarios desde Microsoft Graph API.
+
+<Steps>
+
+30. **Navegando a los Permisos de API**
+    Vamos a `App registrations`, seleccionamos nuestra app `InventoryApp - CustomAuthenticationExtension` y vamos a la sección `API permissions`.
+    <Image src="/images/blogs/microsoft-entra-external-id/59.png" alt="Navegando a API permissions" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+31. **Añadiendo Permisos de Microsoft Graph**
+    Hacemos clic en `+ Add a permission`, seleccionamos `Microsoft Graph`, y luego `Application permissions`. Buscamos y añadimos los siguientes permisos:
+    *   `DeviceManagementConfiguration.Read.All` y `Write.All`
+    *   `Directory.Read.All` y `Write.All`
+    *   `Group.Read.All` y `Write.All`
+    *   `GroupMember.ReadWrite.All`
+    *   `User.EnableDisable.All`
+    *   `User.Read.All` y `Write.All`
+    <Image src="/images/blogs/microsoft-entra-external-id/60.png" alt="Añadiendo un nuevo permiso" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/61.png" alt="Seleccionando Microsoft Graph" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/62.png" alt="Seleccionando permisos de aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/63.png" alt="Añadiendo permisos DeviceManagementConfiguration" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/64.png" alt="Añadiendo permisos Directory" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/65.png" alt="Añadiendo permisos Group" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/66.png" alt="Añadiendo permisos GroupMember" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/67.png" alt="Añadiendo permisos User.EnableDisable" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/68.png" alt="Añadiendo permisos User" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+32. **Otorgando Consentimiento de Administrador**
+    La lista de permisos ahora está completa, pero requieren consentimiento. Hacemos clic en `Grant admin consent for CodeDesignPlus-Dev`, confirmamos, y veremos que todos los permisos tienen el estado "Granted".
+    <Image src="/images/blogs/microsoft-entra-external-id/69.png" alt="Lista de permisos pendientes de consentimiento" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/70.png" alt="Otorgando consentimiento de administrador" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/71.png" alt="Permisos concedidos exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+33. **Creando un Secreto de Cliente**
+    Para que nuestro microservicio `ms-microsoft-graph` se autentique, necesita un secreto. Vamos a `Certificates & secrets`, creamos un `New client secret`, le damos una descripción y una duración. **¡MUY IMPORTANTE!** Copia el valor del secreto inmediatamente, ya que no volverá a mostrarse.
+    <Image src="/images/blogs/microsoft-entra-external-id/72.png" alt="Creando un nuevo secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/73.png" alt="Configurando la descripción y expiración del secreto" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/microsoft-entra-external-id/74.png" alt="Copiando el valor del secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Conclusión
+
+¡Ha sido un viaje intenso, pero el resultado es espectacular! No solo hemos configurado un inicio de sesión; hemos construido un sistema de identidad robusto, extensible y desacoplado que nos da un control total sobre los datos de nuestros usuarios y la información que viaja en nuestros tokens.
+
+Hemos sentado las bases para un sistema seguro y escalable. En los próximos artículos, empezaremos a consumir estas configuraciones desde nuestros microservicios y frontend, y veremos cómo toda esta preparación cobra vida.

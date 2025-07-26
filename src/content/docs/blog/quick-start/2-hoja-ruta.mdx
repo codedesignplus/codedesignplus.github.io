@@ -1,0 +1,102 @@
+---
+title: "Nuestra Hoja de Ruta: De Cero a una Aplicación de Inventarios con CodeDesignPlus"
+date: 2025-07-02
+lastUpdated: 2025-07-02
+tags: ["Hoja de Ruta", "Tutorial", "CodeDesignPlus", "Serie", "Arquitectura"]
+excerpt: "De la teoría a la práctica. Te presentamos la hoja de ruta completa y el índice de nuestra serie, donde construiremos una aplicación de inventarios de nivel empresarial paso a paso. Descubre las fases del proyecto, desde la configuración de la infraestructura hasta el desarrollo final, y prepárate para aprender a construir software escalable desde cero."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+En nuestro artículo anterior, ["Cómo Acelerar tu Time-to-Market sin Hipotecar tu Futuro Técnico"](/blog/quick-start/1-situacion-actual), establecimos un problema común en la industria del software: la tendencia a construir rápidamente sobre cimientos frágiles, lo que inevitablemente conduce a deuda técnica y problemas de escalabilidad.
+
+Presentamos **CodeDesignPlus** como la solución estratégica: un ecosistema diseñado para construir sobre una base sólida desde el día uno.
+
+Pero las palabras solo llegan hasta cierto punto. Es hora de demostrarlo.
+
+En esta serie de tutoriales, pasaremos de la teoría a la práctica. Juntos, construiremos una aplicación de inventario completamente funcional, desde la configuración inicial de la infraestructura hasta el desarrollo de la lógica de negocio final. Este proyecto práctico nos servirá como vehículo para explorar y dominar cada componente de un sistema moderno y escalable.
+
+<Aside>
+Esta hoja de ruta se mantiene actualizada con enlaces a cada guía publicada. ¡Guárdala en tus favoritos!
+</Aside>
+
+### Nuestra Hoja de Ruta
+
+A continuación, te presentamos el mapa completo de nuestro viaje. Cada punto de esta lista se convertirá en un artículo detallado. A medida que los publiquemos, actualizaremos esta página con los enlaces correspondientes, convirtiéndola en tu centro de referencia.
+
+---
+
+### Fase 0: Conceptualización y Preparación
+
+Antes de tocar cualquier configuración, sentamos las bases teóricas y preparamos nuestro laboratorio.
+
+*   **Artículo 1: [Cómo Acelerar tu Time-to-Market sin Hipotecar tu Futuro Técnico](/blog/quick-start/1-situacion-actual) (¡Ya publicado!)**
+    *   *El porqué de nuestra misión: la deuda técnica y cómo evitarla.*
+
+*   **Artículo 2: [Nuestra Hoja de Ruta (Esta Página)](/blog/quick-start/2-hoja-ruta) (¡Ya publicado!)**
+    *   *El índice completo y la visión general de la serie.*
+
+*   **Artículo 3: [Nuestro Blueprint: La Arquitectura Completa del Proyecto Explicada](/blog/quick-start/3-arquitectura-completa) (¡Ya publicado!)**
+    *   *Un análisis visual y detallado de cada componente que vamos a construir.*
+
+*   **Artículo 4: [Construyendo la Base: Guía Visual de Instalación de Ubuntu Server](/blog/quick-start/4-instalacion-ubuntu-server) (¡Ya publicado!)**
+    *   *Preparamos nuestro servidor desde cero, configurando la red y el acceso SSH.*
+
+---
+
+### Fase 1: Cimientos de la Infraestructura y la Identidad
+
+Con nuestro servidor listo, construimos las capas fundamentales: DNS, identidad y el orquestador de contenedores.
+
+*   **Artículo 5: [Configurando los Cimientos: DNS para Nuestro Ecosistema](/blog/quick-start/5-configurando-los-cimientos-dns-para-nuestro-ecosistema) (¡Ya publicado!)**
+    *   *Damos un nombre a nuestros servicios configurando los registros DNS públicos en GoDaddy.*
+
+*   **Artículo 6: [Delegando la Identidad: Guía Visual de Microsoft Entra External ID](/blog/quick-start/6-microsoft-entra-external-id) (¡Ya publicado!)**
+    *   *Configuramos un sistema de identidad robusto y desacoplado usando Custom Authentication Extensions.*
+
+*   **Artículo 7: [Guía Visual: Instalando y Configurando MicroK8s para Nuestro Clúster](/blog/quick-start/7-install-config-microk8s) (¡Ya publicado!)**
+    *   *Montamos el corazón de nuestra plataforma: un clúster de Kubernetes con sus addons esenciales.*
+
+---
+
+### Fase 2: Construyendo la Plataforma de Servicios
+
+Dentro de nuestro clúster, desplegamos los servicios de soporte que potenciarán nuestros microservicios.
+
+*   **Artículo 8: [La Puerta de Entrada: Guía Visual de Instalación de Istio](/blog/quick-start/8-install-config-istio) (¡Ya publicado!)**
+    *   *Instalamos nuestro Service Mesh y configuramos el Ingress Gateway para exponer nuestros servicios de forma segura.*
+
+*   **Artículo 9: [Guía Visual: Desplegando Redis Standalone con un Operador](/blog/quick-start/9-install-config-redis-standalone) (¡Ya publicado!)**
+    *   *Añadimos un servicio de caché de alto rendimiento gestionado por un Operator de Kubernetes.*
+
+*   **Artículo 10: [Guía Visual: Desplegando RabbitMQ con el Operator en Kubernetes](/blog/quick-start/10-install-rabbitmq) (¡Ya publicado!)**
+    *   *Establecemos la columna vertebral de nuestra comunicación asíncrona con un clúster de RabbitMQ.*
+
+---
+
+### Fase 3: Desarrollo de la Aplicación de Inventarios
+
+Con toda la plataforma desplegada, finalmente nos centraremos en lo que aporta valor único a nuestro negocio: la lógica de la aplicación de inventarios.
+
+*   **Próximamente: Desplegando el Ecosistema Base de CodeDesignPlus**
+    *   *Veremos cómo desplegar los microservicios transversales de nuestro SDK.*
+
+*   **Próximamente: Creando el Dominio de Inventario - Microservicios y API**
+    *   *Diseñaremos y desarrollaremos los microservicios específicos para gestionar productos, stock, proveedores, etc.*
+
+*   **Próximamente: Construyendo la Interfaz de Usuario en el Frontend**
+    *   *Daremos vida a la aplicación creando las vistas y componentes necesarios para interactuar con nuestra API de inventarios.*
+
+---
+
+Este es nuestro compromiso: una guía transparente, práctica y completa. Te invitamos a marcar esta página como favorita y a acompañarnos en cada paso de este emocionante viaje.
+
+**¿Estás listo para empezar a construir bien desde el principio? ¡Nos vemos en el próximo artículo!**

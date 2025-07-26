@@ -1,0 +1,1137 @@
+---
+title: "Guía Definitiva: Tu Ecosistema de Desarrollo en Kubernetes con MicroK8s"
+date: 2024-06-15
+lastUpdated: 2024-06-15
+tags: ["Kubernetes", "MicroK8s", "DevOps", "Istio", "RabbitMQ", "Redis", "Vault", "SonarQube", "Microservicios", "Observabilidad", "Grafana"]
+excerpt: "Aprende a construir un entorno de desarrollo profesional en Kubernetes. Despliega Istio, RabbitMQ, Redis, Vault y SonarQube en MicroK8s y monitoriza todo con Grafana Cloud."
+authors:
+    - wclg
+readingTime: 120
+featured: true
+draft: true
+---
+
+Astro es un moderno framework para construir sitios web rápidos, eficientes y fáciles de mantener. Su arquitectura permite aprovechar lo mejor de cada tecnología y solo enviar al cliente lo estrictamente necesario.
+
+
+## Configurar MicroK8s
+
+Para configurar un entorno de desarrollo en Kubernetes utilizando MicroK8s, seguimos estos pasos:
+
+1. Activamos los complementos necesarios en MicroK8s para desplegar nuestro ecosistema de desarrollo. Estos complementos incluyen DNS, MetalLB para balanceo de carga, almacenamiento local y otros servicios esenciales.
+
+  ```bash
+  microk8s enable dns
+  microk8s enable metallb
+  microk8s enable hostpath-storage
+  ```
+
+2. Configuramos el archivo de configuración de MicroK8s para que sea accesible desde el directorio `$HOME/.kube/config`. Esto es necesario para que las herramientas de Kubernetes puedan interactuar con nuestro clúster local.
+
+  ```bash
+  cd $HOME
+  mkdir .kube
+  cd .kube
+  microk8s config > config
+  ```
+
+3. Replicamos el contenido del archivo de configuración de MicroK8s en nuestra máquina local. Esto nos permite utilizar herramientas como `kubectl`, `helm`, `istioctl`, `Lens`, entre otras, para gestionar nuestro clúster de Kubernetes.
+
+  ```bash
+  cat ~/.kube/config
+  ```
+
+## Instalar Helm
+
+Helm es un gestor de paquetes para Kubernetes que facilita la instalación y gestión de aplicaciones en el clúster. Para instalar Helm, seguimos estos pasos:
+
+```powershell
+winget install Helm.Helm
+```
+
+## Instalar Istio
+
+Istio es una plataforma de servicio que proporciona una forma uniforme de conectar, gestionar y asegurar microservicios. Para instalar Istio en nuestro clúster de MicroK8s, utilizamos Helm. Aquí están los pasos:
+
+1. Agregamos el repositorio de Istio a Helm. Esto nos permite instalar Istio y sus componentes necesarios para la gestión del tráfico y la seguridad en nuestro clúster de Kubernetes.
+
+  ```powershell
+  helm repo add istio https://istio-release.storage.googleapis.com/charts
+  ```
+
+2. Actualizamos los repositorios de Helm para asegurarnos de que tenemos la última versión de Istio disponible.
+  ```powershell
+  helm repo update
+  ```
+
+3. Instalamos Istio Base, que incluye los componentes fundamentales necesarios para ejecutar Istio en nuestro clúster de Kubernetes. Utilizamos la opción `--set defaultRevision=default` para establecer la revisión predeterminada de Istio. 
+
+  ```powershell
+  helm install istio-base istio/base -n istio-system --set defaultRevision=default --create-namespace
+  ```
+
+4. Instalamos Istiod, que es el componente de control de plano de Istio.
+
+  ```powershell
+  helm install istiod istio/istiod -n istio-system --wait
+  ```
+
+### Desplegar Istio Ingress Gateway
+
+El Ingress Gateway de Istio es un componente que permite gestionar el tráfico entrante hacia los servicios en nuestro clúster. La IP del Ingress Gateway se asigna automáticamente por MetalLB, que es el complemento de Kubernetes que proporciona balanceo de carga para servicios de tipo LoadBalancer.
+
+1. Creamos un espacio de nombres para el Ingress Gateway de Istio. Esto nos permite organizar los recursos relacionados con Istio en un espacio de nombres específico.
+
+  ```powershell
+  kubectl create namespace istio-ingress
+  ```
+2. Habilitamos la inyección automática de Istio en el espacio de nombres del Ingress Gateway. Esto asegura que los pods que se creen en este espacio de nombres tengan los sidecars de Istio necesarios para la gestión del tráfico.
+  ```powershell
+  kubectl label namespace istio-ingress istio-injection=enabled
+  ```
+3. Instalamos el Ingress Gateway de Istio utilizando Helm. Esta instalación crea los recursos necesarios para gestionar el tráfico entrante hacia nuestros servicios en Kubernetes.
+  ```powershell
+  helm install istio-ingress istio/gateway -n istio-ingress --wait
+  ```
+
+### Certificados SSL con Let's Encrypt
+
+Para asegurar nuestras aplicaciones web, es fundamental contar con certificados SSL válidos. Let's Encrypt es una autoridad de certificación gratuita que nos permite obtener certificados SSL de manera sencilla y rápida. 
+
+-- Direccionar a otro blog
+
+Una vez que tengamos los certificados, podemos crear los secretos necesarios en Kubernetes para que Istio pueda utilizarlos. Esto se hace con el siguiente comando:
+
+```bash
+microk8s kubectl create -n istio-ingress secret tls tls-codedesignplus --key=codedesignplus.com.key --cert=0000_cert.pem
+```
+
+### Gateway de Istio
+
+Para exponer nuestros servicios a través del Ingress Gateway de Istio, necesitamos crear un recurso Gateway. Este recurso define cómo se debe enrutar el tráfico entrante hacia nuestros servicios.
+
+1. Creamos un archivo `gateway.yaml` en el directorio `istio` con la siguiente configuración:
+
+```yaml
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: istio-codedesignplus-gateway
+  namespace: istio-ingress
+spec:
+  selector:
+    istio: ingress
+  servers:  
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: tls-codedesignplus
+    hosts:
+    - services.codedesignplus.com
+    - vault.codedesignplus.com
+    - rabbitmq.codedesignplus.com
+```
+
+2. Aplicamos el recurso Gateway al clúster de Kubernetes:
+```bash
+kubectl apply -f istio/gateway.yaml
+```
+
+3. Verificamos que el Gateway se haya creado correctamente y que esté escuchando en el puerto 443:
+```bash
+kubectl get gateways --all-namespaces
+```
+
+4. Verificamos que el Ingress Gateway de Istio esté funcionando correctamente y que tenga una IP asignada por MetalLB:
+```bash
+kubectl get gateway -n istio-ingress
+```
+
+### Aplicación de Ejemplo
+
+Para probar nuestra configuración, podemos desplegar una aplicación de ejemplo. En este caso, utilizaremos un servicio simple que responderá a las solicitudes HTTP.
+
+1. Creamos un archivo `deployment.yaml` en el directorio `test` con la siguiente configuración:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-deployment
+  labels:
+    app: snake
+  namespace: snake-test
+spec:
+  selector:
+    matchLabels:
+      app: snake
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: snake
+    spec:
+      containers:
+      - name: snake
+        image: bhargavshah86/kube-test:v0.1
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            memory: 256Mi
+            cpu: "250m"
+          requests:
+            memory: 128Mi
+            cpu: "80m"      
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: snake
+  namespace: snake-test
+spec:
+  selector:
+    app: snake
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+  type: ClusterIP
+
+
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: snake-virtualservice
+  namespace: snake-test
+spec:
+  hosts:
+  - services.codedesignplus.com
+  gateways:
+  - istio-ingress/istio-codedesignplus-gateway
+  http:
+  - name: snake
+    match:
+    - uri:
+        prefix: /snake/
+    rewrite:
+      uri: /
+    route:
+    - destination:
+        host: snake.snake-test.svc.cluster.local
+        port:
+          number: 80
+
+```
+
+2. Creamos un espacio de nombres para la aplicación de prueba:
+
+```bash
+kubectl create namespace snake-test
+```
+
+3. Habilitamos la inyección automática de Istio en el espacio de nombres de la aplicación de prueba. Esto asegura que los pods que se creen en este espacio de nombres tengan los sidecars de Istio necesarios para la gestión del tráfico.
+
+```bash
+kubectl label namespace snake-test istio-injection=enabled
+```
+
+4. Aplicamos el archivo de despliegue y servicio al clúster de Kubernetes: 
+```bash
+kubectl apply -f test/deployment.yaml
+```
+
+## Redis Operator
+
+Para gestionar Redis en nuestro clúster de Kubernetes, utilizamos el Redis Operator. Este operador facilita la creación y gestión de instancias de Redis, ya sea en modo clúster o como instancias independientes.
+
+1. Agregamos el repositorio de Helm para el operador de Redis:
+```bash
+helm repo add ot-helm https://ot-container-kit.github.io/helm-charts/
+```
+
+2. Instalamos el operador de Redis:
+```bash
+helm install redis-operator ot-helm/redis-operator --namespace redis-operator --create-namespace
+```
+
+3. Creamos un archivo `standalone.yaml` en el directorio `redis` con la siguiente configuración:
+
+```yaml
+redisStandalone:
+  name: ""
+  image: quay.io/opstree/redis
+  tag: v7.0.15
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+    # - name:  Secret with Registry credentials
+  redisSecret:
+    secretName: ""
+    secretKey: ""
+  serviceType: ClusterIP
+  resources: {}
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+  ignoreAnnotations: []
+    # - "redis.opstreelabs.in/ignore"
+  minReadySeconds: 0
+  # -- Some fields of statefulset are immutable, such as volumeClaimTemplates.
+  # When set to true, the operator will delete the statefulset and recreate it. Default is false.
+  recreateStatefulSetOnUpdateInvalid: false
+
+labels: {}
+#   foo: bar
+#   test: echo
+
+externalConfig:
+  enabled: false
+  data: |
+    tcp-keepalive 400
+    slowlog-max-len 158
+    stream-node-max-bytes 2048
+
+externalService:
+  enabled: true
+  # annotations:
+  #   foo: bar
+  serviceType: LoadBalancer
+  port: 6379
+
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  namespace: monitoring
+  # -- extraLabels are added to the servicemonitor when enabled set to true
+  extraLabels: {}
+    # foo: bar
+    # team: devops
+
+redisExporter:
+  enabled: false
+  image: quay.io/opstree/redis-exporter
+  tag: "v1.44.0"
+  imagePullPolicy: IfNotPresent
+  resources: {}
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+  env: []
+    # - name: VAR_NAME
+    #   value: "value1"
+  securityContext: {}
+
+initContainer:
+  enabled: false
+  image: ""
+  imagePullPolicy: "IfNotPresent"
+  resources: {}
+    # requests:
+    #   memory: "64Mi"
+    #   cpu: "250m"
+    # limits:
+    #   memory: "128Mi"
+    #   cpu: "500m"
+  env: []
+  command: []
+  args: []
+
+sidecars:
+  name: ""
+  image: ""
+  imagePullPolicy: "IfNotPresent"
+  resources:
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+  env: []
+    # - name: MY_ENV_VAR
+    #   value: "my-env-var-value"
+
+priorityClassName: ""
+
+nodeSelector: {}
+  # memory: medium
+
+storageSpec:
+  volumeClaimTemplate:
+    spec:
+      # storageClassName: standard
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 1Gi
+  #   selector: {}
+
+podSecurityContext:
+  runAsUser: 1000
+  fsGroup: 1000
+
+securityContext: {}
+
+affinity: {}
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: disktype
+  #         operator: In
+  #         values:
+  #         - ssd
+
+tolerations: []
+  # - key: "key"
+  #   operator: "Equal"
+  #   value: "value"
+  #   effect: "NoSchedule"
+
+serviceAccountName: ""
+
+TLS:
+  ca: ca.key
+  cert: tls.crt
+  key: tls.key
+  secret:
+    secretName: ""
+
+acl:
+  secret:
+    secretName: ""
+
+env: []
+  # - name: VAR_NAME
+  #   value: "value1"
+```
+
+4. Instalamos una instancia de Redis en modo independiente. Esto es útil para aplicaciones que requieren una base de datos en memoria rápida y eficiente.
+```bash
+helm install redis-standalone ot-helm/redis --namespace srv-redis --create-namespace -f redis/standalone.yaml
+```
+
+## Install RabbitMQ Operator
+
+Para gestionar RabbitMQ en nuestro clúster de Kubernetes, utilizamos el RabbitMQ Operator. Este operador facilita la creación y gestión de instancias de RabbitMQ, ya sea en modo clúster o como instancias independientes.
+
+1. Agregamos el repositorio de Helm para el operador de RabbitMQ:
+```bash
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
+2. Instalamos el operador de RabbitMQ:
+```bash
+helm install rabbitmq bitnami/rabbitmq-cluster-operator --namespace rabbitmq-operator --create-namespace
+```
+
+3. Creamos un espacio de nombres para RabbitMQ y habilitamos la inyección automática de Istio:
+```bash
+kubectl create ns srv-rabbitmq
+```
+
+4. Etiquetamos el espacio de nombres para habilitar la inyección automática de Istio:
+```bash
+kubectl label namespace srv-rabbitmq istio-injection=enabled
+```
+
+5. Creamos un archivo `cluster.yaml` en el directorio `rabbitmq` con la siguiente configuración:
+
+```yaml
+# https://www.rabbitmq.com/kubernetes/operator/using-operator
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: rabbitmq-codedesignplus
+  namespace: srv-rabbitmq
+spec:
+  replicas: 3
+  service:
+    type: LoadBalancer
+  persistence:
+    storageClassName: microk8s-hostpath
+
+---
+
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: rabbitmq-codedesignplus-virtualservice
+  namespace: srv-rabbitmq
+spec:
+  hosts:
+  - rabbitmq.codedesignplus.com
+  gateways:
+  - istio-ingress/istio-codedesignplus-gateway
+  http:
+  - route:
+    - destination:
+        host: rabbitmq-codedesignplus.srv-rabbitmq.svc.cluster.local
+        port:
+          number: 15672
+```
+
+6. Aplicamos el archivo de configuración al clúster de Kubernetes:
+```bash
+kubectl apply -f rabbitmq/cluster.yaml
+```
+
+
+## Install Vault
+Vault es una herramienta para gestionar secretos y proteger datos sensibles. Para instalar Vault en nuestro clúster de Kubernetes, utilizamos Helm.
+1. Agregamos el repositorio de Helm para Vault:
+```bash
+helm repo add hashicorp https://helm.releases.hashicorp.com
+```
+2. Creamos un espacio de nombres para el operador de Vault:
+```bash
+kubectl create namespace vault-operator
+```
+3. Etiquetamos el espacio de nombres para habilitar la inyección automática de Istio:
+```bash
+kubectl label namespace vault-operator istio-injection=enabled
+```
+4. Creamos un archivo `values.yaml` en el directorio `vault` con la siguiente configuración:
+
+```yaml
+global:
+  enabled: true
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+
+server:
+  dev:
+    enabled: true
+    devRootToken: "ANGq0*B2acD1n5%F"
+  # ha:
+  #   enabled: true
+  #   replicas: 3
+  # logLevel: debug
+  service:
+    enabled: true
+    type: ClusterIP
+    # Port on which Vault server is listening
+    port: 8200
+    # Target port to which the service should be mapped to
+    targetPort: 8200
+  # dataStorage:
+  #   enabled: true
+  #   size: 1Gi
+  #   storageClass: microk8s-hostpath
+ui:
+  enabled: true
+  serviceType: ClusterIP
+  externalPort: 8200
+
+injector:
+  enabled: "false"
+
+# global:
+#   enabled: true
+#   tlsDisable: false
+#   resources:
+#     requests:
+#       memory: 256Mi
+#       cpu: 250m
+#     limits:
+#       memory: 256Mi
+#       cpu: 250m
+# server:
+#   dev:
+#     enabled: true
+#     devRootToken: "647USE*!bkz^C14b"
+#   logLevel: debug
+#   ha:
+#     enabled: false
+#     replicas: 5
+#   service:
+#     enabled: true
+#     type: ClusterIP
+#     port: 8200
+#     targetPort: 8200
+#   # raft:
+#   #     enabled: true
+#   #     setNodeId: true
+#   # dataStorage:
+#   #   enabled: true
+#   # auditStorage:
+#   #   enabled: false
+# ui:
+#   enabled: true
+#   serviceType: ClusterIP
+#   externalPort: 8200
+
+# injector:
+#   enabled: "false"
+```
+5. Instalamos Vault utilizando Helm con el archivo de valores que hemos creado:
+```bash
+helm install vault hashicorp/vault -n vault-operator --values vault/values.yaml
+```
+6. Creamos un archivo `network.yaml` en el directorio `vault` con la siguiente configuración:
+
+```yaml
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: vault-codedesignplus-virtualservice
+  namespace: vault-operator
+spec:
+  hosts:
+  - vault.codedesignplus.com
+  gateways:
+  - istio-ingress/istio-codedesignplus-gateway
+  http:
+  - route:
+    - destination:
+        host: vault-ui.vault-operator.svc.cluster.local
+        port:
+          number: 8200
+
+
+```
+7. Aplicamos el archivo de configuración al clúster de Kubernetes:
+```bash
+kubectl apply -f .\vault\network.yaml
+```
+
+## Create Namespaces
+Para organizar nuestros recursos en Kubernetes, creamos espacios de nombres específicos para cada servicio. Esto nos permite gestionar y aislar los recursos de manera más efectiva.
+```bash
+kubectl create namespace codedesignplus
+kubectl label namespace codedesignplus istio-injection=enabled
+```
+
+## Create Sonarqube
+
+Para instalar SonarQube en nuestro clúster de Kubernetes, utilizamos Helm. SonarQube es una plataforma para la inspección continua de código que ayuda a detectar errores y vulnerabilidades.
+
+1. Creamos un espacio de nombres para SonarQube y habilitamos la inyección automática de Istio:
+```bash
+kubectl create namespace sonarqube
+```
+
+2. Etiquetamos el espacio de nombres para habilitar la inyección automática de Istio:
+```bash
+kubectl label namespace sonarqube istio-injection=enabled
+```
+
+3. Creamos un archivo `values.yaml` en el directorio `sonarqube` con la siguiente configuración:
+
+```yaml
+deploymentType: "StatefulSet"
+
+replicaCount: 1
+
+deploymentStrategy: {}
+OpenShift:
+  enabled: false
+  createSCC: true
+
+community:
+  enabled: true
+  buildNumber: "25.7.0.110598"
+
+image:
+  repository: sonarqube
+  tag: 25.7.0.110598-community
+  pullPolicy: IfNotPresent
+
+
+nodeSelector: 
+  kubernetes.io/hostname: vm-microk8s
+
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  failureThreshold: 6
+  timeoutSeconds: 1
+
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  failureThreshold: 6
+  timeoutSeconds: 1
+
+startupProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 24
+  timeoutSeconds: 1
+
+
+initSysctl:
+  enabled: true
+  vmMaxMapCount: 524288
+  fsFileMax: 131072
+  nofile: 131072
+  nproc: 8192
+  securityContext:
+    privileged: true
+
+initFs:
+  enabled: true
+  securityContext:
+    privileged: false
+    runAsNonRoot: false
+    runAsUser: 0
+    runAsGroup: 0
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop: ["ALL"]
+      add: ["CHOWN"]
+
+
+plugins:
+  install: 
+    - "https://github.com/mc1arke/sonarqube-community-branch-plugin/releases/download/25.6.0/sonarqube-community-branch-plugin-25.6.0.jar"
+  noCheckCertificate: false
+
+jvmOpts: "-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin-25.6.0.jar=web"
+
+jvmCeOpts: "-javaagent:/opt/sonarqube/extensions/plugins/sonarqube-community-branch-plugin-25.6.0.jar=ce"
+monitoringPasscode: "bda3f78b-bc71-46ca-b7d5-ea261cd950a7"
+resources:
+  limits:
+    memory: 4Gi
+  requests:
+    cpu: 400m
+    memory: 1250Mi
+
+persistence:
+  enabled: true
+  
+  annotations: {}
+
+  storageClass: microk8s-hostpath
+  accessMode: ReadWriteOnce
+  size: 2Gi
+  uid: 1000
+  guid: 1000
+
+  volumes: []
+  mounts: []
+
+emptyDir: {}
+jdbcOverwrite:
+  # (DEPRECATED) Please use jdbcOverwrite.enabled instead
+  # enable: false
+  # If enable the JDBC Overwrite, make sure to set `postgresql.enabled=false`
+  enabled: true
+  # The JDBC url of the external DB
+  # sonarqube-postgresql.sonarqube.svc.cluster.local is the default service name for the PostgreSQL service
+  jdbcUrl: "jdbc:postgresql://sonarqube-postgresql.sonarqube.svc.cluster.local:5432/sonarDB?currentSchema=public"
+  # The DB user that should be used for the JDBC connection
+  jdbcUsername: "sonarUser"
+  # Use this if you don't mind the DB password getting stored in plain text within the values file
+  # (DEPRECATED) Please use `jdbcOverwrite.jdbcSecretName` along with `jdbcOverwrite.jdbcSecretPasswordKey` instead
+  jdbcPassword: "sonarPass"
+  ## Alternatively, use a pre-existing k8s secret containing the DB password
+  # jdbcSecretName: "sonarqube-jdbc"
+  ## and the secretValueKey of the password found within that secret
+  # jdbcSecretPasswordKey: "jdbc-password"
+  # To install the oracle JDBC driver, set the following URL (in this example, we set the URL for the Oracle 11 driver. Please update it to your target driver URL.).
+  # If downloading the driver requires authentication, please set the .netrc secret file with a key "netrc" to use basic auth.
+  # oracleJdbcDriver:
+  #   url: "https://download.oracle.com/otn-pub/otn_software/jdbc/2113/ojdbc11.jar"
+  #   netrcCreds: ""
+
+postgresql:
+  enabled: true
+  postgresqlUsername: "sonarUser"
+  postgresqlPassword: "sonarPass"
+  postgresqlDatabase: "sonarDB"
+  # Specify the TCP port that PostgreSQL should use
+  service:
+    port: 5432
+  resources:
+    limits:
+      memory: 2Gi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 20Gi
+    storageClass:
+  securityContext:
+    enabled: true
+    fsGroup: 1001
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    allowPrivilegeEscalation: false
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+    capabilities:
+      drop: ["ALL"]
+  volumePermissions:
+    enabled: false
+    securityContext:
+      runAsUser: 0
+  shmVolume:
+    chmod:
+      enabled: false
+  serviceAccount:
+    enabled: false
+
+podLabels: {}
+sonarqubeFolder: /opt/sonarqube
+
+tests:
+  image: ""
+  enabled: true
+  resources: {}
+
+terminationGracePeriodSeconds: 60
+```
+
+4. Instalamos SonarQube utilizando Helm con el archivo de valores que hemos creado:
+```bash
+helm repo add sonarqube https://SonarSource.github.io/helm-chart-sonarqube
+```
+
+5. Actualizamos los repositorios de Helm para asegurarnos de que tenemos la última versión de SonarQube disponible:
+```bash
+helm repo update
+```
+
+6. Creamos un archivo `values.yaml` en el directorio `sonarqube` con la siguiente configuración:
+
+```yaml
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: sonarqube-excellenceforge-virtualservice
+  namespace: sonarqube
+spec:
+  hosts:
+  - sonarqube.excellenceforge.com
+  gateways:
+  - istio-ingress/istio-excellenceforge-gateway
+  http:
+  - route:
+    - destination:
+        host: sonarqube-sonarqube.sonarqube.svc.cluster.local
+        port:
+          number: 9000
+
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: sonarqube-codedesignplus-virtualservice
+  namespace: sonarqube
+spec:
+  hosts:
+  - sonarqube.codedesignplus.com
+  gateways:
+  - istio-ingress/istio-codedesignplus-gateway
+  http:
+  - route:
+    - destination:
+        host: sonarqube-sonarqube.sonarqube.svc.cluster.local
+        port:
+          number: 9000
+```
+
+7. Instalamos SonarQube en el espacio de nombres `sonarqube` utilizando Helm:
+
+```bash
+helm upgrade --install -n sonarqube sonarqube sonarqube/sonarqube -f .\values.yaml
+```
+
+8. Habilitamos la inyección automática de Istio en el espacio de nombres de SonarQube: 
+
+```bash
+kubectl label namespace sonarqube istio-injection=enabled
+```
+
+
+## Grafana
+
+Para instalar Grafana en nuestro clúster de Kubernetes, utilizamos Helm. Grafana es una plataforma de visualización y análisis de datos que nos permite monitorizar nuestros servicios y aplicaciones.
+
+1. Creamos un espacio de nombres para Grafana
+
+```bash
+kubectl create namespace otel-codedesignplus
+```
+
+2. Creamos un archivo `otel.yaml` en el directorio `grafana` con la siguiente configuración:
+
+```yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-conf
+  namespace: otel-collector-codedesignplus
+  labels:
+    app: otel-collector
+data:
+  otel-collector-config.yaml: |   
+    extensions:
+      basicauth/grafana_cloud:
+        # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
+        client_auth:
+          username: "308297"
+          password: "********"
+
+    receivers:
+      otlp:
+        # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver
+        protocols:
+          grpc:
+          http:
+      hostmetrics:
+        # Optional. Host Metrics Receiver added as an example of Infra Monitoring capabilities of the OpenTelemetry Collector
+        # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver
+        scrapers:
+          load:
+          memory:
+
+    processors:
+      batch:
+        # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor
+      resourcedetection:
+        # Enriches telemetry data with resource information from the host
+        # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor
+        detectors: ["env", "system"]
+        override: false
+      transform/drop_unneeded_resource_attributes:
+        # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
+        error_mode: ignore
+        trace_statements:
+          - context: resource
+            statements:
+              - delete_key(attributes, "k8s.pod.start_time")
+              - delete_key(attributes, "os.description")
+              - delete_key(attributes, "os.type")
+              - delete_key(attributes, "process.command_args")
+              - delete_key(attributes, "process.executable.path")
+              - delete_key(attributes, "process.pid")
+              - delete_key(attributes, "process.runtime.description")
+              - delete_key(attributes, "process.runtime.name")
+              - delete_key(attributes, "process.runtime.version")
+        metric_statements:
+          - context: resource
+            statements:
+              - delete_key(attributes, "k8s.pod.start_time")
+              - delete_key(attributes, "os.description")
+              - delete_key(attributes, "os.type")
+              - delete_key(attributes, "process.command_args")
+              - delete_key(attributes, "process.executable.path")
+              - delete_key(attributes, "process.pid")
+              - delete_key(attributes, "process.runtime.description")
+              - delete_key(attributes, "process.runtime.name")
+              - delete_key(attributes, "process.runtime.version")
+        log_statements:
+          - context: resource
+            statements:
+              - delete_key(attributes, "k8s.pod.start_time")
+              - delete_key(attributes, "os.description")
+              - delete_key(attributes, "os.type")
+              - delete_key(attributes, "process.command_args")
+              - delete_key(attributes, "process.executable.path")
+              - delete_key(attributes, "process.pid")
+              - delete_key(attributes, "process.runtime.description")
+              - delete_key(attributes, "process.runtime.name")
+              - delete_key(attributes, "process.runtime.version")
+      transform/add_resource_attributes_as_metric_attributes:
+        # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
+        error_mode: ignore
+        metric_statements:
+          - context: datapoint
+            statements:
+              - set(attributes["deployment.environment"], resource.attributes["deployment.environment"])
+              - set(attributes["service.version"], resource.attributes["service.version"])
+
+    exporters:
+      otlphttp/grafana_cloud:
+        # https://github.com/open-telemetry/opentelemetry-collector/tree/main/exporter/otlpexporter
+        endpoint: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp"
+        auth:
+          authenticator: basicauth/grafana_cloud
+
+    service:
+      extensions: [basicauth/grafana_cloud]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [resourcedetection, transform/drop_unneeded_resource_attributes, batch]
+          exporters: [otlphttp/grafana_cloud]
+        metrics:
+          receivers: [otlp, hostmetrics]
+          processors: [resourcedetection, transform/drop_unneeded_resource_attributes, transform/add_resource_attributes_as_metric_attributes, batch]
+          exporters: [otlphttp/grafana_cloud]
+        logs:
+          receivers: [otlp]
+          processors: [resourcedetection, transform/drop_unneeded_resource_attributes, batch]
+          exporters: [otlphttp/grafana_cloud]
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: otel-collector-codedesignplus
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:latest
+          command: ['/otelcol-contrib']
+          args: ['--config=/conf/otel-collector-config.yaml']
+          volumeMounts:
+            - name: config-volume
+              mountPath: /conf
+          ports:
+          - name:  otlp
+            containerPort: 4317
+          - name:  otlp-http
+            containerPort: 4318
+      volumes:
+        - name: config-volume
+          configMap:
+            name: otel-collector-conf
+      serviceAccountName: otel-collector
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: otel-collector-codedesignplus
+  labels:
+    app: otel-collector
+spec:
+  type: ClusterIP
+  ports:
+    - name: otlp
+      port: 4317
+    - name: otlp-http
+      port: 4318
+  selector:
+    app: otel-collector
+  internalTrafficPolicy: Cluster
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otel-collector
+  namespace: otel-collector-codedesignplus
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: otel-collector
+rules:
+  - apiGroups:
+      - ''
+    resources:
+      - events
+      - namespaces
+      - namespaces/status
+      - nodes
+      - nodes/spec
+      - pods
+      - pods/status
+      - replicationcontrollers
+      - replicationcontrollers/status
+      - resourcequotas
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+      - cronjobs
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: otel-collector
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: otel-collector
+subjects:
+  - kind: ServiceAccount
+    name: otel-collector
+    namespace: otel-collector-codedesignplus
+```
+
+3. Aplicamos el archivo de configuración al clúster de Kubernetes:
+
+```bash
+kubectl apply -f grafana/otel.yaml
+```

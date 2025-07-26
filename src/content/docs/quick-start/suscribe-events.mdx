@@ -3,7 +3,11 @@ title: Suscripción a Eventos de Dominio
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, exploraremos cómo un microservicio puede suscribirse a eventos de dominio publicados por otros microservicios y reaccionar a ellos. Crearemos un nuevo microservicio llamado **Subscriptions** que publicará un evento `SubscriptionCanceledDomainEvent`. Luego, modificaremos el microservicio de **Clients** para escuchar este evento e inactivar al cliente correspondiente. Utilizaremos el generador `codedesignplus:microservice` para crear el microservicio **Subscriptions** y agregar soporte para consumidores de eventos al microservicio **Clients**.
 

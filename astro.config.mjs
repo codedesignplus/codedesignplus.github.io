@@ -8,6 +8,7 @@ import icon from 'astro-icon';
 import starlightImageZoom from 'starlight-image-zoom'
 
 import sitemap from '@astrojs/sitemap';
+import starlightBlog from 'starlight-blog';
 
 // https://astro.build/config
 export default defineConfig({
@@ -36,19 +37,38 @@ export default defineConfig({
                 './src/styles/custom.css',
             ],
             disable404Route: true,
-          
-            social: {
-                github: 'https://github.com/Codedesignplus/',
-                youtube: 'https://www.youtube.com/@CodeDesignPlus',
-                facebook: 'https://www.facebook.com/profile.php?id=100040970353620',
-                linkedin: 'https://www.linkedin.com/in/wclg'
-            },
+            social: [
+                { icon: 'github', label: 'GitHub', href: 'https://github.com/Codedesignplus/' },
+                { icon: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/@CodeDesignPlus' },
+                { icon: 'facebook', label: 'Facebook', href: 'https://www.facebook.com/profile.php?id=100040970353620' },
+                { icon: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/in/wclg' }
+            ],
             lastUpdated: true,
             editLink: {
                 baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
             plugins: [
-                // @ts-ignore
+                // @ts-ignore                
+                starlightBlog({
+                    title: {
+                        en: 'CodeDesignPlus Blog',
+                    },
+                    postCount: 5,
+                    recentPostCount: 15,
+                    prevNextLinksOrder: 'chronological',
+                    authors: {
+                        wclg: {
+                            name: 'Wilzon Liscano Galindo',
+                            title: 'Founder of CodeDesignPlus',
+                            picture: '/wliscano.jpeg',
+                            url: 'https://hideoo.dev',
+                        }
+                    },
+                    metrics: {
+                        readingTime: true,
+                        words: 'total',
+                    }
+                }),
                 starlightImageZoom({
                     showCaptions: true
                 })
@@ -541,7 +561,7 @@ export default defineConfig({
                                 },
                             ]
                         },
-                        
+
                         {
                             label: 'Generator',
                             collapsed: true,

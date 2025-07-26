@@ -3,7 +3,11 @@ title: Ejecutar con Docker
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, aprenderemos cómo construir y ejecutar los microservicios de CodeDesignPlus utilizando Docker. Veremos cómo crear imágenes Docker para cada uno de los entry points del microservicio **Clients** (REST, gRPC y AsyncWorker) y cómo ejecutarlos en contenedores. Esto nos permitirá desplegar y gestionar los microservicios de manera eficiente y consistente.
 

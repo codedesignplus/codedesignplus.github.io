@@ -1,0 +1,105 @@
+---
+title: "Configurando DNS en GoDaddy para Nuestro Proyecto"
+date: 2025-07-05
+lastUpdated: 2025-07-05
+tags: ["DNS", "GoDaddy", "Infraestructura", "Tutorial", "Homelab"]
+excerpt: "Un servidor es solo una IP hasta que le das un nombre. En este tutorial práctico, te guiamos paso a paso por la configuración de tus registros DNS en GoDaddy. Aprende a crear los registros 'A' necesarios para apuntar tus dominios a tu IP pública y verifica que todo el mundo pueda encontrarte usando herramientas de propagación. Es el paso clave para hacer tu proyecto accesible globalmente."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+Después de preparar nuestro servidor en la [guía anterior](/blog/4-instalacion-ubuntu-server/), es hora de darle una dirección pública. En este tutorial, nos sumergiremos en el panel de **GoDaddy** para configurar los registros DNS que harán accesible nuestra aplicación desde cualquier parte del mundo.
+
+### El Plan de Direccionamiento
+
+Recordemos rápidamente los dominios que vamos a configurar:
+
+*   **Públicos (en GoDaddy):**
+    1.  `services.codedesignplus.app`: Para nuestros microservicios.
+    2.  `inventory.codedesignplus.app`: Para nuestra aplicación frontend.
+*   **Locales (en Pi-hole, más adelante):**
+    1.  `rabbitmq.codedesignplus.app`, `redis.codedesignplus.app`, `vault.codedesignplus.app`.
+
+### Configurando los Registros Públicos en GoDaddy (Guía Visual)
+
+<Steps>
+
+1.  **Iniciar Sesión en GoDaddy**
+    El primer paso es acceder a tu cuenta. Ve a la página de inicio de sesión de GoDaddy e introduce tus credenciales.
+
+    <Image src="/images/blogs/godaddy/1.png" alt="Pantalla de inicio de sesión de GoDaddy"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Seleccionar el Dominio a Configurar**
+    Una vez dentro, serás dirigido a tu cartera de dominios. Localiza el dominio que vamos a utilizar, `codedesignplus.app`, y haz clic en el botón **"Configuración de DNS"**.
+
+    <Image src="/images/blogs/godaddy/2.png" alt="Selección del dominio codedesignplus.app en GoDaddy"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Añadir un Nuevo Registro DNS**
+    Ahora estás en el panel de gestión de DNS. Aquí se listan todos los registros actuales. Para crear los nuestros, busca y haz clic en el botón **"Añadir un registro nuevo"**.
+
+    <Image src="/images/blogs/godaddy/3.png" alt="Panel de gestión de DNS con el botón para añadir un nuevo registro"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Crear el Registro para `services`**
+    Configuramos el primer subdominio, que apuntará al Ingress de nuestros microservicios. Rellena el formulario con los siguientes datos:
+    *   **Tipo:** `A`
+    *   **Nombre:** `services`
+    *   **Valor:** `190.26.134.241` (Reemplaza esto con tu IP pública si es diferente).
+    *   **TTL:** `1 Hora`
+    Haz clic en "Guardar".
+
+    <Image src="/images/blogs/godaddy/4.png" alt="Configurando el registro A para services.codedesignplus.app"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Crear el Registro para `inventory`**
+    Repetimos el proceso exacto para el subdominio de nuestra aplicación frontend.
+    *   **Tipo:** `A`
+    *   **Nombre:** `inventory`
+    *   **Valor:** `190.26.134.241` (Apunta a la misma IP pública).
+    *   **TTL:** `1 Hora`
+    Haz clic en "Guardar".
+
+    <Image src="/images/blogs/godaddy/5.png" alt="Configurando el registro A para inventory.codedesignplus.app"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+6.  **Verificar la Configuración Final en GoDaddy**
+    ¡Excelente! Después de guardar, tu lista de registros DNS debería incluir las dos nuevas entradas "A" que acabamos de crear en la parte inferior de la tabla.
+
+    <Image src="/images/blogs/godaddy/6.png" alt="Lista final de registros DNS en GoDaddy con las nuevas entradas"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Verificando que Todo Funciona (Propagación de DNS)
+
+Los cambios de DNS no son instantáneos. Pueden tardar desde unos minutos hasta varias horas en "propagarse" por todos los servidores de Internet del mundo. Para verificar si nuestros cambios ya están activos, usaremos una herramienta online gratuita como [**DNSChecker.org**](https://dnschecker.org/).
+
+1.  **Verificar `inventory.codedesignplus.app`**
+    Ingresa `inventory.codedesignplus.app` en DNSChecker, selecciona el tipo de registro "A" y haz clic en "Search". Verás cómo los servidores de todo el mundo empiezan a mostrar la nueva IP con un tick verde a medida que se actualizan.
+
+    <Image src="/images/blogs/godaddy/7.png" alt="Verificación de la propagación de DNS para inventory.codedesignplus.app en DNSChecker"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar `services.codedesignplus.app`**
+    Repetimos la misma verificación para `services.codedesignplus.app` para asegurarnos de que ambos subdominios se propaguen correctamente y apunten a nuestra IP.
+
+    <Image src="/images/blogs/godaddy/8.png" alt="Verificación de la propagación de DNS para services.codedesignplus.app en DNSChecker"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+<Aside>
+No te preocupes si algunos servidores tardan más en actualizarse (marcas 'X' rojas). Lo importante es que la mayoría de las ubicaciones principales muestren la IP correcta.
+</Aside>
+
+### Configuración de Dominios Locales y Visión a Futuro
+
+Recuerda que esta guía cubre solo los DNS públicos. La configuración de nuestros dominios locales (`rabbitmq`, `redis`, `vault`) la realizaremos más adelante con un servidor DNS interno como Pi-hole.
+
+Además, ten presente que esta configuración es para nuestro entorno de aprendizaje. En un entorno de producción en la nube como Azure, usaríamos servicios como [**Azure Private DNS**](https://learn.microsoft.com/en-us/azure/dns/private-dns-overview) y [**VPN Gateways**](https://learn.microsoft.com/es-mx/azure/vpn-gateway/vpn-gateway-about-vpngateways) para una gestión más robusta y segura.
+
+## Conclusión
+
+¡Trabajo completado! Has configurado y verificado con éxito los registros DNS públicos para nuestra aplicación. Este es un paso fundamental que nos permite empezar a construir servicios y exponerlos al mundo de una manera profesional.
+
+Con nuestras direcciones públicas listas, en el **próximo artículo nos sumergiremos en Microsoft Entra ID** para configurar la capa de identidad y seguridad de nuestro ecosistema.

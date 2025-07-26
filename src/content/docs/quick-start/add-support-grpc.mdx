@@ -3,7 +3,11 @@ title: Soporte para gRPC
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, exploraremos cómo añadir soporte gRPC a un microservicio existente, utilizando el generador `codedesignplus:microservice`. Veremos cómo configurar gRPC y cómo exponer los servicios de tu microservicio para ser consumidos por otros servicios a través de este protocolo. Tomaremos el microservicio de **Clientes** creado en el [artículo anterior](/quick-start/create-microservice) como ejemplo.
 

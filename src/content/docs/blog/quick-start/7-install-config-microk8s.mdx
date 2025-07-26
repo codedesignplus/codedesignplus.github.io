@@ -1,0 +1,129 @@
+---
+title: "Instalando y Configurando MicroK8s para Nuestro Clúster"
+date: 2025-07-07
+lastUpdated: 2025-07-07
+tags: ["MicroK8s", "Kubernetes", "Tutorial", "Infraestructura", "Homelab", "MetalLB", "DevOps"]
+excerpt: "Es hora de construir el motor de nuestra aplicación: un clúster de Kubernetes. En esta guía, te enseñamos a instalar y configurar MicroK8s paso a paso. Descubre cómo habilitar addons esenciales como DNS para el descubrimiento de servicios, MetalLB para exponer tus aplicaciones y Hostpath Storage para la persistencia de datos, dejando tu clúster listo para la acción."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Con nuestro servidor Ubuntu listo y los DNS públicos apuntando a él, ha llegado el momento de construir el motor que orquestará todos nuestros servicios: nuestro clúster de **Kubernetes**.
+
+Para este tutorial, hemos elegido **MicroK8s**, una distribución de Kubernetes ligera, robusta y desarrollada por Canonical (la misma empresa detrás de Ubuntu). Es perfecta para entornos de desarrollo, edge computing y, como en nuestro caso, para montar un clúster de un solo nodo de forma rápida y sencilla.
+
+## Parte 1: Instalación de MicroK8s
+
+<Steps>
+
+1.  **Instalar MicroK8s con Snap**
+    Nos conectamos a nuestro servidor por SSH y ejecutamos un solo comando para instalar MicroK8s.
+
+    ```bash
+    sudo snap install microk8s --classic --channel=1.32
+    ```
+    *   `--classic`: Permite que la aplicación tenga acceso al sistema como un paquete tradicional, lo cual es necesario para que MicroK8s gestione la red y otros recursos.
+    *   `--channel=1.32`: Fijamos la versión de Kubernetes a la `1.32`. Esto es una buena práctica para garantizar la estabilidad y evitar actualizaciones automáticas inesperadas que podrían romper nuestra configuración.
+
+    <Image src="/images/blogs/install-config-microk8s/1.png" alt="Instalando MicroK8s con Snap" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Configurar Permisos de Usuario**
+    Por defecto, los comandos de MicroK8s requieren `sudo`. Para evitar esto y facilitar la administración, añadiremos nuestro usuario actual al grupo `microk8s`.
+
+    ```bash
+    sudo usermod -a -G microk8s $USER
+    mkdir -p ~/.kube
+    chmod 0700 ~/.kube
+    su - $USER
+    ```
+    *   `usermod`: Añade (`-a`) nuestro usuario (`$USER`) al grupo (`-G`) `microk8s`.
+    *   `mkdir` y `chmod`: Crean el directorio `.kube` con los permisos adecuados para almacenar la configuración del clúster.
+    *   `su - $USER`: Reinicia nuestra sesión de shell para que los nuevos permisos de grupo se apliquen. Deberás introducir tu contraseña.
+
+    <Image src="/images/blogs/install-config-microk8s/2.png" alt="Configurando permisos de usuario para MicroK8s" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Verificar el Estado del Clúster**
+    Una vez que los permisos están aplicados, verificamos que el clúster esté completamente operativo.
+
+    ```bash
+    microk8s status --wait-ready
+    ```
+    El flag `--wait-ready` le dice al comando que espere hasta que todos los servicios principales de Kubernetes estén en funcionamiento. El mensaje `microk8s is running` confirma que nuestro clúster de un solo nodo está vivo y listo para recibir órdenes.
+
+    <Image src="/images/blogs/install-config-microk8s/3.png" alt="Verificando el estado del clúster de MicroK8s" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Parte 2: Configurando los Addons Esenciales
+
+Un clúster de Kubernetes "vacío" no es muy útil. Necesitamos añadirle funcionalidades clave. En MicroK8s, esto se hace habilitando "addons". Vamos a configurar los tres más importantes para nuestro proyecto.
+
+```bash
+microk8s enable dns
+microk8s enable metallb:192.168.0.100-192.168.0.115
+microk8s enable hostpath-storage
+```
+
+<Image src="/images/blogs/install-config-microk8s/5.png" alt="Habilitando los addons dns, metallb y hostpath-storage" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Vamos a desglosar qué hace cada uno de estos comandos.
+
+**Addon 1: DNS**
+    <Aside  title="¿Por qué necesitamos DNS interno?">
+    Dentro de un clúster de Kubernetes, los Pods (contenedores) son efímeros; pueden ser destruidos y recreados con nuevas IPs en cualquier momento. El addon **DNS** (basado en CoreDNS) nos proporciona un sistema de descubrimiento de servicios vital. Permite que nuestros microservicios se comuniquen entre sí usando nombres estables y predecibles (ej. `my-service.my-namespace`) en lugar de direcciones IP volátiles. Es la guía telefónica interna de nuestro clúster.
+    </Aside>
+
+**Addon 2: MetalLB (Load Balancer)**
+    <Aside  title="¿Qué es y por qué MetalLB?">
+    En Kubernetes, el servicio de tipo `LoadBalancer` es la forma estándar de exponer un servicio a la red externa. Sin embargo, en clústeres bare-metal (como el nuestro) o en VMs, esta funcionalidad no viene incluida por defecto como en los proveedores de nube (AWS, Azure, GCP).
+    **MetalLB** soluciona este problema. Actúa como un balanceador de carga de red para nuestro clúster local. Al habilitarlo con el rango `192.168.0.30-192.168.0.35`, le estamos dando un "pool" de direcciones IP de nuestra red LAN que puede asignar a cualquier servicio de tipo `LoadBalancer` que creemos. Esto será crucial cuando despleguemos nuestro Ingress Controller.
+    </Aside>
+
+**Addon 3: Hostpath Storage (Almacenamiento Persistente)**
+    <Aside type="caution" title="¿Por qué necesitamos almacenamiento persistente?">
+    Por defecto, los contenedores no tienen estado (son "stateless"). Si un Pod que ejecuta una base de datos se reinicia, todos sus datos se pierden. El addon **hostpath-storage** nos proporciona una solución de almacenamiento **persistente** y sencilla para nuestro entorno de desarrollo. Crea un "StorageClass" que utiliza directorios en el propio sistema de archivos del nodo (nuestro servidor Ubuntu) para guardar los datos de forma permanente.
+    **¡Importante!** Esta solución es perfecta para un entorno de desarrollo de un solo nodo, pero **no es adecuada para producción**, ya que los datos están atados a un único servidor y no son altamente disponibles.
+    </Aside>
+
+## Parte 3: Visualizando Nuestro Clúster con Lens
+
+Administrar Kubernetes desde la línea de comandos es potente, pero a veces una interfaz gráfica ayuda a visualizar el estado del clúster. Lens es considerado el IDE para Kubernetes por excelencia.
+
+<Steps>
+1. Descargar e Instalar Lens
+    Visita la [página web oficial de Lens](https://k8slens.dev/) y descarga el instalador para tu sistema operativo.
+    
+    <Image src="/images/blogs/install-config-microk8s/9.png" alt="Obteniendo el kubeconfig de MicroK8s" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+2. Obtener el Archivo de Configuración (Kubeconfig)
+    Para que Lens (o cualquier otra herramienta) pueda conectarse a nuestro clúster, necesita un archivo de configuración. Lo obtenemos con este comando en nuestro servidor:
+    ```bash
+    microk8s config
+    ```
+
+    Esto imprimirá el contenido del archivo kubeconfig en la terminal. Cópialo todo.
+    <Image src="/images/blogs/install-config-microk8s/4.png" alt="Obteniendo el kubeconfig de MicroK8s" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4. Añadir el Clúster a Lens
+    Abre Lens y haz clic en el icono + para añadir un nuevo clúster, o selecciona la opción "Add kubeconfig by pasting".
+    <Image src="/images/blogs/install-config-microk8s/6.png" alt="Añadiendo un nuevo clúster en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5. Pegar la Configuración
+    Pega el contenido del kubeconfig que copiaste del servidor en el cuadro de texto y haz clic en "Add Clusters".
+    <Image src="/images/blogs/install-config-microk8s/7.png" alt="Pegando el kubeconfig en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+6. Explorar el Clúster
+    ¡Listo! Lens se conectará a tu clúster de MicroK8s. Ahora puedes navegar visualmente por los nodos, workloads, pods y todos los recursos de tu clúster, viendo su estado en tiempo real.
+    <Image src="/images/blogs/install-config-microk8s/8.png" alt="Visualizando el nodo del clúster en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Conclusión
+¡Felicidades! Has construido y configurado con éxito un clúster de Kubernetes funcional. No solo has instalado el motor, sino que también le has añadido las piezas clave para el descubrimiento de servicios (DNS), la exposición a la red (MetalLB) y la persistencia de datos (Hostpath Storage).

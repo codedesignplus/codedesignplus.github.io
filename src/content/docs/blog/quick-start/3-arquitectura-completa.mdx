@@ -1,0 +1,80 @@
+---
+title: "La Arquitectura Completa del Proyecto Explicada"
+date: 2025-07-03
+lastUpdated: 2025-07-03
+tags: ["Arquitectura de Software", "Kubernetes", "Microservicios", "DevOps", "Arquitectura Híbrida", "Istio"]
+excerpt: "Para construir una aplicación robusta, primero se necesita un plano. En este artículo, desglosamos el diagrama de arquitectura completo de nuestro proyecto. Descubre cómo interactúan Kubernetes, los microservicios, un service mesh como Istio y los servicios clave en la nube para formar un sistema cohesivo y escalable. Este es el mapa que guiará cada paso de nuestra serie."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Antes de sumergirnos en la configuración de DNS, nubes y microservicios, necesitamos construir nuestro campo de juego: un servidor robusto que alojará el núcleo de nuestra infraestructura. Este artículo es nuestro "Día Cero", donde prepararemos el lienzo sobre el cual pintaremos nuestra obra maestra técnica.
+
+Aquí haremos dos cosas fundamentales:
+1.  **Visualizar el Futuro:** Presentaremos un diagrama de alto nivel de la arquitectura completa que vamos a construir.
+2.  **Construir la Base:** Te guiaremos paso a paso en la instalación de Ubuntu Server, nuestro sistema operativo elegido.
+
+### Nuestro Diagrama de Arquitectura
+
+Un buen arquitecto nunca empieza a construir sin un plano. Este diagrama es nuestro plano. Muestra cómo interactuarán todos los componentes, desde el usuario final hasta nuestros servicios más profundos.
+
+<Image src="/images/blogs/preparando-laboratorio/architecture-diagram.svg" alt="Diagrama de Arquitectura" width="1600" height="900" decoding="async" loading="lazy"/>
+
+
+Este diagrama, visualiza la arquitectura completa que construiremos a lo largo de esta serie. Aunque puede parecer complejo a primera vista, está dividido en cuatro zonas lógicas que interactúan de manera muy específica. Vamos a desglosarlas.
+
+#### 1. La Zona de Internet (Arriba a la Izquierda)
+
+Esta es la perspectiva del **usuario final**.
+
+*   El **Usuario** interactúa con nuestra aplicación a través de un navegador. Accede al dominio `inventory.codedesignplus.app`, que sirve nuestra aplicación **Frontend** (construida en Angular).
+*   El Frontend, a su vez, realiza peticiones a un dominio diferente, `services.codedesignplus.app`, que es la puerta de entrada a todas nuestras APIs.
+*   Ambos dominios son públicos y son resueltos por **GoDaddy DNS**, que los dirige a la dirección IP pública de nuestro servidor.
+
+#### 2. La Zona de Servicios en la Nube (Derecha)
+
+Estos son servicios de terceros, gestionados y altamente especializados, que nuestro sistema utiliza para delegar tareas críticas.
+
+*   **Microsoft Entra ID:** Actúa como nuestro proveedor de identidad. Cada vez que un microservicio necesita verificar quién es un usuario y qué puede hacer, se comunica con Entra ID.
+*   **MongoDB Atlas:** Es nuestra base de datos como servicio. Aquí es donde se almacenará de forma persistente toda la información de la aplicación (productos, usuarios, etc.).
+*   **Grafana Cloud:** Es nuestro centro de observabilidad. Recibe métricas, logs y trazas de nuestro sistema (enviadas por **OTEL**) para que podamos monitorizar la salud y el rendimiento de la aplicación.
+*   **GitHub y GitHub Packages:** Alojan nuestro código fuente y los artefactos de software (como imágenes de Docker), respectivamente.
+
+#### 3. El Servidor Ubuntu (Centro)
+
+Este es el corazón de nuestra operación, la infraestructura que nosotros mismos gestionaremos.
+
+*   **Kubernetes Cluster:** Es el orquestador que gestiona todos nuestros contenedores. Dentro de él viven los componentes clave:
+    *   **Istio Ingress:** Actúa como el portero de nuestro clúster. Recibe todo el tráfico de la IP pública y lo dirige inteligentemente al servicio correcto (ya sea el Frontend o un microservicio específico).
+    *   **Microservices:** Son el cerebro de nuestra aplicación. Cada uno tiene una responsabilidad única (gestionar inventario, usuarios, etc.).
+    *   **Supporting Services:** Servicios de soporte que nuestros microservicios necesitan para funcionar:
+        *   **Vault:** Un almacén seguro para gestionar secretos como contraseñas y claves de API.
+        *   **Redis:** Una base de datos en memoria usada para caché, mejorando el rendimiento.
+        *   **RabbitMQ:** Un broker de mensajería para la comunicación asíncrona entre microservicios a través de eventos.
+*   **Host Services:** Aplicaciones instaladas directamente en el servidor Ubuntu que dan soporte al clúster y al ciclo de desarrollo:
+    *   **Pi-hole:** Nuestro servidor DNS local para resolver dominios de desarrollo internos.
+    *   **SonarQube:** Una herramienta para analizar estáticamente nuestro código en busca de bugs, vulnerabilidades y "code smells".
+    *   **GitHub Action Runner:** Un agente que permite a GitHub Actions ejecutar trabajos de CI/CD (como construir y desplegar la aplicación) directamente en nuestro servidor.
+
+#### 4. El Entorno del Desarrollador (Abajo a la Izquierda)
+
+Esta zona representa al **desarrollador (Dev)** y cómo interactúa con el sistema.
+
+*   Desde su máquina, el desarrollador puede acceder a las interfaces de administración de los servicios internos (Vault, RabbitMQ, etc.) a través de los dominios locales que resuelve **Pi-hole**.
+*   Puede enviar su código a **SonarQube** para análisis de calidad.
+*   Todo esto ocurre a través de la **Red LAN**, conectando al desarrollador con el servidor y, a través de este, con los servicios en la nube.
+
+En resumen, esta arquitectura combina lo mejor de dos mundos: el control y la personalización de una infraestructura propia con la potencia y la fiabilidad de los servicios gestionados en la nube. En los próximos artículos, construiremos cada una de estas piezas, paso a paso.
+
+## Conclusión
+
+¡Y ahí lo tienes! Has completado el "Día Cero" de nuestro proyecto. Ahora no solo tienes una idea, sino un plano claro y detallado de la robusta arquitectura que estamos a punto de construir. Este diagrama será nuestra brújula en cada paso del camino, ayudándonos a entender dónde encaja cada pieza del rompecabezas.
+
+Con nuestro lienzo conceptualmente definido, es hora de empezar a construir de verdad. En el próximo artículo, nos arremangaremos para dar el primer paso práctico y fundamental: **instalar y configurar nuestro servidor con Ubuntu Server**.

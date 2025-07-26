@@ -3,7 +3,11 @@ title: Pruebas de Carga del Microservicio de Clientes con K6
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Code  } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
+
+<ImageZoom/>
 
 En este tutorial, aprenderemos cómo realizar pruebas de carga en el microservicio **Clients** utilizando K6, una herramienta de pruebas de carga de código abierto.  Profundizaremos en los diferentes tipos de executors que ofrece K6, especialmente los modelos `closed` y `open`, y mostraremos un ejemplo práctico para probar nuestro microservicio.
 

@@ -1,0 +1,154 @@
+---
+title: "Instalando Ubuntu Server 24.04 LTS Paso a Paso"
+date: 2025-07-04
+lastUpdated: 2025-07-04
+tags: ["Ubuntu Server", "Instalación", "Tutorial", "Infraestructura", "Homelab", "Hyper-V"]
+excerpt: "Ponemos la primera piedra de nuestra arquitectura. En esta guía visual y detallada, te llevamos paso a paso por la instalación y configuración de Ubuntu Server 24.04 LTS. Aprende a asignar una IP estática, habilitar el acceso SSH y dejar tu servidor base completamente listo para los siguientes desafíos."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+¡Bienvenido a la guía de instalación definitiva de nuestra serie! En el [artículo anterior](/blog/3-arquitectura-completa/), visualizamos la arquitectura completa. Ahora, nos arremangaremos para construir el cimiento de nuestro proyecto: el servidor.
+
+Esta no es una guía cualquiera. Te llevaremos de la mano, **imagen por imagen**, a través de todo el proceso de instalación de **Ubuntu Server 24.04 LTS** en una máquina virtual de Hyper-V. ¡Empecemos!
+
+### Requisitos y Configuración de Red
+
+Antes de nada, recordemos nuestros requisitos y la configuración de red que usaremos.
+
+*   **Hardware Recomendado:** 4+ núcleos de CPU, 8GB+ de RAM, 100GB+ de SSD.
+*   **Red Local (LAN):** Usaremos el rango `192.168.0.0/24`.
+*   **IP Estática del Servidor:** Asignaremos la IP **`192.168.0.10`**.
+
+<Aside type="note">
+**¿Tu red es diferente?**
+¡No hay problema! Es muy común que las redes usen `192.168.1.0/24`. Si ese es tu caso, simplemente reemplaza el `0` por un `1` en todas las direcciones que mencionemos. Tu servidor tendría la IP `192.168.1.10` y tu gateway sería `192.168.1.1`.
+
+Para averiguar la configuración de tu red, puedes abrir una terminal y usar el comando `ipconfig` en Windows o `ifconfig` / `ip a` en macOS/Linux.
+</Aside>
+
+### Guía de Instalación Visual
+
+<Steps>
+
+1. **Arranque de la Máquina Virtual**
+    Nuestra máquina virtual en Hyper-V está iniciando. El mensaje "Start PXE over IPv4" indica que está intentando arrancar desde la red. En unos segundos, procederá a arrancar desde la imagen ISO que hemos configurado.
+    <Image src="/images/blogs/instalacion-ubuntu-server/1.png" alt="Arranque de la VM en Hyper-V"  width="1024" height="864" decoding="async" loading="lazy"/>
+
+2. **Carga del Sistema Operativo**
+    Vemos el registro de arranque de systemd. El sistema está cargando todos los servicios iniciales necesarios para lanzar el instalador gráfico. No se requiere ninguna acción, solo esperar.
+    <Image src="/images/blogs/instalacion-ubuntu-server/2.png" alt="Registro de arranque de systemd"  width="1024" height="864" decoding="async" loading="lazy"/>
+
+3. **Selección de Idioma**
+    Aquí comienza la interacción. Elegimos el idioma para el proceso de instalación. Seleccionamos "English" para mantener la consistencia con la terminología técnica.
+    <Image src="/images/blogs/instalacion-ubuntu-server/3.png" alt="Selección de idioma de instalación" width="1024" height="864" decoding="async" loading="lazy"/>
+
+4. **Configuración del Teclado**
+    Confirmamos la distribución de nuestro teclado. La opción por defecto "English (US)" es adecuada para la mayoría. Seleccionamos "Done" para continuar.
+    <Image src="/images/blogs/instalacion-ubuntu-server/4.png" alt="Configuración de la distribución del teclado" width="1024" height="864" decoding="async" loading="lazy"/>
+
+5. **Tipo de Instalación**
+    Elegimos la base de nuestra instalación. La opción por defecto, "Ubuntu Server", es la ideal, ya que incluye un conjunto de paquetes curado para una experiencia de servidor cómoda.
+    <Image src="/images/blogs/instalacion-ubuntu-server/5.png" alt="Selección de tipo de instalación Ubuntu Server" width="1024" height="864" decoding="async" loading="lazy"/>
+
+6. **Resumen de la Red (DHCP)**
+    El instalador muestra nuestra interfaz de red (`eth0`) con una dirección IP (`192.168.0.142`) asignada automáticamente por DHCP. Vamos a cambiarla por nuestra IP estática.
+    <Image src="/images/blogs/instalacion-ubuntu-server/6.png" alt="Resumen de la configuración de red con DHCP" width="1024" height="864" decoding="async" loading="lazy"/>
+
+7. **Editando la Interfaz de Red**
+    Nos posicionamos sobre la interfaz `eth0` y presionamos Enter para abrir el submenú de opciones. Seleccionamos "Edit IPv4".
+    <Image src="/images/blogs/instalacion-ubuntu-server/7.png" alt="Menú para editar la configuración IPv4" width="1024" height="864" decoding="async" loading="lazy"/>
+
+8. **Cambiando a IP Manual**
+    En el menú "IPv4 Method", cambiamos la selección de "Automatic (DHCP)" a "Manual".
+    <Image src="/images/blogs/instalacion-ubuntu-server/8.png" alt="Cambiando método de DHCP a Manual" width="1024" height="864" decoding="async" loading="lazy"/>
+
+9. **Introduciendo la IP Estática**
+    Este es el paso más importante de la configuración de red. Rellenamos los campos:
+    *   **Subnet:** `192.168.0.0/24`
+    *   **Address:** `192.168.0.10`
+    *   **Gateway:** `192.168.0.1`
+    *   **Name servers:** `192.168.0.1, 8.8.8.8` (El de tu router y uno público).
+    Luego, seleccionamos "Save".
+    <Image src="/images/blogs/instalacion-ubuntu-server/9.png" alt="Ingresando los datos de la IP estática" width="1024" height="864" decoding="async" loading="lazy"/>
+
+10. **Verificación de la Red Estática**
+    De vuelta en la pantalla de resumen, ahora vemos nuestra IP estática `192.168.0.10/24` correctamente configurada. Seleccionamos "Done".
+    <Image src="/images/blogs/instalacion-ubuntu-server/10.png" alt="Verificación de la configuración de red estática" width="1024" height="864" decoding="async" loading="lazy"/>
+
+11. **Configuración de Proxy**
+    Dejamos este campo en blanco, ya que no necesitamos un proxy para conectarnos a Internet. Seleccionamos "Done".
+    <Image src="/images/blogs/instalacion-ubuntu-server/11.png" alt="Configuración de proxy omitida" width="1024" height="864" decoding="async" loading="lazy"/>
+
+12. **Configuración del Espejo de Archivos**
+    El instalador ha verificado la conexión con el servidor de paquetes por defecto de Ubuntu. No es necesario cambiarlo. Continuamos seleccionando "Done".
+    <Image src="/images/blogs/instalacion-ubuntu-server/12.png" alt="Configuración del espejo de archivos de Ubuntu" width="1024" height="864" decoding="async" loading="lazy"/>
+
+13. **Configuración Guiada del Almacenamiento**
+    Para simplificar, elegimos "Use an entire disk" y nos aseguramos de que la opción "Set up this disk as an LVM group" esté seleccionada. LVM (Logical Volume Management) nos da flexibilidad para redimensionar particiones en el futuro.
+    <Image src="/images/blogs/instalacion-ubuntu-server/13.png" alt="Selección de usar un disco completo con LVM" width="1024" height="864" decoding="async" loading="lazy"/>
+
+14. **Resumen del Almacenamiento**
+    Esta pantalla muestra el plan de particionamiento que el instalador ha creado automáticamente (con particiones para `/`, `/boot` y `/boot/efi`). Confirmamos seleccionando "Done".
+    <Image src="/images/blogs/instalacion-ubuntu-server/14.png" alt="Resumen del particionamiento de disco" width="1024" height="864" decoding="async" loading="lazy"/>
+
+15. **Confirmación de Acción Destructiva**
+    El instalador nos da una última advertencia antes de formatear el disco. Nos aseguramos de nuestra elección y seleccionamos "Continue".
+    <Image src="/images/blogs/instalacion-ubuntu-server/15.png" alt="Confirmación para formatear el disco" width="1024" height="864" decoding="async" loading="lazy"/>
+
+16. **Creación del Perfil de Usuario**
+    Rellenamos los datos para nuestra cuenta de administrador:
+    *   **Your name:** `CodeDesignPlus`
+    *   **Your server's name:** `vm-microk8s`
+    *   **Pick a username:** `coded`
+    *   **Choose a password:** Una contraseña segura.
+    <Image src="/images/blogs/instalacion-ubuntu-server/16.png" alt="Creación del perfil de usuario y nombre del servidor" width="1024" height="864" decoding="async" loading="lazy"/>
+
+17. **Configuración de SSH**
+    **¡Paso indispensable!** Marcamos la casilla `Install OpenSSH server` para habilitar el acceso remoto seguro a nuestro servidor.
+    <Image src="/images/blogs/instalacion-ubuntu-server/17.png" alt="Habilitando la instalación de OpenSSH Server" width="1024" height="864" decoding="async" loading="lazy"/>
+
+18. **Selección de Snaps Adicionales**
+    Se nos ofrece instalar software popular. **No seleccionamos nada**. Preferimos instalar todo manualmente más adelante para un control total. Seleccionamos "Done".
+    <Image src="/images/blogs/instalacion-ubuntu-server/18.png" alt="Omitiendo la instalación de snaps destacados" width="1024" height="864" decoding="async" loading="lazy"/>
+
+19. **Proceso de Instalación**
+    Ahora, a esperar. El sistema está copiando archivos y configurando todos los paquetes base.
+    <Image src="/images/blogs/instalacion-ubuntu-server/19.png" alt="Progreso de la instalación del sistema" width="1024" height="864" decoding="async" loading="lazy"/>
+
+20. **Instalación Completa**
+    ¡Misión cumplida! El mensaje "Installation complete!" nos indica que podemos reiniciar. Seleccionamos "Reboot Now".
+    <Image src="/images/blogs/instalacion-ubuntu-server/20.png" alt="Mensaje de Instalación Completada" width="1024" height="864" decoding="async" loading="lazy"/>
+
+21. **Conexión Remota por SSH**
+    Después del reinicio, abrimos una terminal en nuestra máquina de desarrollo (en este caso, Windows Terminal) y nos conectamos por primera vez.
+    `ssh coded@192.168.0.10`
+    Se nos pregunta si confiamos en la huella digital del servidor. Escribimos `yes` y presionamos Enter. Tras introducir la contraseña, ¡estamos dentro!
+    <Image src="/images/blogs/instalacion-ubuntu-server/21.png" alt="Primera conexión SSH exitosa al servidor" width="1024" height="864" decoding="async" loading="lazy"/>
+
+22. **Actualizando la Lista de Paquetes**
+    El primer comando que ejecutamos como buena práctica es `sudo apt update`. Esto descarga la lista más reciente de paquetes disponibles desde los repositorios de Ubuntu.
+    <Image src="/images/blogs/instalacion-ubuntu-server/22.png" alt="Ejecutando sudo apt update" width="1024" height="864" decoding="async" loading="lazy"/>
+
+23. **Aplicando las Actualizaciones**
+    Con la lista actualizada, ahora aplicamos las actualizaciones con `sudo apt upgrade`. El sistema nos muestra los paquetes que se van a actualizar y nos pide confirmación.
+    <Image src="/images/blogs/instalacion-ubuntu-server/23.png" alt="Ejecutando sudo apt upgrade" width="1024" height="864" decoding="async" loading="lazy"/>
+
+24. **Imagen 24 (Referencia interna, parte de la 23):** 
+    Confirmamos la actualización escribiendo `Y` y presionando Enter. El sistema procede a descargar e instalar las nuevas versiones.
+    <Image src="/images/blogs/instalacion-ubuntu-server/24.png" alt="Confirmación de actualización de paquetes" width="1024" height="864" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Conclusión
+
+¡Felicidades! Has completado una instalación limpia y profesional de Ubuntu Server, guiado por cada paso visual. Ahora tienes una base sólida, segura y accesible, lista para convertirse en una potente plataforma de aplicaciones.
+
+En el **próximo artículo**, comenzaremos a configurar los **DNS** para darle nombres a los servicios que desplegaremos en este servidor.
