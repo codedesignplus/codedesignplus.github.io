@@ -275,15 +275,168 @@ Con nuestros certificados generados en el artículo [Creando Certificados con Le
 
 </Steps>
 
-### Conclusión
+### Parte 5: Poniéndolo Todo a Prueba - Desplegando una Aplicación de Ejemplo
 
-¡Misión cumplida! Has completado el ciclo completo de seguridad para el punto de entrada de tu clúster.
+Hemos instalado Istio, configurado el Gateway y asegurado los certificados. Ahora, vamos a hacer la prueba de fuego: desplegar una aplicación de ejemplo (un juego de Snake) y exponerla a través de nuestra nueva infraestructura.
 
-1.  **Instalaste Istio**, el cerebro de tu red.
-2.  **Desplegaste el Ingress Gateway**, el portero.
-3.  **Lo configuraste** con un recurso `Gateway`.
-4.  **Lo aseguraste** cargando tus certificados en un **Secreto TLS**.
+<Aside type="caution" title="Tutorial Avanzado">
+Esta sección asume una comprensión básica de los manifiestos de Kubernetes (`Deployment`, `Service`) y de los recursos de Istio (`VirtualService`). ¡Vamos a conectar todas las piezas!
+</Aside>
 
-Ahora tienes una única puerta de entrada a tu clúster, segura, inteligente y lista para dirigir el tráfico. El Gateway está escuchando en el puerto 443, pero todavía no sabe a qué servicio interno enviar las peticiones que llegan.
+<Steps>
 
-Ese es el trabajo del recurso **`VirtualService`**, el "director de tráfico", que configuraremos en próximos artículos cuando empecemos a desplegar nuestras aplicaciones.
+1.  **Preparar el Manifiesto de Despliegue**
+    Crearemos un único archivo `deployment.yaml` que contendrá todos los recursos necesarios para nuestra aplicación de prueba.
+
+    ```yaml
+    # deployment.yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: snake-test
+      labels:
+        istio-injection: enabled
+    
+    ---
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: snake-deployment
+      labels:
+        app: snake
+      namespace: snake-test
+    spec:
+      selector:
+        matchLabels:
+          app: snake
+      replicas: 2
+      template:
+        metadata:
+          labels:
+            app: snake
+        spec:
+          containers:
+          - name: snake
+            image: bhargavshah86/kube-test:v0.1
+            ports:
+            - containerPort: 80
+            resources:
+              limits:
+                memory: 256Mi
+                cpu: "250m"
+              requests:
+                memory: 128Mi
+                cpu: "80m"      
+    
+    ---
+    apiVersion: v1
+    kind: Service
+    metadata:
+      name: snake
+      namespace: snake-test
+    spec:
+      selector:
+        app: snake
+      ports:
+        - name: http
+          protocol: TCP
+          port: 80
+          targetPort: 80
+      type: ClusterIP
+    
+    ---
+    apiVersion: networking.istio.io/v1
+    kind: VirtualService
+    metadata:
+      name: snake-virtualservice
+      namespace: snake-test
+    spec:
+      hosts:
+      - services.codedesignplus.app
+      gateways:
+      - istio-ingress/istio-inventory-gateway
+      http:
+      - name: snake
+        match:
+        - uri:
+            prefix: /snake/
+        rewrite:
+          uri: /
+        route:
+        - destination:
+            host: snake.snake-test.svc.cluster.local
+            port:
+              number: 80
+    ```
+
+    <Aside title="Desglose del Manifiesto">
+    *   **`Namespace`**: Creamos un espacio de nombres `snake-test` para aislar nuestra aplicación. La etiqueta `istio-injection: enabled` es crucial: le ordena a Istio que inyecte automáticamente un proxy "sidecar" en nuestros pods.
+    *   **`Deployment`**: Define cómo se debe ejecutar nuestra aplicación. Le decimos a Kubernetes que queremos `2` réplicas del contenedor `bhargavshah86/kube-test:v0.1`.
+    *   **`Service`**: Crea un punto de acceso interno y estable para nuestros pods de Snake. Le da un nombre DNS dentro del clúster (`snake.snake-test.svc.cluster.local`).
+    *   **`VirtualService`**: Este es el "director de tráfico" de Istio. Le damos las siguientes instrucciones:
+        *   **`hosts`**: Aplica esta regla cuando el tráfico llegue al host `services.codedesignplus.app`.
+        *   **`gateways`**: Asocia esta regla con el `istio-inventory-gateway` que creamos anteriormente.
+        *   **`match`**: Si la URL empieza con `/snake/`.
+        *   **`rewrite`**: Antes de enviar el tráfico al servicio, reescribe la URL a `/` (ya que la aplicación de Snake no espera `/snake/`).
+        *   **`route`**: Envía el tráfico al `Service` de Kubernetes `snake` en el namespace `snake-test`.
+    </Aside>
+
+2.  **Aplicar el Manifiesto**
+    Desde nuestra terminal, con `kubectl` ya configurado, aplicamos el archivo.
+
+    ```bash
+    kubectl apply -f .\deployment.yaml
+    ```
+    El comando crea exitosamente los cuatro recursos.
+
+    <Image src="/images/blogs/install-config-istio/18.png" alt="Aplicando el manifiesto de la aplicación Snake"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Verificar los Pods en Lens**
+    Si vamos a la vista de Pods en Lens, ahora veremos nuestras dos réplicas de `snake-deployment` corriendo en el namespace `snake-test`.
+
+    <Image src="/images/blogs/install-config-istio/19.png" alt="Verificando los pods de la aplicación Snake en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Configurar el Acceso Local (Archivo `hosts`)**
+    Para poder acceder a nuestra aplicación desde el navegador usando el dominio, necesitamos decirle a nuestra máquina local cómo resolver `services.codedesignplus.app`. Para ello, editaremos nuestro archivo `hosts`.
+
+    *   Obtenemos la IP externa de nuestro Ingress Gateway de Istio. En Lens, vamos a "Network > Services" y copiamos la "External IP" del servicio `istio-ingress`, que es `192.168.0.30`.
+
+        <Image src="/images/blogs/install-config-istio/20.png" alt="Obteniendo la IP externa del Ingress Gateway"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   Editamos el archivo `hosts` (`C:\Windows\System32\drivers\etc\hosts` en Windows, `/etc/hosts` en macOS/Linux) y añadimos la siguiente línea:
+
+        ```
+        192.168.0.30    services.codedesignplus.app
+        ```
+
+        <Image src="/images/blogs/install-config-istio/21.png" alt="Editando el archivo hosts en Windows"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+        <Aside type="caution" title="Nota Importante: Acceso Temporal vs. Acceso Público Real">
+        La edición del archivo `hosts` es un truco que estamos usando para **simular el acceso público desde nuestra propia máquina de desarrollo**. Le estamos diciendo a nuestro PC que resuelva `services.codedesignplus.app` directamente a la IP **local** de nuestro Ingress (`192.168.0.30`).
+
+        Esto es temporal y necesario porque aún no hemos configurado el **port forwarding** (reenvío de puertos) en nuestro router.
+
+        En un escenario real, para que cualquier persona en Internet pudiera acceder, configuraríamos nuestro router para que todo el tráfico que llegue a nuestra **IP pública** en los puertos 80 y 443 sea redirigido a la IP local de nuestro Ingress (`192.168.0.30`). Este proceso, a menudo llamado "configurar una DMZ" o "port forwarding", lo abordaremos en un futuro artículo.
+        </Aside>
+
+5.  **¡Jugar Snake!**
+    El momento de la verdad. Abrimos un navegador y vamos a la URL:
+    
+    `https://services.codedesignplus.app/snake/`
+
+    ¡Y ahí está! Nuestro Gateway de Istio ha recibido la petición, el `VirtualService` la ha enrutado correctamente a nuestro `Service`, que a su vez la ha enviado a uno de los Pods del juego. ¡Hemos completado el flujo de extremo a extremo!
+
+    <Image src="/images/blogs/install-config-istio/22.png" alt="Juego de Snake funcionando en el navegador"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión Final
+
+¡Lo has conseguido! Has construido un flujo completo, desde la instalación de un clúster de Kubernetes hasta el despliegue de una aplicación real expuesta de forma segura a través de Istio.
+
+En este viaje, has aprendido a:
+1.  Instalar y configurar un Ingress Gateway de Istio con Helm.
+2.  Asegurar la comunicación con certificados TLS a través de Secretos de Kubernetes.
+3.  Desplegar una aplicación y dirigir el tráfico hacia ella usando un `VirtualService`.
+
+Ahora tienes una base sólida y profesional sobre la cual puedes empezar a desplegar tus propias aplicaciones y microservicios.
