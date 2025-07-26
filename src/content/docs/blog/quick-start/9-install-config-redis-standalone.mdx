@@ -1,0 +1,146 @@
+---
+title: "Desplegando Redis Standalone con un Operador en Kubernetes"
+date: 2025-07-10
+lastUpdated: 2025-07-10
+tags: ["Redis", "Kubernetes", "Operator", "Cache", "Helm", "Visual", "StatefulSet"]
+excerpt: "Añadimos velocidad a nuestra plataforma. Aprende a desplegar una instancia de Redis Standalone en Kubernetes usando el patrón Operator y a conectarte con Redis Insight."
+authors:
+    - wclg
+---
+
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Toda aplicación moderna necesita ser rápida. Una de las formas más efectivas de lograr velocidad es a través del **caching**. En nuestro ecosistema, **Redis** será nuestra navaja suiza para el almacenamiento en memoria.
+
+En este tutorial, desplegaremos una instancia de Redis en nuestro clúster de Kubernetes. Pero en lugar de gestionar manualmente los complejos `StatefulSets` y `Services`, utilizaremos un patrón avanzado y recomendado: el **Patrón Operator**. Específicamente, usaremos el [Redis Operator de Opstree](https://redis-operator.opstree.dev/) para que gestione el ciclo de vida de nuestra instancia de Redis por nosotros.
+
+### Parte 1: Entendiendo los "Porqués"
+
+Antes de ejecutar comandos, aclaremos algunos conceptos clave.
+
+<Aside title="¿Qué es Redis y cómo lo usaremos?">
+**Redis** es una base de datos en memoria ultrarrápida, a menudo descrita como un "servidor de estructuras de datos". Es increíblemente versátil.
+
+En nuestro ecosistema CodeDesignPlus, lo usaremos principalmente como **caché** para reducir la carga sobre nuestras bases de datos principales y acelerar los tiempos de respuesta. Sin embargo, el SDK también está preparado para aprovechar otras de sus potentes características como **Pub/Sub** (para mensajería en tiempo real) y **Queues** (para gestionar trabajos en segundo plano).
+</Aside>
+
+<Aside type="note" title="¿Por qué una instancia Standalone para Desarrollo?">
+Redis puede desplegarse en varias configuraciones. Para producción, a menudo se usan configuraciones de alta disponibilidad como **Sentinel** o de escalado horizontal como **Redis Cluster**.
+
+Sin embargo, para nuestro entorno de desarrollo, una instancia **Standalone** (única) es la opción perfecta: es ligera, consume menos recursos y es mucho más sencilla de gestionar, dándonos toda la funcionalidad que necesitamos para construir y probar nuestras aplicaciones.
+</Aside>
+
+### Parte 2: Desplegando el Operador y la Instancia de Redis
+
+<Steps>
+
+1.  **Añadir el Repositorio de Helm**
+    Primero, le indicamos a Helm dónde encontrar los charts del Redis Operator de Opstree.
+
+    ```bash
+    helm repo add ot-helm https://ot-container-kit.github.io/helm-charts/
+    ```
+    <Image src="/images/blogs/redis-standalone/1-redis-standalone.png" alt="Añadiendo el repositorio de Helm de Opstree"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Instalar el Redis Operator**
+    Ahora, desplegamos el "cerebro" que gestionará nuestras instancias de Redis. Lo instalamos en su propio namespace para mantener todo organizado.
+
+    ```bash
+    helm install redis-operator ot-helm/redis-operator --namespace redis-operator --create-namespace
+    ```
+    El `STATUS: deployed` nos confirma que el Operator está instalado.
+
+    <Image src="/images/blogs/redis-standalone/2-redis-standalone.png" alt="Instalando el Redis Operator con Helm"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    En Lens, podemos verificar que la release `redis-operator` está activa y que su pod correspondiente está corriendo en el namespace `redis-operator`.
+    
+    <Image src="/images/blogs/redis-standalone/3-redis-standalone.png" alt="Verificando la release del Operator en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/redis-standalone/4-redis-standalone.png" alt="Verificando el pod del Operator en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Preparar el Archivo de Configuración de la Instancia**
+    Con el Operator esperando órdenes, ahora le diremos qué tipo de Redis queremos. Creamos un archivo `redis-standalone.yaml` con nuestros valores personalizados.
+
+    ```yaml
+    # redis-standalone.yaml
+    redisStandalone:
+      name: ""
+      image: quay.io/opstree/redis
+      tag: v7.0.15
+      imagePullPolicy: IfNotPresent
+      imagePullSecrets: []
+      serviceType: ClusterIP
+      ignoreAnnotations: []
+      minReadySeconds: 0
+      recreateStatefulSetOnUpdateInvalid: false
+
+    externalService:
+      enabled: true
+      serviceType: LoadBalancer
+      port: 6379
+    ```
+    Las líneas clave aquí son `externalService.enabled: true` y `serviceType: LoadBalancer`. Le estamos pidiendo al Operator que, además del servicio interno (`ClusterIP`), cree un servicio externo de tipo `LoadBalancer` para que podamos acceder a Redis desde fuera del clúster.
+
+4.  **Desplegar la Instancia de Redis Standalone**
+    Ahora, usamos Helm para crear nuestra instancia, pasándole nuestro archivo de configuración.
+
+    ```bash
+    helm install redis-standalone ot-helm/redis --namespace srv-redis --create-namespace -f redis-standalone.yaml
+    ```
+    El Operator detectará esta nueva solicitud y provisionará todos los recursos necesarios (StatefulSet, Services, etc.) por nosotros.
+
+    <Image src="/images/blogs/redis-standalone/5-redis-standalone.png" alt="Desplegando la instancia de Redis Standalone con Helm"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Verificar el Despliegue en Lens**
+    En Lens, vemos la nueva release `redis-standalone` en el namespace `srv-redis`.
+
+    <Image src="/images/blogs/redis-standalone/6-redis-standalone.png" alt="Verificando la release de Redis Standalone en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Si vamos a la sección de Pods, veremos nuestro pod `redis-standalone-0` corriendo. Es un `StatefulSet`, por eso el `-0` al final.
+
+    <Image src="/images/blogs/redis-standalone/7-redis-standalone.png" alt="Verificando el pod de Redis Standalone en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Conexión y Verificación
+
+<Steps>
+
+1.  **Analizando el Servicio `LoadBalancer`**
+    Navegamos a "Network > Services". Vemos nuestro `redis-standalone-external-service` de tipo `LoadBalancer`. De nuevo, **MetalLB** ha hecho su trabajo y le ha asignado una IP de nuestra red local: `192.168.0.31`.
+
+    <Image src="/images/blogs/redis-standalone/8-redis-standalone.png" alt="Servicio LoadBalancer para Redis con IP externa"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="caution" title="¿Por qué no usamos el Gateway de Istio para Redis?">
+    Istio Gateway es excepcional para gestionar tráfico **HTTP/HTTPS (Capa 7)**. Sin embargo, Redis utiliza su propio protocolo TCP llamado **RESP**. Aunque Istio puede manejar tráfico TCP genérico, para un acceso directo de herramientas de desarrollo como **Redis Insight**, es mucho más simple y directo usar un servicio `LoadBalancer`. Esto mantiene nuestra configuración de Istio limpia y enfocada en el tráfico web, mientras nos da un punto de acceso directo a Redis.
+    </Aside>
+
+2.  **Conectarse con Redis Insight**
+    Para verificar que nuestra instancia funciona, usaremos **Redis Insight**, un potente cliente gráfico para Redis.
+    *   Abrimos Redis Insight y hacemos clic en **"+ Add Redis database"**.
+    *   En el campo "Connection URL", introducimos la IP y el puerto de nuestro servicio: `redis://default:192.168.0.31:6379`.
+    *   Hacemos clic en **"Add Database"**.
+
+    <Image src="/images/blogs/redis-standalone/9-redis-standalone.png" alt="Añadiendo una nueva base de datos en Redis Insight"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Conexión Exitosa**
+    Vemos nuestra nueva conexión en la lista, indicando que Redis Insight se ha conectado correctamente a nuestra instancia en Kubernetes.
+
+    <Image src="/images/blogs/redis-standalone/10-redis-standalone.png" alt="Conexión a Redis establecida en Redis Insight"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Al hacer clic en la conexión, entramos al navegador de datos. ¡Nuestra instancia de Redis está vacía, funcionando y lista para recibir datos!
+
+    <Image src="/images/blogs/redis-standalone/11-redis-standalone.png" alt="Navegador de datos de Redis Insight"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+¡Excelente trabajo! Has desplegado una pieza de infraestructura crítica utilizando un patrón moderno y robusto. Al usar el **Redis Operator**, hemos simplificado enormemente la gestión de una aplicación con estado como Redis.
+
+Ahora tenemos un servicio de caché de alto rendimiento listo para ser utilizado por nuestros microservicios, lo que nos permitirá construir aplicaciones más rápidas y escalables. En los próximos artículos, continuaremos desplegando más servicios de infraestructura, como RabbitMQ y HashiCorp Vault antes de desplegar el Ecosistema completo de CodeDesignPlus.
