@@ -36,7 +36,7 @@ export default defineConfig({
             customCss: [
                 './src/styles/custom.css',
             ],
-            disable404Route: true,          
+            disable404Route: true,
             social: [
                 { icon: 'github', label: 'GitHub', href: 'https://github.com/Codedesignplus/' },
                 { icon: 'youtube', label: 'YouTube', href: 'https://www.youtube.com/@CodeDesignPlus' },
@@ -51,10 +51,10 @@ export default defineConfig({
                 // @ts-ignore                
                 starlightBlog({
                     title: {
-                        en: 'My Blog',
+                        en: 'CodeDesignPlus Blog',
                     },
                     postCount: 5,
-                    recentPostCount: 10,
+                    recentPostCount: 15,
                     prevNextLinksOrder: 'chronological',
                     authors: {
                         wclg: {
@@ -63,6 +63,10 @@ export default defineConfig({
                             picture: '/wliscano.jpeg',
                             url: 'https://hideoo.dev',
                         }
+                    },
+                    metrics: {
+                        readingTime: true,
+                        words: 'total',
                     }
                 }),
                 starlightImageZoom({
@@ -557,7 +561,7 @@ export default defineConfig({
                                 },
                             ]
                         },
-                        
+
                         {
                             label: 'Generator',
                             collapsed: true,

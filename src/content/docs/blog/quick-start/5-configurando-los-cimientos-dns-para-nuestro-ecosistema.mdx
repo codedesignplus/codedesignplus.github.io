@@ -2,11 +2,10 @@
 title: "Configurando DNS en GoDaddy para Nuestro Proyecto"
 date: 2025-07-05
 lastUpdated: 2025-07-05
-tags: ["DNS", "GoDaddy", "Networking", "Kubernetes", "Configuración", "DevOps", "Visual"]
-excerpt: "El segundo paso práctico de nuestra serie. Aprende con esta guía visual a configurar los registros DNS públicos en GoDaddy y a verificar su propagación a nivel mundial."
+tags: ["DNS", "GoDaddy", "Infraestructura", "Tutorial", "Homelab"]
+excerpt: "Un servidor es solo una IP hasta que le das un nombre. En este tutorial práctico, te guiamos paso a paso por la configuración de tus registros DNS en GoDaddy. Aprende a crear los registros 'A' necesarios para apuntar tus dominios a tu IP pública y verifica que todo el mundo pueda encontrarte usando herramientas de propagación. Es el paso clave para hacer tu proyecto accesible globalmente."
 authors:
     - wclg
-readingTime: 150
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
@@ -99,7 +98,7 @@ Recuerda que esta guía cubre solo los DNS públicos. La configuración de nuest
 
 Además, ten presente que esta configuración es para nuestro entorno de aprendizaje. En un entorno de producción en la nube como Azure, usaríamos servicios como [**Azure Private DNS**](https://learn.microsoft.com/en-us/azure/dns/private-dns-overview) y [**VPN Gateways**](https://learn.microsoft.com/es-mx/azure/vpn-gateway/vpn-gateway-about-vpngateways) para una gestión más robusta y segura.
 
-### Conclusión
+## Conclusión
 
 ¡Trabajo completado! Has configurado y verificado con éxito los registros DNS públicos para nuestra aplicación. Este es un paso fundamental que nos permite empezar a construir servicios y exponerlos al mundo de una manera profesional.
 

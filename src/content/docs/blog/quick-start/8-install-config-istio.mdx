@@ -2,11 +2,10 @@
 title: "La Puerta de Entrada: Instalación de Istio en Kubernetes"
 date: 2025-07-08
 lastUpdated: 2025-07-08
-tags: ["Istio", "Service Mesh", "Kubernetes", "Helm", "Gateway", "Ingress", "Visual"]
-excerpt: "Instalamos el corazón de nuestra red: Istio. Aprende con esta guía visual a desplegar el Ingress Gateway de Istio usando Helm y a crear tu primera configuración de puerta de entrada."
+tags: ["Istio", "Service Mesh", "Kubernetes", "Seguridad", "Gateway", "Helm", "TLS"]
+excerpt: "Un clúster sin una puerta de entrada segura es solo un conjunto de servicios aislados. En esta guía completa, instalamos Istio desde cero para que actúe como el cerebro de nuestra red. Aprende a usar Helm para el despliegue, a proteger tu Ingress Gateway con certificados TLS para habilitar HTTPS y a dirigir el tráfico como un profesional con un VirtualService."
 authors:
     - wclg
-readingTime: 250
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
@@ -430,7 +429,7 @@ Esta sección asume una comprensión básica de los manifiestos de Kubernetes (`
 
 </Steps>
 
-### Conclusión Final
+## Conclusión Final
 
 ¡Lo has conseguido! Has construido un flujo completo, desde la instalación de un clúster de Kubernetes hasta el despliegue de una aplicación real expuesta de forma segura a través de Istio.
 
