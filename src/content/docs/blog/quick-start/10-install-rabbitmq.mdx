@@ -1,0 +1,194 @@
+---
+title: "Desplegando RabbitMQ con el Operator en Kubernetes"
+date: 2025-07-10
+lastUpdated: 2025-07-10
+tags: ["RabbitMQ", "Kubernetes", "Operator", "Mensajería", "Event-Driven", "Helm", "Istio"]
+excerpt: "Añadimos la columna vertebral de nuestra comunicación asíncrona. Aprende a desplegar un clúster de RabbitMQ usando el Operator de Bitnami y a exponer su UI de gestión de forma segura con Istio."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+En una arquitectura de microservicios moderna, la comunicación directa y síncrona no siempre es la mejor opción. Para desacoplar nuestros servicios y construir sistemas resilientes y escalables, necesitamos un **Message Broker**. Aquí es donde entra **RabbitMQ**.
+
+<Aside  title="¿Qué es RabbitMQ y por qué una Arquitectura Orientada a Eventos?">
+**RabbitMQ** es un intermediario de mensajes robusto y de código abierto. Permite que nuestros microservicios se comuniquen de forma **asíncrona** a través de **eventos**.
+
+En lugar de que el Servicio A llame directamente al Servicio B (acoplamiento fuerte), el Servicio A simplemente publica un evento (ej. "PedidoCreado") en RabbitMQ. Otros servicios (B, C, D...) pueden suscribirse a ese evento y reaccionar de forma independiente. Esta **arquitectura orientada a eventos** nos da una flexibilidad increíble: podemos añadir o quitar servicios que escuchan los eventos sin afectar al servicio que los origina.
+</Aside>
+
+En este tutorial, desplegaremos un clúster de RabbitMQ utilizando el [**RabbitMQ Cluster Kubernetes Operator**](https://www.rabbitmq.com/kubernetes/operator/operator-overview), esta vez del popular catálogo de **Bitnami**.
+
+### Prerrequisitos
+
+*   **Clúster de Kubernetes:** Un clúster funcional (como el que montamos con MicroK8s).
+*   **Helm y kubectl:** Instalados y configurados en tu máquina de desarrollo.
+*   **Istio Ingress Gateway:** Desplegado y configurado, ya que lo usaremos para exponer la UI de RabbitMQ.
+
+### Parte 1: Instalando el RabbitMQ Operator
+
+<Steps>
+
+1.  **Añadir el Repositorio de Helm de Bitnami**
+    Primero, añadimos el repositorio de Bitnami, que contiene una vasta colección de charts de alta calidad, incluyendo el del RabbitMQ Operator.
+
+    ```bash
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    ```
+    <Image src="/images/blogs/rabbitmq/1-rabbitmq.png" alt="Añadiendo el repositorio de Helm de Bitnami" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Instalar el Operator**
+    Ahora, desplegamos el Operator en su propio namespace para mantener la organización. Este Operator se encargará de gestionar el ciclo de vida de nuestros clústeres de RabbitMQ.
+
+    ```bash
+    helm install rabbitmq bitnami/rabbitmq-cluster-operator --namespace rabbitmq-operator --create-namespace
+    ```
+    El estado `STATUS: deployed` confirma la instalación correcta.
+
+    <Image src="/images/blogs/rabbitmq/2-rabbitmq.png" alt="Instalando el RabbitMQ Cluster Operator con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    En Lens, podemos verificar la nueva release `rabbitmq` en el namespace `rabbitmq-operator`.
+
+    <Image src="/images/blogs/rabbitmq/3-rabbitmq.png" alt="Verificando la release del RabbitMQ Operator en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: Desplegando el Clúster de RabbitMQ
+
+<Steps>
+
+1.  **Crear y Etiquetar el Namespace**
+    Desplegaremos nuestro clúster de RabbitMQ en su propio namespace. Crucialmente, lo etiquetaremos para la **inyección automática del sidecar de Istio**.
+
+    ```bash
+    kubectl create ns srv-rabbitmq
+    kubectl label namespace srv-rabbitmq istio-injection=enabled
+    ```
+    <Image src="/images/blogs/rabbitmq/4-rabbitmq.png" alt="Creando y etiquetando el namespace para RabbitMQ" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="note" title="¿Por qué la inyección de Istio?">
+    Al etiquetar el namespace, Istio añadirá automáticamente un proxy Envoy a cada pod de RabbitMQ. Esto nos permitirá aplicar políticas de seguridad mTLS (Mutual TLS) en el futuro, garantizando que toda la comunicación de mensajería dentro del clúster esté cifrada y sea segura, sin tener que configurar TLS en RabbitMQ directamente.
+    </Aside>
+
+    Podemos verificar en Lens que el namespace `srv-rabbitmq` ha sido creado con la etiqueta correcta.
+    
+    <Image src="/images/blogs/rabbitmq/5-rabbitmq.png" alt="Verificando el namespace y su etiqueta en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Definir el Clúster con un Recurso Personalizado**
+    El Operator nos permite definir nuestro clúster de RabbitMQ de forma declarativa con un `Custom Resource`. Creamos un archivo `cluster.yaml`:
+
+    ```yaml
+    # https://www.rabbitmq.com/kubernetes/operator/using-operator
+    apiVersion: rabbitmq.com/v1beta1
+    kind: RabbitmqCluster
+    metadata:
+      name: rabbitmq-cluster
+      namespace: srv-rabbitmq
+    spec:
+      replicas: 3
+      persistence:
+        storageClassName: microk8s-hostpath
+    ```
+    Este simple manifiesto le ordena al Operator que cree un clúster de RabbitMQ llamado `rabbitmq-cluster` con 3 nodos para alta disponibilidad.
+
+3.  **Aplicar el Manifiesto del Clúster**
+    Aplicamos el archivo para que el Operator comience a trabajar.
+
+    ```bash
+    kubectl apply -f .\cluster.yaml
+    ```
+    <Image src="/images/blogs/rabbitmq/6-rabbitmq.png" alt="Aplicando el manifiesto del clúster de RabbitMQ" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Verificar los Recursos Creados**
+    *   En Lens, bajo `Custom Resources > RabbitmqCluster`, vemos nuestro nuevo recurso.
+        <Image src="/images/blogs/rabbitmq/7-rabbitmq.png" alt="Verificando el Custom Resource del clúster en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+    *   En la sección de Pods, vemos que el Operator ha creado 3 pods para nuestro clúster (`rabbitmq-cluster-server-0`, `1`, y `2`).
+        <Image src="/images/blogs/rabbitmq/8-rabbitmq.png" alt="Verificando los pods del clúster de RabbitMQ en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+    *   En "Network > Services", vemos que el Operator ha creado un servicio `rabbitmq-cluster`. Este es de tipo `ClusterIP`, lo que significa que solo es accesible desde dentro del clúster.
+        <Image src="/images/blogs/rabbitmq/9-rabbitmq.png" alt="Verificando el servicio ClusterIP de RabbitMQ en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Exponiendo la UI de Gestión con Istio
+
+El tráfico de mensajería entre nuestros microservicios y RabbitMQ será interno (usando el servicio `ClusterIP`). Sin embargo, necesitamos acceder a la **interfaz de gestión web** de RabbitMQ para monitorizar y administrar las colas. Para esto, usaremos nuestro Gateway de Istio.
+
+<Steps>
+
+1.  **Crear el `VirtualService`**
+    Crearemos un `VirtualService` para indicarle a Istio cómo enrutar el tráfico que llegue a `rabbitmq.codedesignplus.app`. Creamos un archivo `network.yaml`:
+
+    ```yaml
+    apiVersion: networking.istio.io/v1
+    kind: VirtualService
+    metadata:
+      name: rabbitmq-virtualservice
+      namespace: srv-rabbitmq
+    spec:
+      hosts:
+      - rabbitmq.codedesignplus.app
+      gateways:
+      - istio-ingress/istio-inventory-gateway
+      http:
+      - route:
+        - destination:
+            host: rabbitmq-cluster.srv-rabbitmq.svc.cluster.local
+            port:
+              number: 15672
+    ```
+    Esta regla dirige todo el tráfico para `rabbitmq.codedesignplus.app` al servicio interno de RabbitMQ en el puerto `15672`.
+
+2.  **Aplicar el `VirtualService`**
+    ```bash
+    kubectl apply -f .\network.yaml
+    ```
+    <Image src="/images/blogs/rabbitmq/10-rabbitmq.png" alt="Aplicando el manifiesto del VirtualService para RabbitMQ" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    Verificamos en Lens que el nuevo `VirtualService` ha sido creado.
+    <Image src="/images/blogs/rabbitmq/11-rabbitmq.png" alt="Verificando el VirtualService de RabbitMQ en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Configurar el Acceso Local (Archivo `hosts`)**
+    Como en artículos anteriores, añadimos una entrada temporal a nuestro archivo `hosts` para poder acceder al dominio desde nuestra máquina.
+
+    ```
+    192.168.0.30    rabbitmq.codedesignplus.app
+    ```
+    <Image src="/images/blogs/rabbitmq/12-rabbitmq.png" alt="Editando el archivo hosts para RabbitMQ" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Obtener las Credenciales de Acceso**
+    El Operator de RabbitMQ genera automáticamente un usuario y una contraseña por defecto y los almacena en un secreto de Kubernetes.
+    *   En Lens, vamos a `Config > Secrets` y seleccionamos el namespace `srv-rabbitmq`.
+    *   Hacemos clic en el secreto `rabbitmq-cluster-default-user`.
+    *   Lens nos muestra los valores decodificados para `username` y `password`. ¡Copiamos ambos!
+
+    <Image src="/images/blogs/rabbitmq/14-rabbitmq.png" alt="Obteniendo las credenciales del secreto de RabbitMQ en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Acceder a la UI de RabbitMQ**
+    Abrimos un navegador y vamos a `https://rabbitmq.codedesignplus.app`.
+    
+    <Image src="/images/blogs/rabbitmq/13-rabbitmq.png" alt="Pantalla de inicio de sesión de RabbitMQ Management" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    Usamos las credenciales que acabamos de obtener del secreto para iniciar sesión.
+
+    <Image src="/images/blogs/rabbitmq/15-rabbitmq.png" alt="Iniciando sesión en la UI de RabbitMQ" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    ¡Y listo! Estamos dentro de la consola de gestión de RabbitMQ, donde podemos ver nuestros 3 nodos del clúster funcionando perfectamente.
+
+    <Image src="/images/blogs/rabbitmq/16-rabbitmq.png" alt="Panel de control de RabbitMQ Management" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Conclusión
+
+Has desplegado con éxito un clúster de RabbitMQ de alta disponibilidad utilizando el patrón Operator. Has aprendido a:
+*   Instalar y usar el RabbitMQ Cluster Operator de Bitnami.
+*   Desplegar un clúster declarativamente con un `Custom Resource`.
+*   Entender la diferencia entre el tráfico de mensajería interno y la exposición segura de la UI de gestión a través de Istio.
+
+Con RabbitMQ en su lugar, nuestra arquitectura está ahora preparada para la comunicación asíncrona y orientada a eventos, un pilar fundamental para construir microservicios desacoplados y resilientes.
