@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: vm-k8s
     steps:
       - name: Checkout your repository using git
         uses: actions/checkout@v4
@@ -28,7 +28,7 @@ jobs:
           PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.PUBLIC_RECAPTCHA_SITE_KEY }}
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: vm-k8s
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
