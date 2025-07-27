@@ -1,0 +1,139 @@
+---
+title: "Instalando Pi-hole para DNS Local y Bloqueo de Anuncios"
+date: 2025-07-14
+lastUpdated: 2025-07-14
+tags: ["Pi-hole", "DNS", "Ad Blocking", "Networking", "Homelab", "Ubuntu", "Visual"]
+excerpt: "Centraliza tu DNS de desarrollo y protege tu red. Aprende con esta guía visual a instalar Pi-hole en Ubuntu Server para gestionar dominios locales y bloquear anuncios y rastreadores de forma eficiente."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+En artículos anteriores, hemos recurrido a editar el archivo `hosts` de nuestra máquina para acceder a los servicios internos de nuestro clúster. Si bien esto funciona, es una solución manual y poco escalable. Hoy, implementaremos una solución mucho más robusta y profesional: **Pi-hole**.
+
+<Aside  title="Los Superpoderes de Pi-hole">
+Pi-hole es un servidor DNS para tu red local que ofrece dos beneficios principales:
+
+1.  **Bloqueo de Anuncios a Nivel de Red:** Actúa como un "agujero negro" para dominios conocidos por servir anuncios y rastreadores. Al configurarlo en tu red, todos tus dispositivos (PCs, móviles, Smart TVs) se beneficiarán de una experiencia de navegación más limpia, rápida y privada, sin necesidad de instalar software en cada uno.
+2.  **Gestión Centralizada de DNS Local:** Esta es la razón clave por la que lo integramos en nuestra serie. Nos permite crear registros DNS personalizados (`vault.codedesignplus.app` -> `192.168.0.30`) en un solo lugar. Esto elimina la necesidad de editar archivos `hosts` y simula un entorno empresarial más realista.
+</Aside>
+
+En esta guía, instalaremos Pi-hole directamente en nuestro servidor Ubuntu.
+
+### Prerrequisitos
+*   Un servidor Ubuntu funcionando con una **IP estática** configurada. En nuestra serie, es la `192.168.0.10`.
+
+### Parte 1: El Proceso de Instalación
+
+<Steps>
+
+1.  **Ejecutar el Script de Instalación Oficial**
+    Nos conectamos por SSH a nuestro servidor y ejecutamos el comando oficial de Pi-hole, que descarga y ejecuta el script de instalación automatizado.
+
+    ```bash
+    wget -O - https://install.pi-hole.net | sudo bash
+    ```
+    <Image src="/images/blogs/pi-hole/1-pi-hole.png" alt="Ejecutando el script de instalación de Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Navegando el Instalador Interactivo**
+    El script lanzará un instalador gráfico en la terminal. La mayoría de los pasos son informativos.
+    *   **Pantallas de Bienvenida:** Simplemente presiona "OK" en las primeras pantallas informativas.
+        <Image src="/images/blogs/pi-hole/2-pi-hole.png" alt="Pantalla de bienvenida del instalador de Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/pi-hole/3-pi-hole.png" alt="Pantalla de bienvenida del instalador de Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+       
+    *   **IP Estática:** El instalador nos recuerda que Pi-hole necesita una IP estática, algo que ya configuramos en nuestro servidor Ubuntu. Continuamos.
+        <Image src="/images/blogs/pi-hole/4-pi-hole.png" alt="Aviso de IP estática" width="2550" height="1314" decoding="async" loading="lazy"/>
+       
+    *   **Seleccionar Interfaz de Red:** Elegimos la interfaz de red principal de nuestro servidor (normalmente `eth0` o similar).
+        <Image src="/images/blogs/pi-hole/5-pi-hole.png" alt="Seleccionando la interfaz de red" width="2550" height="1314" decoding="async" loading="lazy"/>
+       
+
+    *   **Seleccionar Proveedor DNS "Upstream"**: Aquí elegimos a qué servidor DNS público le preguntará Pi-hole cuando no conozca una dirección (ej. google.com). Google es una opción sólida y confiable.
+
+        <Image src="/images/blogs/pi-hole/6-pi-hole.png" alt="Seleccionando el proveedor de DNS upstream" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Configuraciones por Defecto:** Para las siguientes pantallas (listas de bloqueo, logging y modo de privacidad), simplemente aceptamos las opciones por defecto presionando "Yes" o "Continue". Son excelentes para un uso general.
+        <Image src="/images/blogs/pi-hole/7-pi-hole.png" alt="Aceptando las listas de bloqueo por defecto" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/pi-hole/8-pi-hole.png" alt="Habilitando el registro de consultas" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/pi-hole/9-pi-hole.png" alt="Seleccionando el modo de privacidad" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **¡Instalación Completa y Contraseña!**
+    El instalador finalizará y nos mostrará una pantalla de resumen crucial.
+    
+    <Image src="/images/blogs/pi-hole/10-pi-hole.png" alt="Resumen de la instalación con la contraseña de administrador" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="caution" title="¡Guarda esta Contraseña!">
+    Esta pantalla contiene la **contraseña de administrador generada aleatoriamente** para acceder a la interfaz web de Pi-hole. Anótala en un lugar seguro. Si la pierdes, puedes restablecerla con el comando `pihole -a -p`.
+    </Aside>
+    
+    El proceso finaliza y nos devuelve a la línea de comandos.
+    
+    <Image src="/images/blogs/pi-hole/11-pi-hole.png" alt="Proceso de instalación finalizado en la terminal" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: Configuración y Uso
+
+<Steps>
+
+1.  **Iniciar Sesión en la Interfaz Web**
+    Abrimos un navegador y vamos a la dirección IP de nuestro servidor seguido de `/admin` (ej. `http://192.168.0.10/admin`). Usamos la contraseña que guardamos en el paso anterior para iniciar sesión.
+
+    <Image src="/images/blogs/pi-hole/12-pi-hole.png" alt="Pantalla de inicio de sesión de Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    Una vez dentro, veremos el panel de control principal, que nos muestra estadísticas sobre las consultas DNS y los dominios bloqueados.
+
+    <Image src="/images/blogs/pi-hole/13-pi-hole.png" alt="Panel de control principal de Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Añadir Registros DNS Locales**
+    Este es el paso clave para nuestro entorno de desarrollo.
+    *   En el menú de la izquierda, navegamos a `Local DNS > DNS Records`.
+    *   Añadimos nuestros dominios internos (`rabbitmq.codedesignplus.app`, `vault.codedesignplus.app`, etc.) y los apuntamos a la **IP de nuestro Ingress Gateway de Istio** (`192.168.0.30`).
+
+    <Image src="/images/blogs/pi-hole/14-pi-hole.png" alt="Añadiendo registros DNS locales en Pi-hole" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="note" title="Adiós al Archivo `hosts`">
+    Con estos registros en Pi-hole, ya no necesitamos las entradas manuales en nuestro archivo `hosts` local. Pi-hole ahora actúa como la fuente de verdad centralizada para estos dominios. ¡Podemos limpiar ese archivo!
+    <Image src="/images/blogs/pi-hole/15-pi-hole.png" alt="Archivo hosts sin las entradas de desarrollo" width="2550" height="1314" decoding="async" loading="lazy"/>
+    </Aside>
+
+3.  **Configurar tu Red para Usar Pi-hole**
+    Ahora, debemos decirle a nuestros dispositivos que usen Pi-hole como su servidor DNS. Hay dos maneras de hacerlo:
+
+    *   **Método 1: A Nivel de Host (Recomendado para este tutorial)**
+        Configuramos el DNS directamente en la interfaz de red de nuestra máquina de desarrollo. En Windows, esto se hace en las propiedades de IPv4 del adaptador de red. Establecemos el "Preferred DNS server" a la IP de nuestro Pi-hole (`192.168.0.10`).
+
+        <Image src="/images/blogs/pi-hole/16-pi-hole.png" alt="Configurando el DNS en el adaptador de red de Windows" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Método 2: A Nivel de Red (Opcional)**
+        Si quieres que **todos** los dispositivos de tu red (móviles, tablets, etc.) usen Pi-hole automáticamente, puedes configurarlo en los ajustes de DHCP de tu router, estableciendo la IP de Pi-hole como el DNS primario.
+
+        <Image src="/images/blogs/pi-hole/17-pi-hole.png" alt="Configurando el DNS primario en el router (opcional)" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Verificar que Todo Funciona**
+    Abrimos una terminal en nuestra máquina de desarrollo y usamos el comando `nslookup` para hacer una consulta DNS.
+
+    ```bash
+    nslookup rabbitmq.codedesignplus.app
+    nslookup vault.codedesignplus.app
+    ```
+    La respuesta es perfecta: nos muestra que el servidor DNS que respondió es nuestro Pi-hole (`192.168.0.10`) y que la dirección resuelta para nuestros dominios es la de nuestro Ingress Gateway (`192.168.0.30`).
+
+    <Image src="/images/blogs/pi-hole/18-pi-hole.png" alt="Verificando la resolución de DNS con nslookup" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+¡Felicidades! Has instalado y configurado con éxito Pi-hole, una de las herramientas más queridas en el mundo del *homelab*. Ahora tienes:
+*   Un **bloqueador de anuncios y rastreadores** para toda tu red.
+*   Un **servidor DNS local centralizado** que elimina la necesidad de gestionar archivos `hosts` y te prepara para un flujo de trabajo de desarrollo más profesional.
+
+Con esta pieza final de nuestra infraestructura de red en su lugar, estamos listos para continuar con el despliegue de más componentes de nuestro ecosistema, sabiendo que la resolución de nombres interna está en buenas manos.
