@@ -1,0 +1,280 @@
+---
+title: "Instalando HashiCorp Vault para la Gestión de Secretos"
+date: 2025-07-11
+lastUpdated: 2025-07-11
+tags: ["Vault", "HashiCorp", "Secrets Management", "Kubernetes", "Helm", "DevSecOps", "Visual"]
+excerpt: "Aseguramos nuestra configuración. Aprende a desplegar y configurar HashiCorp Vault en Kubernetes para una gestión de secretos centralizada, segura y dinámica, un pilar del ecosistema CodeDesignPlus."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+En cualquier arquitectura de software, la gestión de secretos (contraseñas, claves de API, certificados) es una de las tareas más críticas y a menudo, peor manejadas. "Hardcodear" secretos en el código o en archivos de configuración dentro de repositorios de Git es un anti-patrón de seguridad garrafal.
+
+La solución profesional es un gestor de secretos centralizado. Para nuestro ecosistema, utilizaremos el estándar de la industria: **HashiCorp Vault**.
+
+<Aside type="note" title="El Rol de Vault en CodeDesignPlus">
+Vault es el cerebro de nuestra configuración. Al arrancar, cualquier microservicio construido con el **SDK de CodeDesignPlus** se conectará automáticamente a Vault, obtendrá los secretos que le corresponden y los usará para **sobrescribir dinámicamente** cualquier valor presente en sus archivos `appsettings.json`. Esto nos da una flexibilidad y seguridad inmensas: podemos rotar contraseñas o actualizar configuraciones en un solo lugar (Vault) sin necesidad de redeployar nuestros microservicios.
+</Aside>
+
+En esta guía, desplegaremos Vault en modo de desarrollo y realizaremos la configuración inicial para preparar el terreno para nuestros microservicios.
+
+### Parte 1: Desplegando Vault con Helm
+
+<Steps>
+
+1.  **Añadir el Repositorio de Helm de HashiCorp**
+    Primero, le enseñamos a Helm dónde encontrar los charts oficiales de HashiCorp.
+
+    ```bash
+    helm repo add hashicorp https://helm.releases.hashicorp.com
+    ```
+    <Image src="/images/blogs/vault/1-vault.png" alt="Añadiendo el repositorio de Helm de HashiCorp"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Crear y Etiquetar el Namespace**
+    Desplegaremos Vault en su propio namespace dedicado y lo etiquetaremos para la inyección del sidecar de Istio, lo que nos permitirá aplicar políticas de seguridad mTLS en el futuro.
+
+    ```bash
+    kubectl create namespace vault
+    kubectl label namespace vault istio-injection=enabled
+    ```
+    <Image src="/images/blogs/vault/2-vault.png" alt="Creando y etiquetando el namespace para Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Preparar el Archivo de Configuración (`values.yaml`)**
+    Para instalar Vault en modo de desarrollo con la UI habilitada, creamos un archivo `values.yaml`:
+
+    ```yaml
+    # values.yaml
+    global:
+      enabled: true
+      resources:
+        requests:
+          memory: 256Mi
+          cpu: 250m
+        limits:
+          memory: 256Mi
+          cpu: 250m
+    
+    server:
+      dev:
+        enabled: true
+        devRootToken: "ANGq0*B2acD1n5%F"
+      service:
+        enabled: true
+        type: ClusterIP
+        port: 8200
+        targetPort: 8200
+    ui:
+      enabled: true
+      serviceType: ClusterIP
+      externalPort: 8200
+    
+    injector:
+      enabled: "false"
+    ```
+    *   `server.dev.enabled: true`: Inicia Vault en un modo de desarrollo simple, con un solo nodo y almacenamiento en memoria (ideal para pruebas, **nunca para producción**).
+    *   `ui.enabled: true`: Habilita la interfaz web de Vault.
+    *   `serviceType: "ClusterIP"`: Expone la UI con un servicio interno, que luego haremos accesible a través de nuestro Gateway de Istio.
+    *   `server.dev.devRootToken`: Establece el token raíz a un valor conocido para facilitar el acceso en desarrollo.
+
+4.  **Instalar Vault**
+    Usamos Helm para desplegar Vault con nuestra configuración personalizada.
+
+    ```bash
+    helm install vault hashicorp/vault -n vault --values values.yaml
+    ```
+    <Image src="/images/blogs/vault/3-vault.png" alt="Instalando Vault con Helm"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Verificar el Despliegue en Lens**
+    En Lens, bajo "Helm > Releases", vemos la nueva release `vault`.
+
+    <Image src="/images/blogs/vault/4-vault.png" alt="Verificando la release de Vault en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Y en "Workloads > Pods", encontramos el pod `vault-0` corriendo en el namespace `vault`.
+
+    <Image src="/images/blogs/vault/5-vault.png" alt="Verificando el pod de Vault en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: Exponiendo la UI y Configuración Inicial
+
+<Steps>
+
+1.  **Crear el `VirtualService` para la UI de Vault**
+    Creamos un archivo `network.yaml` para indicarle a Istio cómo enrutar el tráfico hacia la UI de Vault.
+
+    ```yaml
+    # network.yaml
+    apiVersion: networking.istio.io/v1
+    kind: VirtualService
+    metadata:
+      name: vault-virtualservice
+      namespace: vault
+    spec:
+      hosts:
+      - vault.codedesignplus.app
+      gateways:
+      - istio-ingress/istio-inventory-gateway
+      http:
+      - route:
+        - destination:
+            host: vault-ui.vault.svc.cluster.local
+            port:
+              number: 8200
+    ```
+    Aplicamos el manifiesto:
+    ```bash
+    kubectl apply -f .\network.yaml
+    ```
+    <Image src="/images/blogs/vault/6-vault.png" alt="Aplicando el VirtualService para Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/7-vault.png" alt="Verificando el VirtualService de Vault en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Configurar el Acceso Local (Archivo `hosts`)**
+    Añadimos la entrada temporal a nuestro archivo `hosts` para que nuestro navegador pueda encontrar `vault.codedesignplus.app`.
+
+    ```
+    192.168.0.30    vault.codedesignplus.app
+    ```
+    <Image src="/images/blogs/vault/8-vault.png" alt="Editando el archivo hosts para Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Iniciar Sesión por Primera Vez**
+    Abrimos el navegador en `https://vault.codedesignplus.app`. Para iniciar sesión, usamos el token que definimos en nuestro `values.yaml`.
+
+    <Image src="/images/blogs/vault/9-vault.png" alt="Pantalla de inicio de sesión de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    ¡Estamos dentro! Ya podemos ver el panel principal de Vault.
+    
+    <Image src="/images/blogs/vault/10-vault.png" alt="Panel principal de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Configurar la CLI de Vault**
+    Para configuraciones avanzadas, usaremos la CLI. Primero, iniciamos sesión desde nuestra terminal especificando el token que definimos en el `values.yaml`.
+
+    ```bash
+    $env:VAULT_ADDR = "https://vault.codedesignplus.app"
+    vault login token=<token>
+    ```
+    <Image src="/images/blogs/vault/11-vault.png" alt="Iniciando sesión en Vault con la CLI"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Configuración de Motores y Autenticación
+
+Ahora prepararemos Vault para que nuestros microservicios puedan usarlo.
+
+<Steps>
+
+1.  **Habilitar el Método de Autenticación `AppRole`**
+    `AppRole` es uno de los métodos para que las máquinas (nuestros microservicios o la CLI) se autentiquen en Vault. Sin embargo, en un ambiente de producción, deberíamos usar un método más robusto como `Kubernetes` o `OIDC`. Para este tutorial, habilitamos `AppRole` para simplificar.
+
+    ```bash
+    vault auth enable approle
+    ```
+    <Image src="/images/blogs/vault/12-vault.png" alt="Habilitando el método de autenticación AppRole"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Habilitar los Motores de Secretos**
+    Habilitaremos varios "motores" que Vault usará para gestionar diferentes tipos de secretos.
+
+    ```bash
+    vault secrets enable -path=inventory-keyvalue kv-v2
+    vault secrets enable -path=inventory-database database
+    vault secrets enable -path=inventory-rabbitmq rabbitmq
+    vault secrets enable -path=inventory-transit transit
+    ```
+    <Image src="/images/blogs/vault/13-vault.png" alt="Habilitando varios motores de secretos"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    En la UI, bajo "Secrets Engines", ahora podemos ver todos los motores que hemos habilitado.
+    
+    <Image src="/images/blogs/vault/14-vault.png" alt="Verificando los motores de secretos en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside type="note" title="Un Vistazo a Nuestros Motores de Secretos">
+    Cada "motor" en Vault está especializado en gestionar un tipo diferente de secreto. Aquí está el propósito de los que acabamos de habilitar:
+
+    *   **`kv-v2` (Key-Value Versionado):** Este es el caballo de batalla para secretos estáticos. Lo usaremos para almacenar pares de clave-valor como cadenas de conexión, claves de API de terceros, etc. Su principal ventaja es que **mantiene un historial de versiones** de cada secreto, permitiéndonos revertir a una versión anterior si es necesario. Lo hemos montado en `inventory-keyvalue/`.
+
+    *   **`database`:** Este motor es increíblemente potente. No almacena contraseñas estáticas, sino que se conecta a tu base de datos y **genera credenciales dinámicas y de corta duración** bajo demanda. Cada vez que un microservicio necesita acceder a la base de datos, puede solicitar un usuario y contraseña únicos que expiran después de un tiempo. Esto mejora drásticamente la seguridad. Lo usaremos para gestionar el acceso a MongoDB Atlas y lo montamos en `inventory-database/`.
+
+    *   **`rabbitmq`:** Similar al motor de base de datos, este se conecta a nuestro clúster de RabbitMQ y puede generar **usuarios y permisos dinámicos** para que los microservicios publiquen o consuman mensajes de colas específicas. Lo montamos en `inventory-rabbitmq/`.
+
+    *   **`transit`:** Este es el motor de "Cifrado como Servicio" (Encryption as a Service). Permite que nuestras aplicaciones envíen datos a Vault para ser cifrados, sin que la aplicación tenga que manejar las claves de cifrado directamente. Es ideal para proteger datos sensibles (como números de tarjetas de crédito o información personal) antes de guardarlos en la base de datos. Lo montamos en `inventory-transit/`.
+    </Aside>
+
+3.  **Crear una Política de Acceso**
+    Las políticas definen qué puede hacer una identidad en Vault. Crearemos una política de "acceso total" para nuestro entorno de desarrollo. Creamos un archivo `full-access.hcl`:
+
+    ```hcl
+    # full-access.hcl
+    path "*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+    ```
+    Y la aplicamos con la CLI:
+    ```bash
+    vault policy write full-access .\full-access.hcl
+    ```
+    <Image src="/images/blogs/vault/15-vault.png" alt="Creando una política de acceso en Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Podemos verificar la política en la UI, bajo "Policies".
+    
+    <Image src="/images/blogs/vault/16-vault.png" alt="Verificando la política en el dashboard"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/17-vault.png" alt="Viendo la lista de políticas ACL"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/18-vault.png" alt="Detalle de la política full-access"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Crear un Rol de `AppRole` y Obtener Credenciales**
+    Ahora, creamos un rol que une la política de `full-access` con el método de autenticación `AppRole`. Luego generamos las credenciales (`RoleID` y `SecretID`) que podremos usar en el CLI para llevar a cabo las configuraciones de nuestros microservicios.
+
+    ```bash
+    vault write auth/approle/role/inventory-approle policies="full-access"
+    vault read auth/approle/role/inventory-approle/role-id
+    vault write -f auth/approle/role/inventory-approle/secret-id
+    ```
+    <Image src="/images/blogs/vault/19-vault.png" alt="Creando un AppRole y obteniendo sus credenciales"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Podemos verificar la creación del método `approle` en la UI, bajo "Access > Authentication Methods".
+
+    <Image src="/images/blogs/vault/20-vault.png" alt="Verificando el método de autenticación AppRole en la UI"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/21-vault.png" alt="Detalles de la configuración de AppRole"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/22-vault.png" alt="Panel principal de Vault con los motores de secretos visibles"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5.  **Probar el Login con `AppRole`**
+    Para asegurarnos de que todo funciona, podemos hacer un login de prueba usando las credenciales que acabamos de generar.
+
+    ```bash
+    vault write auth/approle/login role_id=TU_ROLE_ID secret_id=TU_SECRET_ID
+    ```
+    <Image src="/images/blogs/vault/23-vault.png" alt="Probando el inicio de sesión con RoleID y SecretID"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+6.  **Crear un Secreto de Ejemplo**
+    Finalmente, creamos nuestro primer secreto en el motor `inventory-keyvalue`.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-my-microservice `
+        "MySecret1=Value1" `
+        "MySecret2=Value2"
+    ```
+    <Image src="/images/blogs/vault/24-vault.png" alt="Creando un secreto de ejemplo con la CLI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Podemos ver el secreto creado en la UI, navegando al motor `inventory-keyvalue`.
+    
+    <Image src="/images/blogs/vault/25-vault.png" alt="Viendo el secreto en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/vault/26-vault.png" alt="Detalles del secreto creado"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+</Steps>
+
+## Conclusión y Próximos Pasos
+
+¡Has desplegado y configurado exitosamente HashiCorp Vault! Ahora tienes un almacén centralizado y seguro para toda la configuración de tu ecosistema.
+
+<Aside type="note" title="Entorno de Desarrollo vs. Producción">
+Recuerda, esta instalación está en **modo de desarrollo**. Es perfecta para aprender y construir, pero no es resiliente ni está preparada para producción. En una futura serie de artículos avanzados, exploraremos cómo desplegar Vault en modo de alta disponibilidad (HA), con persistencia de datos y un proceso de "unseal" seguro.
+</Aside>
+
+En los próximos artículos, cuando empecemos a desplegar el **ecosistema base de CodeDesignPlus**, verás cómo nuestros microservicios utilizan el método de autenticación `Kubernetes` en un entorno de producción para conectarse a Vault y obtener los secretos que definiremos para cada uno, como las cadenas de conexión a la base de datos o las claves de API. Sin embargo, continuaremos con el método de autenticación `AppRole` para el CLI y `Token` para simplificar el proceso de configuración inicial y para la conexión de los microservicios en desarrollo.
+
+Si deseas profundizar en el uso de la CLI y los diferentes motores de Vault, puedes consultar nuestra guía: **[Administrando Vault: Guía Avanzada](/blog/link-a-la-guia-avanzada)**.
