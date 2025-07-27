@@ -1,0 +1,223 @@
+---
+title: "Centralizando la Observabilidad con OpenTelemetry Collector"
+date: 2025-07-13
+lastUpdated: 2025-07-13
+tags: ["OpenTelemetry", "OTel", "Observability", "Grafana", "Kubernetes", "Helm", "Visual"]
+excerpt: "Construimos el sistema nervioso de nuestra plataforma. Aprende a desplegar el OpenTelemetry Collector en Kubernetes para centralizar la recolección de métricas, trazas y logs, y enviarlos a Grafana Cloud."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+Una arquitectura de microservicios distribuida puede ser increíblemente potente, pero también increíblemente difícil de depurar y monitorizar si no tenemos visibilidad de lo que ocurre en su interior. La **observabilidad** —la capacidad de entender el estado interno de un sistema a partir de sus salidas externas— no es un lujo, es una necesidad.
+
+Para lograrla, nos apoyaremos en **OpenTelemetry (OTel)**, el estándar de código abierto para la instrumentación y recolección de datos de telemetría (métricas, trazas y logs). En este tutorial, desplegaremos el **OpenTelemetry Collector**, que actuará como un "agente" centralizado en nuestro clúster.
+
+<Aside title="El Flujo de Datos de Nuestra Observabilidad">
+El rol del OTel Collector en nuestra arquitectura es simple pero poderoso:
+1.  Nuestros **microservicios** (ya instrumentados gracias al SDK de CodeDesignPlus) envían sus datos de telemetría a un único punto dentro del clúster: el `Service` del OTel Collector.
+2.  El **OTel Collector** recibe estos datos, los procesa (ej. añade metadatos, filtra información innecesaria) y los agrupa en lotes.
+3.  Finalmente, el Collector **exporta** estos datos de forma segura a nuestro backend de observabilidad, que en nuestro caso es **Grafana Cloud**.
+
+Este enfoque nos da un control total, permitiéndonos cambiar de backend en el futuro (ej. de Grafana a Datadog) con solo modificar la configuración del Collector, sin tocar ni uno solo de nuestros microservicios.
+</Aside>
+
+### OTel Collector Contrib vs. Grafana Alloy
+
+Antes de empezar, es importante conocer las herramientas. Desplegaremos la distribución `contrib` del OTel Collector, pero otra opción popular, especialmente en el ecosistema de Grafana, es Grafana Alloy. Ambas son válidas, pero tienen diferencias clave.
+
+| Característica         | OpenTelemetry Collector (Contrib)                                     | Grafana Alloy                                                     |
+| ---------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Origen y Gobernanza**| Proyecto de la **CNCF**, neutral en cuanto a proveedores.             | Proyecto de **Grafana Labs**, optimizado para el ecosistema Grafana. |
+| **Ecosistema**         | Enorme. La versión `contrib` incluye docenas de receptores y exportadores para casi cualquier tecnología. | Más enfocado. Excelente integración con Grafana (Loki, Mimir, Tempo, Pyroscope) pero menos opciones para otros proveedores. |
+| **Curva de Aprendizaje**| Baja si ya conoces YAML. La complejidad está en conocer los componentes. | Moderada. |
+| **Nuestra Elección**    | **OTel Collector Contrib.** Lo elegimos por su neutralidad y el vasto ecosistema de componentes, lo que nos da la máxima flexibilidad. | Una excelente alternativa si estás 100% comprometido con el stack de Grafana y te gusta la potencia del lenguaje River. |
+
+Para más información, puedes consultar la [documentación oficial de OTel](https://opentelemetry.io/docs/platforms/kubernetes/helm/collector/) y de [Grafana Cloud](https://grafana.com/docs/opentelemetry/collector/opentelemetry-collector/).
+
+### Parte 1: Obteniendo la Configuración desde Grafana Cloud
+
+<Steps>
+
+1.  **Añadir una Nueva Conexión**
+    Iniciamos sesión en nuestra cuenta de Grafana Cloud y, en el menú de la izquierda, vamos a `Connections > Add new connection`.
+
+    <Image src="/images/blogs/grafana-otel/1-grafana-otel.png" alt="Añadiendo una nueva conexión en Grafana Cloud" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Seleccionar el OpenTelemetry Collector**
+    En el buscador, escribimos "otel" y seleccionamos la integración **"OpenTelemetry Collector"**.
+
+    <Image src="/images/blogs/grafana-otel/2-grafana-otel.png" alt="Seleccionando la integración de OpenTelemetry Collector" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Generar un Token de Acceso**
+    Grafana necesita un token para autenticar los datos que nuestro Collector le enviará. Le damos un nombre a nuestro token (ej. `vm-k8s-otel`) y hacemos clic en **"Create token"**.
+
+    <Image src="/images/blogs/grafana-otel/3-grafana-otel.png" alt="Generando un Access Policy Token en Grafana Cloud" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4.  **Obtener la Configuración Base**
+    ¡Magia! Grafana nos genera automáticamente una configuración `values.yaml` completa y pre-rellenada con nuestro endpoint y credenciales. Hacemos clic en **"Copy to clipboard"** para copiar toda esta configuración.
+
+    <Image src="/images/blogs/grafana-otel/4-grafana-otel.png" alt="Configuración generada por Grafana Cloud y copiada al portapapeles" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 2: Desplegando el Collector en Kubernetes
+
+<Steps>
+
+1.  **Adaptar el Archivo `values.yaml`**
+    Pegamos la configuración copiada en un nuevo archivo `values.yaml`. La configuración de Grafana es un excelente punto de partida, pero está pensada para su propio chart. La adaptaremos ligeramente para que sea compatible con el chart oficial de OTel Collector Contrib. En nuestro caso, la configuración final se ve así:
+
+    ```yaml
+    # values.yaml
+    config:        
+      extensions:
+        health_check: {}
+        basicauth/grafana_cloud:
+          # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/extension/basicauthextension
+          client_auth:
+            username: "308297"
+            password: "glc_..." # Tu token de Grafana Cloud
+     
+      receivers:
+        jaeger: null
+        otlp: {}
+          # https://github.com/open-telemetry/opentelemetry-collector/tree/main/receiver/otlpreceiver
+          # protocols:
+          #   grpc:
+          #   http:
+        hostmetrics: 
+          # Optional. Host Metrics Receiver added as an example of Infra Monitoring capabilities of the OpenTelemetry Collector
+          # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/hostmetricsreceiver
+          scrapers:
+            load:
+            memory:
+     
+      processors:
+        batch: {}
+          # https://github.com/open-telemetry/opentelemetry-collector/tree/main/processor/batchprocessor
+        resourcedetection:
+          # Enriches telemetry data with resource information from the host
+          # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/resourcedetectionprocessor
+          detectors: ["env", "system"]
+          override: false
+        transform/drop_unneeded_resource_attributes:
+          # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
+          error_mode: ignore
+          trace_statements:
+            - context: resource
+              statements:
+                - delete_key(attributes, "k8s.pod.start_time")
+                - delete_key(attributes, "os.description")
+                - delete_key(attributes, "os.type")
+                - delete_key(attributes, "process.command_args")
+                - delete_key(attributes, "process.executable.path")
+                - delete_key(attributes, "process.pid")
+                - delete_key(attributes, "process.runtime.description")
+                - delete_key(attributes, "process.runtime.name")
+                - delete_key(attributes, "process.runtime.version")
+          metric_statements:
+            - context: resource
+              statements:
+                - delete_key(attributes, "k8s.pod.start_time")
+                - delete_key(attributes, "os.description")
+                - delete_key(attributes, "os.type")
+                - delete_key(attributes, "process.command_args")
+                - delete_key(attributes, "process.executable.path")
+                - delete_key(attributes, "process.pid")
+                - delete_key(attributes, "process.runtime.description")
+                - delete_key(attributes, "process.runtime.name")
+                - delete_key(attributes, "process.runtime.version")
+          log_statements:
+            - context: resource
+              statements:
+                - delete_key(attributes, "k8s.pod.start_time")
+                - delete_key(attributes, "os.description")
+                - delete_key(attributes, "os.type")
+                - delete_key(attributes, "process.command_args")
+                - delete_key(attributes, "process.executable.path")
+                - delete_key(attributes, "process.pid")
+                - delete_key(attributes, "process.runtime.description")
+                - delete_key(attributes, "process.runtime.name")
+                - delete_key(attributes, "process.runtime.version")
+        transform/add_resource_attributes_as_metric_attributes:
+          # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/processor/transformprocessor
+          error_mode: ignore
+          metric_statements:
+            - context: datapoint
+              statements:
+                - set(attributes["deployment.environment"], resource.attributes["deployment.environment"])
+                - set(attributes["service.version"], resource.attributes["service.version"])
+     
+      exporters:
+        otlphttp/grafana_cloud:
+          # https://github.com/open-telemetry/opentelemetry-collector/tree/main/exporter/otlpexporter
+          endpoint: "https://otlp-gateway-prod-us-central-0.grafana.net/otlp"
+          auth:
+            authenticator: basicauth/grafana_cloud
+     
+      service:
+        extensions: [basicauth/grafana_cloud, health_check]
+        pipelines:
+          traces:
+            receivers: [otlp]
+            processors: [resourcedetection, transform/drop_unneeded_resource_attributes, batch]
+            exporters: [otlphttp/grafana_cloud]
+          metrics:
+            receivers: [otlp, hostmetrics]
+            processors: [resourcedetection, transform/drop_unneeded_resource_attributes, transform/add_resource_attributes_as_metric_attributes, batch]
+            exporters: [otlphttp/grafana_cloud]
+          logs:
+            receivers: [otlp]
+            processors: [resourcedetection, transform/drop_unneeded_resource_attributes, batch]
+            exporters: [otlphttp/grafana_cloud]
+     
+    ```
+
+    <Aside type="note" title="Ajustes Clave para el Chart Oficial de OTel">
+        La configuración que nos proporciona Grafana Cloud es un punto de partida fantástico, pero está diseñada para su propio método de despliegue. Para usarla con el **Helm Chart oficial de OpenTelemetry**, necesitamos hacer algunos ajustes estructurales clave:
+        * **Anidamiento bajo `config`:** El chart oficial espera que toda la configuración del Collector (receivers, processors, exporters, service) esté anidada bajo una clave principal llamada config:. Por eso, hemos indentado todo el bloque que copiamos de Grafana.
+        * **Extensión `health_check`:** Añadimos explícitamente la extensión health_check: {}. Esto habilita un endpoint de salud que Kubernetes usará para verificar que nuestro Collector está funcionando correctamente, mejorando la resiliencia del despliegue.
+        * **Receptor `otlp`:** Aunque Grafana lo asume, debemos declarar explícitamente el receptor otlp: {}. Este es el componente que abrirá los puertos (gRPC y HTTP) para recibir los datos de telemetría de nuestros microservicios. Es la puerta de entrada principal para nuestra telemetría.
+        * **Procesador `batch`:** Incluimos el procesador batch: {} y lo añadimos a todas nuestras pipelines. Este componente es una optimización crucial: agrupa múltiples métricas, trazas o logs en lotes antes de enviarlos a Grafana. Esto reduce la cantidad de peticiones de red y mejora la eficiencia.
+        Con estos ajustes, hemos adaptado exitosamente la plantilla de Grafana para un despliegue robusto y estándar.
+    </Aside>
+
+2.  **Desplegar el Collector con Helm**
+    Ahora, instalamos el OTel Collector usando su chart oficial y pasándole nuestro archivo de configuración.
+
+    ```bash
+    helm install inventory opentelemetry/opentelemetry-collector `
+        -f .\values.yaml `
+        --namespace otel-collector `
+        --create-namespace `
+        --set image.repository="otel/opentelemetry-collector-contrib-k8s" `
+        --set mode="deployment"
+    ```
+    *   `--set image.repository`: Especificamos que queremos usar la imagen `contrib-k8s`, que incluye más componentes.
+    *   `--set mode="deployment"`: Desplegamos el collector como un `Deployment` centralizado en lugar de un `DaemonSet` (que correría en cada nodo).
+
+    <Image src="/images/blogs/grafana-otel/5-grafana-otel.png" alt="Desplegando el OTel Collector con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Verificar el Despliegue en Lens**
+    *   En "Helm > Releases", vemos nuestra nueva release `inventory` en el namespace `otel-collector`.
+        <Image src="/images/blogs/grafana-otel/6-grafana-otel.png" alt="Verificando la release del OTel Collector en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+    *   En "Workloads > Pods", encontramos nuestros dos pods del collector corriendo.
+        <Image src="/images/blogs/grafana-otel/7-grafana-otel.png" alt="Verificando los pods del OTel Collector en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+    *   **Paso crucial:** En "Network > Services", localizamos el servicio `inventory-opentelemetry-collector`. Este servicio de tipo `ClusterIP` expone los puertos (`4317` para gRPC, `4318` para HTTP) a los que nuestros microservicios enviarán sus datos. **Este es el endpoint que usaremos para configurar nuestros microservicios más adelante.**
+        <Image src="/images/blogs/grafana-otel/8-grafana-otel.png" alt="Verificando el servicio ClusterIP del OTel Collector" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+## Conclusión
+
+¡Has desplegado con éxito el pilar de tu estrategia de observabilidad! Ahora tienes un OTel Collector centralizado, configurado para recibir datos de telemetría de tus aplicaciones y enviarlos de forma segura a Grafana Cloud.
+
+Hemos construido una "tubería" de datos robusta y flexible. En los próximos artículos, cuando despleguemos los microservicios del ecosistema CodeDesignPlus, simplemente los configuraremos para que apunten a `inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317`, y toda su telemetría comenzará a fluir automáticamente hacia Grafana, dándonos una visibilidad sin precedentes de nuestra aplicación.
