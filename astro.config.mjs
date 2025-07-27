@@ -6,6 +6,8 @@ import remarkGitHubCode from './src/plugins/remark-github-code.js';
 import tailwindcss from '@tailwindcss/vite';
 import icon from 'astro-icon';
 import starlightImageZoom from 'starlight-image-zoom'
+import starlightLinksValidator from 'starlight-links-validator'
+
 
 import sitemap from '@astrojs/sitemap';
 import starlightBlog from 'starlight-blog';
@@ -48,7 +50,8 @@ export default defineConfig({
                 baseUrl: 'https://github.com/codedesignplus/codedesignplus.github.io/tree/main/',
             },
             plugins: [
-                // @ts-ignore                
+                // @ts-ignore     
+                //starlightLinksValidator(),           
                 starlightBlog({
                     title: {
                         en: 'CodeDesignPlus Blog',

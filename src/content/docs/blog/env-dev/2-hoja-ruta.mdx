@@ -1,0 +1,119 @@
+---
+title: "Nuestra Hoja de Ruta: La Serie Completa de CodeDesignPlus"
+description: "El índice central y la hoja de ruta visual de nuestra serie. Navega a través de cada artículo, desde la conceptualización hasta el despliegg ue de la infraestructura completa."
+date: 2025-07-02
+authors:
+    - wclg
+tags: ["Hoja de Ruta", "Tutorial", "CodeDesignPlus", "Serie", "Arquitectura", "Índice"]
+category: "Guías"
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+En nuestro artículo inicial, establecimos un problema común en la industria: la tendencia a construir rápidamente sobre cimientos frágiles. Presentamos **CodeDesignPlus** como la solución estratégica para construir sobre una base sólida desde el día uno.
+
+Esta página es tu mapa, el índice central de nuestra serie práctica. Aquí, transformamos la teoría en realidad, construyendo una aplicación de inventario completamente funcional, paso a paso.
+
+Navega a través de las fases y haz clic en cada tarjeta para ir directamente a la guía que necesitas. ¡Guárdala en tus favoritos!
+
+### Fase 0: Conceptualización y Preparación 
+
+Antes de tocar cualquier configuración, sentamos las bases teóricas y preparamos nuestro laboratorio.
+
+<LinkCard
+  title="1. La Situación Actual"
+  description="El porqué de nuestra misión. Analizamos el problema de la deuda técnica y presentamos la visión de CodeDesignPlus para construir software de calidad."
+  href="/blog/env-dev/1-situacion-actual"
+/>
+<LinkCard
+  title="2. Nuestra Hoja de Ruta (Esta Página)"
+  description="El mapa completo de la serie. Tu punto de partida y referencia para seguir cada paso del viaje, siempre actualizado."
+  href="/blog/env-dev/2-hoja-ruta"
+/>
+<LinkCard
+  title="3. 🏛️ El Blueprint: La Arquitectura Explicada"
+  description="Un análisis visual y detallado de cada componente que vamos a construir, desde la red hasta los servicios en la nube."
+  href="/blog/env-dev/3-arquitectura-completa"
+/>
+<LinkCard
+  title="4. 🖥️ La Base: Instalación de Ubuntu Server"
+  description="Preparamos nuestro servidor desde cero. Una guía visual para instalar y configurar el sistema operativo, la red estática y el acceso SSH."
+  href="/blog/env-dev/4-instalacion-ubuntu-server"
+/>
+
+### Fase 1: Cimientos de la Infraestructura 🏗️
+
+Con nuestro servidor listo, construimos las capas fundamentales: DNS, identidad y el orquestador de contenedores.
+
+<LinkCard
+  title="5. 🌐 DNS Público: Configurando GoDaddy"
+  description="Damos un nombre a nuestros servicios y los hacemos accesibles desde Internet, configurando los registros DNS públicos."
+  href="/blog/env-dev/5-configurando-los-cimientos-dns-para-nuestro-ecosistema"
+/>
+<LinkCard
+  title="13. 🧠 DNS Inteligente: Instalación de Pi-hole"
+  description="Centralizamos nuestro DNS de desarrollo para una gestión profesional y, de paso, protegemos la red con un bloqueador de anuncios."
+  href="/blog/env-dev/13-install-pi-hole"
+/>
+<LinkCard
+  title="6. 🆔 Identidad Segura: Microsoft Entra External ID"
+  description="Delegamos la autenticación y autorización a un proveedor de nivel mundial, integrándolo de forma flexible con nuestro ecosistema."
+  href="/blog/env-dev/6-microsoft-entra-external-id"
+/>
+<LinkCard
+  title="7.  Orchestrator El Orquestador: Instalación de MicroK8s"
+  description="Montamos el corazón de nuestra plataforma: un clúster de Kubernetes, configurando sus addons esenciales para red y almacenamiento."
+  href="/blog/env-dev/7-install-config-microk8s"
+/>
+
+### Fase 2: Plataforma de Servicios en Kubernetes 🛠️
+
+Dentro de nuestro clúster, desplegamos los servicios de soporte que potenciarán nuestros microservicios.
+
+<LinkCard
+  title="8. 🚪 La Puerta de Entrada: Instalación de Istio"
+  description="Desplegamos nuestro Service Mesh y configuramos el Ingress Gateway para un acceso seguro y controlado a nuestras aplicaciones."
+  href="/blog/env-dev/8-install-config-istio"
+/>
+<LinkCard
+  title="11. 🔑 El Guardián: Gestión de Secretos con Vault"
+  description="Aseguramos nuestras contraseñas y claves de API con el estándar de la industria, HashiCorp Vault, en modo de desarrollo."
+  href="/blog/env-dev/11-install-vault"
+/>
+<LinkCard
+  title="9. ⚡ La Velocidad: Caching con Redis Standalone"
+  description="Añadimos un servicio de caché de alto rendimiento gestionado por un Operator de Kubernetes para acelerar nuestras aplicaciones."
+  href="/blog/env-dev/9-install-config-redis-standalone"
+/>
+<LinkCard
+  title="10. 📨 La Comunicación: Mensajería con RabbitMQ"
+  description="Establecemos la base para una arquitectura asíncrona y orientada a eventos con un clúster de RabbitMQ."
+  href="/blog/env-dev/10-install-rabbitmq"
+/>
+<LinkCard
+  title="12. 📊 La Visibilidad: Observabilidad con OpenTelemetry"
+  description="Construimos nuestro pipeline de telemetría para monitorizar métricas, trazas y logs con OTel Collector y Grafana Cloud."
+  href="/blog/env-dev/12-install-otel"
+/>
+
+### Fase 3: Cierre de la Fase 1 y Próximos Pasos ✅
+
+Recapitulamos todo el trabajo realizado y nos preparamos para la siguiente etapa del viaje.
+
+<LinkCard
+  title="14. La Plataforma Está Lista: Resumen y Beneficios"
+  description="Hacemos una pausa para analizar el valor de la robusta infraestructura que hemos construido y miramos hacia el futuro."
+  href="/blog/env-dev/14-cierre-fase-infraestructura"
+/>
+
+---
+
+### Próxima Fase: Desplegando el Ecosistema CodeDesignPlus
+
+Con toda la plataforma desplegada, la siguiente etapa de la serie se centrará en lo que aporta valor único a nuestro negocio: desplegar los microservicios base de CodeDesignPlus y desarrollar la lógica de la aplicación de inventarios.
+
+¡Mantente atento
