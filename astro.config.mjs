@@ -64,7 +64,7 @@ export default defineConfig({
                             name: 'Wilzon Liscano Galindo',
                             title: 'Founder of CodeDesignPlus',
                             picture: '/wliscano.jpeg',
-                            url: 'https://hideoo.dev',
+                            url: 'https://www.linkedin.com/in/wclg/',
                         }
                     },
                     metrics: {
