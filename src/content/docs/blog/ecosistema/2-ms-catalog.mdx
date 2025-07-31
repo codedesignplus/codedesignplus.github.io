@@ -1,0 +1,138 @@
+---
+title: "Desplegando Nuestro Primer Microservicio: `ms-catalog`"
+date: 2025-07-18
+lastUpdated: 2025-07-18
+tags: ["Microservices", "CodeDesignPlus", "Kubernetes", "Helm", "Vault", "DDD", "CQRS"]
+excerpt: "¡La plataforma cobra vida! En este artículo, desplegamos nuestro primer componente del ecosistema, ms-catalog. Analizamos su arquitectura interna y lo integramos con nuestra infraestructura de Vault e Istio."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+
+
+En la fase anterior, construimos una plataforma robusta. Ahora, es el momento de la verdad: desplegar nuestro **primer microservicio** del ecosistema CodeDesignPlus. Empezaremos con un componente fundamental: `ms-catalog`.
+
+`ms-catalog` es un microservicio diseñado para gestionar catálogos genéricos (tipos de documento, estados de pedido, etc.). Al centralizar esta información, evitamos la duplicación y aseguramos la consistencia de datos en toda la plataforma.
+
+En esta guía, haremos lo siguiente:
+1.  **Analizar la Arquitectura Interna:** Entenderemos cómo está construido `ms-catalog`.
+2.  **Desplegar con Helm desde ArtifactHub:** Usaremos su Helm chart público para instalarlo.
+3.  **Configurar sus Secretos:** Almacenaremos su configuración sensible en HashiCorp Vault.
+4.  **Verificar su Funcionamiento:** Realizaremos una prueba de extremo a extremo.
+
+### Un Vistazo a la Arquitectura de `ms-catalog`
+
+Antes de desplegar, entendamos cómo funciona por dentro.
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+Este diagrama muestra cómo una petición REST se traduce en una acción dentro del microservicio.
+
+<Image src="/images/blogs/ecosystem/ms-catalogs/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-catalog" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **Lado Izquierdo (REST):** Muestra los endpoints estándar para las operaciones CRUD.
+*   **Lado Derecho (Use Cases):** La lógica real, separada por el patrón **CQRS**:
+    *   **Commands (Azul):** Operaciones de escritura (`Create`, `Update`, `Delete`) que modifican el estado y emiten **Eventos de Dominio**.
+    *   **Queries (Amarillo):** Operaciones de solo lectura (`Get`, `GetAll`) optimizadas para la consulta de datos.
+
+#### El Corazón del Dominio: El `TypeDocumentAggregate`
+
+Este diagrama de clases nos muestra la estructura del Agregado `TypeDocument`, la pieza central de nuestra lógica de negocio según los principios de **Domain-Driven Design (DDD)**.
+
+<Image src="/images/blogs/ecosystem/ms-catalogs/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de TypeDocument" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Un **Agregado** es una unidad transaccional que agrupa objetos de dominio y garantiza la consistencia de las reglas de negocio.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    Antes de que `ms-catalog` pueda arrancar, necesita su configuración. La almacenaremos de forma segura en Vault. En futuros artículos, veremos en detalle cada uno de los secretos, pero por ahora, nos centraremos en el proceso.
+
+    /*
+     * Placeholder para la imagen del comando `vault kv put` para ms-catalog.
+     * Ejemplo: vault kv put -mount=inventory-keyvalue ms-catalog ConnectionStrings:DefaultConnection="..."
+     */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Creando los secretos para ms-catalog en Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    /* Placeholder para la imagen de verificación en la UI de Vault. */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Verificando los secretos de ms-catalog en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    Cada entrypoint de un microservicio del ecosistema está empaquetado como un **Helm Chart** y publicado en **ArtifactHub**, el registro público de charts. Esto estandariza y simplifica enormemente el despliegue.
+
+    <Aside  title="Un Chart por Entrypoint">
+    El ecosistema CodeDesignPlus sigue una filosofía modular. Si un microservicio tiene múltiples puntos de entrada (ej. REST y un Worker asíncrono), encontrarás un Helm Chart separado para cada uno. En el caso de `ms-catalog`, que solo expone una API REST, usaremos el chart `ms-catalogs-rest`.
+    </Aside>
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-catalogs-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-catalogs-rest" />
+
+    Para instalarlo, primero añadimos el repositorio de CodeDesignPlus a Helm:
+    ```bash
+    helm repo add codedesignplus https://codedesignplus.github.io/codedesignplus-charts/
+    helm repo update
+    ```
+
+    Ahora, ejecutamos el comando de instalación. Usaremos `helm upgrade --install` que instala el chart si no existe, o lo actualiza si ya está presente.
+
+    ```bash
+    helm upgrade --install ms-catalogs-rest codedesignplus/ms-catalogs-rest \
+        --namespace srv-catalogs \
+        --set ms-base.vault.token=<vault-token> \
+        --set ms-base.virtualService.http[0].route[0].destination.host=ms-catalogs-rest.srv-catalogs.svc.cluster.local \
+        --create-namespace
+    ```
+    Desglosemos los parámetros clave:
+    *   `--namespace srv-catalogs`: Desplegamos el servicio en su propio namespace.
+    *   `--set ms-base.vault.token`: Aquí pasamos el token que el microservicio usará para autenticarse contra Vault y obtener sus secretos.
+    *   `--set ms-base.virtualService...`: Este parámetro configura dinámicamente el `VirtualService` de Istio para que apunte al `Service` de Kubernetes correcto.
+
+    <Aside type="note">
+    El Helm chart viene con un `values.yaml` preconfigurado con valores por defecto sensatos. Para una personalización más profunda, te recomendamos consultar la documentación del chart directamente en ArtifactHub.
+    </Aside>
+
+    /* Placeholder para la imagen del comando `helm upgrade --install`. */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Instalando el Helm chart de ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    /* Placeholder para la imagen de verificación de la Release y los Pods en Lens. */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Verificando la release y los pods de ms-catalog en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Verificación End-to-End**
+    Con el despliegue completado, el Helm chart ya ha creado el `VirtualService` por nosotros. Es hora de hacer la prueba de fuego usando un cliente de API como Postman o `curl`.
+
+    **Crear un nuevo tipo de documento (POST):**
+    ```bash
+    curl -k -X POST https://services.codedesignplus.app/api/TypeDocument/ \
+      -H "Content-Type: application/json" \
+      -d '{"name": "Cédula de Ciudadanía", "code": "CC"}'
+    ```
+    *(Usamos `-k` para ignorar la validación del certificado en un entorno de desarrollo si es necesario)*
+
+    /* Placeholder para la imagen de la petición POST y la respuesta 201 Created. */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Petición POST exitosa a ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    **Obtener todos los tipos de documento (GET):**
+    ```bash
+    curl -k https://services.codedesignplus.app/api/TypeDocument/
+    ```
+    /* Placeholder para la imagen de la petición GET y la respuesta con la lista de documentos. */
+    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Petición GET exitosa a ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+¡Felicidades! Has desplegado, configurado y verificado con éxito el primer microservicio de nuestro ecosistema.
+
+Este proceso que acabamos de seguir será la **plantilla** para desplegar todos los demás componentes de CodeDesignPlus. Hemos visto en la práctica cómo la sólida infraestructura que construimos (Kubernetes, Vault, Istio) y la estandarización a través de **Helm y ArtifactHub** nos permiten añadir nueva funcionalidad de una manera increíblemente rápida, segura y repetible.
+
+En el próximo artículo, continuaremos expandiendo nuestro ecosistema desplegando el siguiente microservicio de la lista.

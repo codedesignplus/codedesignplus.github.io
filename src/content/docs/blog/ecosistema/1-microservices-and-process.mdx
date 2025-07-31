@@ -16,121 +16,76 @@ import { Image } from 'astro:assets';
 
 <ImageZoom/>
 
+En la [primera fase de nuestra serie](/blog/quick-start/14-cierre-fase-infraestructura), construimos meticulosamente el escenario: una plataforma robusta, segura y escalable sobre Kubernetes. Ahora que el escenario está listo, es hora de presentar a los actores principales.
 
-En la [primera fase de nuestra serie](/blog/env-dev/14-cierre-fase-infraestructura/), construimos meticulosamente el escenario: una plataforma robusta, segura y escalable sobre Kubernetes. Montamos las luces (Istio), el sonido (OpenTelemetry), la maquinaria interna (Vault, RabbitMQ, Redis) y la seguridad perimetral (Entra ID). Ahora, con el escenario listo, es hora de que los actores principales entren en escena.
+Este artículo es el prólogo de nuestra segunda gran fase. Actuará como una guía introductoria, dándote un tour completo del **ecosistema de microservicios de CodeDesignPlus**. Exploraremos el "qué" (los componentes), el "cómo" (la arquitectura interna) y el "para qué" (los procesos de negocio que resuelven), preparando el terreno para los próximos artículos, donde nos sumergiremos en el despliegue de cada pieza individual.
 
-Este artículo marca el inicio de una nueva y emocionante fase: el despliegue del **ecosistema de microservicios base de CodeDesignPlus**. Estos no son servicios de ejemplo; son componentes de nivel de producción, reutilizables y listos para usar, que resuelven los problemas más comunes y complejos del desarrollo de software. Su propósito es liberarnos para que podamos centrarnos en lo que realmente aporta valor: la lógica de negocio de nuestra aplicación de inventario.
+### El Ecosistema de un Vistazo
 
-### El Diagrama del Ecosistema
+Este primer diagrama muestra todos los microservicios base que componen nuestro ecosistema. Cada uno es una pieza de un rompecabezas más grande, con una responsabilidad única y bien definida.
 
-*(Aquí irá el diagrama del ecosistema)*
+<Image src="/images/blogs/ecosystem/ecosystem-overview.png" alt="Diagrama del Ecosistema de Microservicios CodeDesignPlus" width="2550" height="1314" decoding="async" loading="lazy"/>
 
-<Image src="/images/blogs/ecosistema/ecosystem-diagram.png" alt="Diagrama del Ecosistema de Microservicios CodeDesignPlus" width="2550" height="1314" decoding="async" loading="lazy"/>
+La leyenda de colores indica los diferentes puntos de entrada (Entrypoints) que cada microservicio puede tener:
+*   🟣 **Rest:** Para comunicación síncrona vía HTTP, ideal para frontends y clientes externos.
+*   🟠 **gRpc:** Para comunicación síncrona de alto rendimiento entre microservicios.
+*   🔵 **Worker:** Para procesos asíncronos que consumen eventos de un message broker.
 
-Este diagrama visualiza cómo cada microservicio tiene una responsabilidad única y cómo se comunican entre sí para formar un todo coherente.
+### Bajo el Capó: El Blueprint de un Microservicio
 
-### La Arquitectura Base: Patrones y Principios
+Para entender realmente cómo funciona nuestro ecosistema, es crucial saber que **todos los microservicios comparten el mismo ADN arquitectónico**. No son cajas negras dispares; todos están construidos a partir de un **Arquetipo** base que implementa patrones de diseño de software de primer nivel.
 
-Todos los microservicios del ecosistema CodeDesignPlus no son solo piezas de código funcionales; están construidos sobre una base arquitectónica sólida, siguiendo patrones de diseño probados en la industria para garantizar la mantenibilidad, escalabilidad y testabilidad.
+<Image src="/images/archetype/archetype.svg" alt="Diagrama del Arquetipo base de un Microservicio" width="2550" height="1314" decoding="async" loading="lazy"/>
 
-*   **Ports and Adapters (Arquitectura Hexagonal):** Desacopla la lógica de negocio del mundo exterior (bases de datos, APIs, etc.).
-*   **CQRS (Command Query Responsibility Segregation):** Separa las operaciones de escritura (Comandos) de las de lectura (Consultas), permitiendo optimizar cada una de forma independiente.
-*   **Event-Driven Architecture (EDA):** Fomenta la comunicación asíncrona a través de eventos, creando sistemas más resilientes y desacoplados.
-*   **Domain-Driven Design (DDD):** Modela el software en torno al dominio del negocio, asegurando que el código hable el mismo lenguaje que los expertos en la materia.
+Este diagrama muestra las capas y patrones que viven dentro de cada microservicio:
 
-<Aside  title="El ADN del Ecosistema: El Arquetipo">
-La consistencia y calidad de todos estos microservicios provienen de un único punto de origen: el **Arquetipo de CodeDesignPlus**. Este arquetipo es una plantilla de proyecto que ya implementa todos estos patrones y las mejores prácticas. Para conocer a fondo las características y la estructura interna de cualquier microservicio del ecosistema, basta con entender el arquetipo.
+*   **Capa de Infraestructura (Naranja):** Es la capa más externa, responsable de la comunicación con el mundo exterior. Aquí viven los **Adaptadores** de la arquitectura hexagonal, como los repositorios que hablan con la base de datos, los clientes de Redis para caché, o los Message Brokers para publicar eventos. También incluye los **Ports**, que son los puntos de entrada (Rest, gRpc, Workers).
 
-<LinkCard title="Explora el Arquetipo de CodeDesignPlus" href="/archetypes/" />
+*   **Capa de Aplicación (Verde):** Orquesta los casos de uso. Sigue el patrón **CQRS**, separando la lógica en:
+    *   **Commands:** Operaciones que cambian el estado del sistema (ej. `CreateUserCommand`).
+    *   **Queries:** Operaciones que leen datos sin modificarlos (ej. `GetUserByIdQuery`).
+    Cada comando y consulta es manejado por su propio `Handler` dedicado.
+
+*   **Capa de Dominio (Púrpura):** El corazón de la lógica de negocio. Utiliza los principios de **Domain-Driven Design (DDD)** para modelar el negocio a través de **Aggregates, Entities, Value Objects** y **Domain Events**. Es la capa más pura, sin dependencias externas.
+
+<Aside title="El ADN del Ecosistema: El Arquetipo">
+La consistencia y calidad de todos estos microservicios provienen de un único punto de origen: el **Arquetipo de CodeDesignPlus**. Para conocer a fondo las características y la estructura interna de cualquier microservicio del ecosistema, basta con entender el arquetipo.
+
+<LinkCard title="Explora el Arquetipo de CodeDesignPlus" href="https://www.codedesignplus.com/archetypes/" />
 </Aside>
 
-### Los Puntos de Entrada (Entrypoints)
+### Conoce a los Microservicios
 
-Cada microservicio expone su funcionalidad a través de diferentes "puntos de entrada", adaptados a distintos casos de uso:
+Aquí tienes una lista de los componentes que desplegaremos, cada uno con su propósito específico:
 
-*   **REST 🌐:** Punto de entrada síncrono basado en HTTP. Es la interfaz principal para ser consumida por aplicaciones web, móviles o clientes de terceros.
-*   **gRPC ⚡:** Un framework de comunicación síncrona de alto rendimiento. Se utiliza principalmente para la comunicación interna y crítica entre microservicios, donde la latencia es un factor clave.
-*   **Async Worker ⚙️:** Un proceso en segundo plano que no expone una API directa. Su trabajo es escuchar eventos de dominio publicados en RabbitMQ por otros microservicios y disparar acciones de forma asíncrona.
+*   **`ms-catalogs`**: Microservicio para la gestión de catálogos genéricos como tipos de documentos.
+*   **`ms-emails`**: Microservicio para la gestión de envíos de correos electrónicos y la administración de plantillas de correo.
+*   **`ms-filestorage`**: Microservicio para la gestión de almacenamiento de archivos con integración a múltiples proveedores.
+*   **`ms-licenses`**: Microservicio para la gestión de licencias de software, la cual tiene asociada un conjunto de módulos.
+*   **`ms-locations`**: Microservicio para la gestión de ubicaciones geográficas, incluyendo países, estados, ciudades, etc.
+*   **`ms-microsoft-graph`**: Microservicio para la integración con Microsoft Entra ID y la gestión de Custom Authentication Extensions.
+*   **`ms-modules`**: Microservicio para la gestión de módulos disponibles en la plataforma.
+*   **`ms-payments`**: Microservicio para la gestión de pagos, incluyendo la integración con diferentes proveedores.
+*   **`ms-rbac`**: Microservicio para la gestión de los permisos asociados a los roles (Control de Acceso Basado en Roles).
+*   **`ms-roles`**: Microservicio para la gestión de roles del sistema.
+*   **`ms-services`**: Microservicio para la gestión y descubrimiento de servicios disponibles en la plataforma.
+*   **`ms-tenants`**: Microservicio para la gestión de inquilinos (tenants) en la plataforma.
+*   **`ms-users`**: Microservicio para la gestión de usuarios y sus perfiles.
 
-### Presentando a los Actores: Los Microservicios Base
+### Un Vistazo a los Procesos Transversales
 
-A continuación, presentamos cada uno de los microservicios que componen el núcleo del ecosistema, agrupados por su función principal.
+Más allá de los componentes individuales, el verdadero poder del ecosistema reside en cómo orquestan flujos de negocio complejos. En artículos futuros, exploraremos en detalle procesos como los siguientes:
 
-#### Gestión de Identidad y Acceso
-*   **`Users`**: Gestiona perfiles de usuario, incluyendo creación y actualización. (REST, gRPC, Worker)
-*   **`Roles`**: Administra los roles del sistema (ej. "Admin", "Lector"). (REST)
-*   **`Rbac`**: Control de Acceso Basado en Roles. Permite a otros servicios consultar en tiempo de ejecución si un usuario/rol tiene permiso para realizar una acción. (REST, gRPC)
-*   **`MicrosoftGraph`**: Se integra con Microsoft Entra ID, gestionando la sincronización de usuarios y el enriquecimiento de tokens a través de las Custom Authentication Extensions. (REST, Worker)
+*   **Proceso de Registro de Usuario:** Veremos paso a paso cómo la interacción entre **Microsoft Entra ID**, nuestras **Custom Authentication Extensions**, el **`ms-microsoft-graph`** y los **eventos de dominio** crea un flujo de registro seguro y desacoplado.
+*   **Proceso para Adquirir una Licencia:** Analizaremos cómo los microservicios `ms-tenants`, `ms-licenses` y `ms-payments` colaboran para gestionar la compra y asignación de licencias de software a un inquilino.
+*   **Proceso de Configuración Inicial:** Mostraremos, a través de la interfaz gráfica, cómo un administrador puede realizar el "poblado de datos semilla" inicial, configurando roles, módulos, licencias y permisos para poner en marcha una nueva instancia de la aplicación.
 
-#### Núcleo de la Plataforma y Negocio
-*   **`Tenants`**: Gestiona los inquilinos (tenants) en una arquitectura multi-tenant, asociando a cada uno con su licencia. (REST, gRPC)
-*   **`Licenses`**: Administra las licencias de software y los módulos que estas habilitan. (REST)
-*   **`Modules`**: Define los módulos funcionales de la plataforma y sus endpoints asociados. (REST)
-*   **`Services`**: Actúa como un registro de servicios. Los demás microservicios se registran en él para permitir el descubrimiento. (REST, gRPC)
-*   **`Payments`**: Orquesta la lógica de pagos e se integra con diferentes proveedores. (REST, gRPC)
+### Nuestro Viaje por Delante: Un Microservicio a la Vez
 
-#### Servicios de Soporte y Datos
-*   **`Catalogs`**: Proporciona una forma genérica de gestionar catálogos comunes (ej. tipos de documento). (REST)
-*   **`Emails`**: Se encarga del envío de correos electrónicos y la gestión de plantillas. (REST, gRPC, Worker)
-*   **`FileStorage`**: Abstrae el almacenamiento de archivos, con soporte para proveedores como Azure Blob Storage, Azure File Storage o sistemas de archivos locales. (REST)
-*   **`Locations`**: Gestiona datos geográficos complejos: países, estados, ciudades, barrios, zonas horarias y monedas. (REST)
+Este artículo ha sentado las bases. En las próximas guías de esta serie, nos sumergiremos en el despliegue y configuración de **cada uno de estos microservicios, uno por uno**. Para cada componente, cubriremos en detalle:
 
----
-
-### Presentando los Procesos Transversales Clave
-
-Un ecosistema es más que la suma de sus partes. El verdadero poder de CodeDesignPlus reside en cómo estos microservicios colaboran para orquestar procesos de negocio complejos de forma predeterminada. A continuación, exploraremos algunos de estos flujos de trabajo clave que obtienes "out-of-the-box".
-
-#### 1. Proceso de Registro de Usuario Moderno y Desacoplado
-
-El registro de un nuevo usuario en una aplicación moderna es un proceso complejo. Nuestro ecosistema lo resuelve de la siguiente manera:
-
-*(Aquí irá el diagrama de secuencia del proceso de registro)*
-<Image src="/images/blogs/ecosistema/user-registration-flow.png" alt="Diagrama de flujo del registro de usuario" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-El flujo es el siguiente:
-1.  **Inicio:** El usuario interactúa con la interfaz de registro generada por **Microsoft Entra External ID**.
-2.  **Webhook de Sincronización:** Tras la recolección de datos, Entra ID dispara la **Custom Authentication Extension (`AttributeCollectionSubmit`)**.
-3.  **Lógica Centralizada:** La extensión invoca a nuestro microservicio **`ms-microsoft-graph`**, que actúa como adaptador.
-4.  **Creación Interna:** `ms-microsoft-graph` recibe los datos y publica un evento de dominio, como `UsuarioRegistradoEnProveedorExterno`.
-5.  **Reacción Asíncrona:** El microservicio **`ms-users`** escucha este evento y crea la réplica del usuario en nuestra base de datos interna, asignándole un ID único del ecosistema.
-6.  **Enriquecimiento del Token:** En los siguientes inicios de sesión, la extensión `TokenIssuanceStart` se asegura de que el token JWT final contenga nuestro ID de usuario interno, desacoplando por completo nuestra lógica del proveedor de identidad.
-
-#### 2. Proceso de Adquisición de una Licencia
-
-Este flujo muestra cómo un `Tenant` puede adquirir una licencia, habilitando un conjunto específico de funcionalidades en la plataforma.
-
-*(Aquí irá el diagrama de flujo y/o capturas de la UI del proceso de licencia)*
-<Image src="/images/blogs/ecosistema/license-acquisition-flow.png" alt="Flujo de adquisición de licencia" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-Este proceso orquesta la interacción entre los microservicios `ms-tenants`, `ms-licenses`, `ms-modules` y `ms-payments` para validar la compra, asignar la licencia correcta y habilitar los módulos correspondientes para el inquilino.
-
-#### 3. Proceso de Configuración Inicial y "Data Seeding"
-
-Poner en marcha una nueva instancia de la aplicación desde cero ("cold start") puede ser tedioso. El ecosistema facilita este proceso permitiendo una configuración inicial guiada y el poblado de datos semilla.
-
-*(Aquí irán capturas de pantalla de las interfaces de administración para la configuración inicial)*
-<Image src="/images/blogs/ecosistema/initial-setup-ui.png" alt="Interfaz de configuración inicial" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-A través de las interfaces de administración, un "Super Admin" puede realizar tareas esenciales como:
-*   Crear los **roles** base del sistema (`ms-roles`).
-*   Definir los **módulos** y **servicios** que componen la oferta de productos (`ms-modules`, `ms-services`).
-*   Crear los diferentes niveles de **licencias** (`ms-licenses`).
-*   Poblar los catálogos de **ubicaciones** con datos de países, estados y ciudades (`ms-locations`).
-*   Configurar los **permisos** detallados para cada rol en cada microservicio (`ms-rbac`).
-
----
-
-### ¿Qué Sigue? Profundizando en Cada Microservicio
-
-Este artículo es solo la introducción. En las próximas guías, nos sumergiremos en el despliegue y configuración de **cada uno de estos microservicios**. Para cada uno, cubriremos en detalle:
-
-1.  **El Helm Chart:** Analizaremos su `values.yaml` y lo desplegaremos en nuestro clúster.
+1.  **El Helm Chart:** Analizaremos su archivo `values.yaml` y lo desplegaremos en nuestro clúster.
 2.  **La Configuración en Vault:** Crearemos y poblaremos los secretos necesarios para que el microservicio se inicie y funcione correctamente.
 3.  **La Interacción y Uso:** Veremos cómo interactuar con su API o cómo responde a eventos, para entender su funcionalidad en la práctica.
 
-<Aside type="note" title="Entorno de Desarrollo vs. Producción">
-Una vez más, nuestro enfoque inicial será el despliegue en el **entorno de desarrollo** que hemos construido. En una futura serie de artículos avanzados, exploraremos las consideraciones y configuraciones específicas para llevar cada uno de estos componentes a un entorno de **producción** de alta disponibilidad.
-</Aside>
-
-¡La base está construida, los actores y sus guiones están presentados! En nuestro próximo artículo, comenzaremos con el primer despliegue. ¡Prepárate para ver cómo toda nuestra infraestructura cobra vida!
+¡La base está construida y los actores están presentados! En nuestro próximo artículo, comenzaremos con el primer despliegue. ¡Prepárate para ver cómo toda nuestra infraestructura cobra vida
