@@ -15,14 +15,40 @@ import { Image } from 'astro:assets';
 
 <ImageZoom/>
 
+
+
 En la fase anterior, construimos una plataforma de contenedores robusta. Ahora, estamos listos para el primer despliegue real del ecosistema CodeDesignPlus.
 
-El primer microservicio que debemos desplegar es **`ms-services`**. Este componente es crucial porque actúa como el **registro central** de nuestra plataforma. Todos los demás microservicios que despleguemos reportarán a `ms-services` para su registro y descubrimiento. Es el pilar sobre el que se asienta toda la comunicación interna.
+El primer microservicio que debemos desplegar es **`ms-services`**. Este componente es crucial porque actúa como el **registro central** de nuestra plataforma. Todos los demás microservicios que despleguemos reportarán a `ms-services` para su registro y descubrimiento.
 
-En esta guía haremos lo siguiente:
-1.  **Configurar Secretos Globales en Vault:** Almacenaremos la información de conexión a servicios clave.
-2.  **Desplegar los Entrypoints REST y gRPC:** Usaremos los Helm charts específicos para cada punto de entrada.
-3.  **Verificar la Integración:** Confirmaremos que ambos servicios están activos y accesibles.
+### La Arquitectura en Acción: Flujo y Responsabilidades de `ms-services`
+
+Antes de desplegar, entendamos el rol específico de `ms-services` y cómo su arquitectura interna le permite cumplir su función.
+
+#### Flujo de Peticiones y Casos de Uso
+
+Este diagrama ilustra cómo las solicitudes que llegan a `ms-services` se procesan internamente.
+
+<Image src="/images/blogs/ecosystem/ms-services/ms-service-flow-diagram.svg" alt="Diagrama de Flujo CQRS de un microservicio" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **Peticiones REST (Lado Izquierdo):** `ms-services` expone una API REST para operaciones de gestión. Por ejemplo, a través de esta API, un administrador podría registrar un nuevo microservicio o consultar los existentes.
+*   **Procesamiento Interno (Lado Derecho):** Cada petición activa un "Caso de Uso" específico.
+    *   Las operaciones de escritura (como `CreateService`) son manejadas como **Commands**. Estas modifican los datos y, al finalizar, emiten un **Evento de Dominio** (ej. `ServiceCreated`) a RabbitMQ. Esto permite que otros sistemas reaccionen a los cambios de forma asíncrona.
+    *   Las operaciones de lectura (como `GetService`) son manejadas como **Queries**, optimizadas para devolver la información rápidamente.
+
+#### El Modelo de Dominio
+
+La lógica de negocio está encapsulada en un **Agregado de Dominio**, como se ve en este diagrama de clases.
+
+<Image src="/images/blogs/ecosystem/ms-services/ms-service-ddd-diagram.svg" alt="Diagrama de un Agregado de Dominio" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Este Agregado se asegura de que cualquier "Microservicio" que se cree o modifique siempre cumpla con las reglas de negocio (ej. un microservicio no puede estar duplicado por el nombre o id, un nombre no puede estar vacío).
+
+<Aside  title="Profundiza en la Arquitectura">
+Este flujo, que separa `Commands` y `Queries` (CQRS) y modela la lógica de negocio con `Agregados` (DDD), es el estándar para **todos** los microservicios del ecosistema. Si quieres entender a fondo estos patrones, te recomendamos leer nuestro artículo detallado sobre el **Arquetipo de CodeDesignPlus**.
+
+<LinkCard title="Explora el Arquetipo de CodeDesignPlus" href="/archetypes" />
+</Aside>
 
 ### Parte 1: Almacenando Secretos Globales en Vault
 
