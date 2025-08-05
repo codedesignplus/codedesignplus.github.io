@@ -1,0 +1,206 @@
+---
+title: "Desplegando ms-services: El Registro Central con REST y gRPC"
+date: 2025-07-19
+lastUpdated: 2025-07-19
+tags: ["CodeDesignPlus", "Microservices", "Helm", "Vault", "Istio", "gRPC", "Visual"]
+excerpt: "Iniciamos el despliegue del ecosistema. Aprende a configurar secretos globales en Vault y a desplegar ms-services con sus entrypoints REST y gRPC, estableciendo el registro central de nuestra plataforma."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+
+En la fase anterior, construimos una plataforma de contenedores robusta. Ahora, estamos listos para el primer despliegue real del ecosistema CodeDesignPlus.
+
+El primer microservicio que debemos desplegar es **`ms-services`**. Este componente es crucial porque actúa como el **registro central** de nuestra plataforma. Todos los demás microservicios que despleguemos reportarán a `ms-services` para su registro y descubrimiento.
+
+### La Arquitectura en Acción: Flujo y Responsabilidades de `ms-services`
+
+Antes de desplegar, entendamos el rol específico de `ms-services` y cómo su arquitectura interna le permite cumplir su función.
+
+#### Flujo de Peticiones y Casos de Uso
+
+Este diagrama ilustra cómo las solicitudes que llegan a `ms-services` se procesan internamente.
+
+<Image src="/images/blogs/ecosystem/ms-services/ms-service-flow-diagram.svg" alt="Diagrama de Flujo CQRS de un microservicio" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **Peticiones REST (Lado Izquierdo):** `ms-services` expone una API REST para operaciones de gestión. Por ejemplo, a través de esta API, un administrador podría registrar un nuevo microservicio o consultar los existentes.
+*   **Procesamiento Interno (Lado Derecho):** Cada petición activa un "Caso de Uso" específico.
+    *   Las operaciones de escritura (como `CreateService`) son manejadas como **Commands**. Estas modifican los datos y, al finalizar, emiten un **Evento de Dominio** (ej. `ServiceCreated`) a RabbitMQ. Esto permite que otros sistemas reaccionen a los cambios de forma asíncrona.
+    *   Las operaciones de lectura (como `GetService`) son manejadas como **Queries**, optimizadas para devolver la información rápidamente.
+
+#### El Modelo de Dominio
+
+La lógica de negocio está encapsulada en un **Agregado de Dominio**, como se ve en este diagrama de clases.
+
+<Image src="/images/blogs/ecosystem/ms-services/ms-service-ddd-diagram.svg" alt="Diagrama de un Agregado de Dominio" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Este Agregado se asegura de que cualquier "Microservicio" que se cree o modifique siempre cumpla con las reglas de negocio (ej. un microservicio no puede estar duplicado por el nombre o id, un nombre no puede estar vacío).
+
+<Aside  title="Profundiza en la Arquitectura">
+Este flujo, que separa `Commands` y `Queries` (CQRS) y modela la lógica de negocio con `Agregados` (DDD), es el estándar para **todos** los microservicios del ecosistema. Si quieres entender a fondo estos patrones, te recomendamos leer nuestro artículo detallado sobre el **Arquetipo de CodeDesignPlus**.
+
+<LinkCard title="Explora el Arquetipo de CodeDesignPlus" href="/archetypes" />
+</Aside>
+
+### Parte 1: Almacenando Secretos Globales en Vault
+
+En nuestro [artículo anterior](/blog/ecosistema/2-recolectando-secretos-globales), recolectamos toda la información de conexión. Ahora, la almacenaremos de forma segura en **HashiCorp Vault**.
+
+1.  **Ejecutar el Comando `vault kv put`**
+    Abre una terminal con la CLI de Vault autenticada y ejecuta el siguiente comando, reemplazando los valores con la información que recolectaste.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-services `
+        "Security:ValidIssuer=<URL_FROM_ENTRA_ID_ENDPOINTS>" `
+        "Security:ClientId=<CLIENT_ID_FROM_ENTRA_ID>" `
+        "Security:ValidAudiences:0=<CLIENT_ID_FROM_ENTRA_ID>" `
+        "Resources:Server=http://ms-services-grpc.inventory.svc.cluster.local:5001" `
+        "Resources:Enable=false" `
+        "RabbitMQ:Host=rabbitmq-cluster.srv-rabbitmq.svc" `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=redis-standalone-headless.srv-redis.svc.cluster.local:6379" `
+        "Logger:OTelEndpoint=http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317" `
+        "Observability:ServerOtel=http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317" `
+        "Mongo:ConnectionString=<CONNECTION_STRING_FROM_MONGO_ATLAS>"
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-services/vault-put.png" alt="Configurando los secretos globales para ms-services en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Podemos visualizar los secretos en la interfaz web de Vault:
+    
+    <Image src="/images/blogs/ecosystem/ms-services/vault-verify.png" alt="Verificando los secretos de ms-services en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+### Parte 2: Desplegando los Entrypoints
+
+El microservicio `ms-services` tiene dos puntos de entrada, cada uno con su propio Helm Chart:
+*   **REST:** Para la gestión y consulta a través de una API web.
+*   **gRPC:** Para la comunicación interna de alto rendimiento con otros microservicios.
+
+Desplegaremos ambos.
+
+<Steps>
+
+1.  **Desplegando el Entrypoint REST (`ms-services-rest`)**
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-services-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-services-rest" />
+
+    *   **Preparar el `values.yaml` Local**
+        Para instalar el chart, creamos un archivo `values.yaml`. Es la forma recomendada y más limpia de gestionar la configuración.
+
+        ```yaml
+        # values.yaml para ms-services-rest
+        ms-base:
+          vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F # Token raíz de Vault para desarrollo
+        
+          virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+              - services.codedesignplus.app
+            gateways:
+              - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-services
+              match:
+              - uri:
+                  prefix: /ms-services/
+              rewrite:
+                uri: /
+              route:
+              - destination:
+                  host: ms-services-rest.inventory.svc.cluster.local
+                  port:
+                    number: 5000
+        ```
+        <Aside  title="La Magia del SDK: Autoconfiguración desde Vault">
+        El parámetro `ms-base.vault` es el corazón de la integración con nuestro ecosistema. Cuando el pod de `ms-services` se inicia, el **SDK de CodeDesignPlus** realiza los siguientes pasos:
+        1.  Usa la dirección del servidor y el token proporcionados para **autenticarse contra Vault**.
+        2.  Lee todos los secretos almacenados en la ruta `inventory-keyvalue/ms-services` que creamos en el paso anterior.
+        3.  **Sobrescribe dinámicamente** los valores de su archivo `appsettings.json` con los secretos obtenidos de Vault.
+
+        Esto significa que nuestras imágenes de contenedor no contienen ninguna credencial sensible y podemos rotar secretos en Vault sin necesidad de redeployar la aplicación.
+        </Aside>
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en un nuevo namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-services-rest codedesignplus/ms-services-rest -f ./values.yaml --namespace inventory --create-namespace
+        ```
+
+        <Image src="/images/blogs/ecosystem/ms-services/helm-install-ms-services-rest.png" alt="Instalando el Helm chart de ms-services-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando el Entrypoint gRPC (`ms-services-grpc`)**
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-services-grpc" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-services-grpc" />
+
+    *   **Preparar el `values-grpc.yaml` Local**
+        El `values-grpc.yaml` para el entrypoint gRPC es mucho más simple. Solo necesita saber cómo conectarse a Vault, ya que no se expone a través del Gateway de Istio.
+
+        ```yaml
+        # values-grpc.yaml para ms-services-grpc
+        ms-base:
+          vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F # El mismo token de desarrollo de Vault
+        ```
+
+    *   **Ejecutar el Despliegue con Helm**
+        Instalamos el segundo chart en el **mismo namespace** `inventory`.
+
+        ```bash
+        helm upgrade --install ms-services-grpc codedesignplus/ms-services-grpc -f ./values-grpc.yaml --namespace inventory
+        ```
+        
+        <Image src="/images/blogs/ecosystem/ms-services/helm-install-ms-services-grpc.png" alt="Instalando el Helm chart de ms-services-grpc" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación y Próximos Pasos
+
+<Steps>
+
+1.  **Verificar los Despliegues en Lens**
+    En Lens, si vamos a "Workloads > Pods" y filtramos por el namespace `inventory`, ahora deberíamos ver los pods de **ambos** despliegues (`ms-services-rest` y `ms-services-grpc`) corriendo.
+
+    <Image src="/images/blogs/ecosystem/ms-services/lens-verify-ms-services-pods.png" alt="Verificando los pods de ms-services en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart de `ms-services-rest` ya creó el `VirtualService` por nosotros. En Lens, podemos verificar que la regla para enrutar el tráfico de `/ms-services/` está activa.
+
+    <Image src="/images/blogs/ecosystem/ms-services/lens-virtualservice-ms-services.png" alt="Verificando el VirtualService de ms-services en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API REST**
+    Abre tu navegador o un cliente de API y navega a la URL del endpoint de salud:
+    `https://services.codedesignplus.app/ms-services/api/health`
+
+    Si la respuesta es un código 200 (OK), ¡felicidades! Has desplegado y configurado exitosamente el registro central de servicios con sus dos entrypoints.
+
+    <Image src="/images/blogs/ecosystem/ms-services/browser-test-ms-services.png" alt="Petición exitosa a la API de ms-services" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    También podras visualizar el Swagger UI de `ms-services-rest` en:
+
+    `https://services.codedesignplus.app/ms-services/swagger/index.html`
+
+    <Image src="/images/blogs/ecosystem/ms-services/swagger-ui-ms-services.png" alt="Visualizando Swagger UI de ms-services-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has completado el primer despliegue exitoso del ecosistema CodeDesignPlus. `ms-services` está ahora funcionando con su interfaz de gestión pública (REST) y su canal de comunicación interna de alto rendimiento (gRPC).
+
+Este proceso dual sirve como una plantilla perfecta para microservicios más complejos que también tengan múltiples puntos de entrada. En los próximos artículos, continuaremos desplegando los demás microservicios, que ahora podrán registrarse en `ms-services` y empezar a formar una red de servicios conectados.
