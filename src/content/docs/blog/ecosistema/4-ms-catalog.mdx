@@ -1,12 +1,11 @@
 ---
-title: "Desplegando Nuestro Primer Microservicio: `ms-catalog`"
+title: "Desplegando Nuestro Primer Servicio de Dominio: `ms-catalog`"
 date: 2025-07-20
 lastUpdated: 2025-07-20
-tags: ["Microservices", "CodeDesignPlus", "Kubernetes", "Helm", "Vault", "DDD", "CQRS"]
-excerpt: "¡La plataforma cobra vida! En este artículo, desplegamos nuestro primer componente del ecosistema, ms-catalog. Analizamos su arquitectura interna y lo integramos con nuestra infraestructura de Vault e Istio."
+tags: ["Microservices", "CodeDesignPlus", "Kubernetes", "Helm", "Vault", "DDD", "CQRS", "Catalogs"]
+excerpt: "La plataforma cobra vida. En este artículo, desplegamos nuestro primer servicio de dominio, ms-catalog. Analizamos su arquitectura interna y lo integramos con nuestra infraestructura de Vault e Istio."
 authors:
     - wclg
-draft: true
 ---
 
 import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
@@ -16,124 +15,157 @@ import { Image } from 'astro:assets';
 
 <ImageZoom/>
 
+Con el registro central `ms-services` funcionando, es hora de desplegar nuestro primer microservicio de dominio. Empezaremos con un componente fundamental para la consistencia de los datos en toda la plataforma: **`ms-catalog`**.
 
+`ms-catalog` es un microservicio diseñado para gestionar catálogos genéricos. Por el momento, su responsabilidad principal es la gestión de **Tipos de Documento** (`TypeDocument`), pero está diseñado para ser extensible a otros catálogos en el futuro. Al centralizar esta información, evitamos la duplicación y aseguramos que todos los demás microservicios hablen el mismo "idioma" cuando se refieren a entidades comunes.
 
-
-En la fase anterior, construimos una plataforma robusta. Ahora, es el momento de la verdad: desplegar nuestro **primer microservicio** del ecosistema CodeDesignPlus. Empezaremos con un componente fundamental: `ms-catalog`.
-
-`ms-catalog` es un microservicio diseñado para gestionar catálogos genéricos (tipos de documento, estados de pedido, etc.). Al centralizar esta información, evitamos la duplicación y aseguramos la consistencia de datos en toda la plataforma.
-
-En esta guía, haremos lo siguiente:
+En esta guía, seguiremos nuestro patrón de despliegue estándar:
 1.  **Analizar la Arquitectura Interna:** Entenderemos cómo está construido `ms-catalog`.
-2.  **Desplegar con Helm desde ArtifactHub:** Usaremos su Helm chart público para instalarlo.
-3.  **Configurar sus Secretos:** Almacenaremos su configuración sensible en HashiCorp Vault.
+2.  **Configurar sus Secretos:** Almacenaremos su configuración sensible en HashiCorp Vault.
+3.  **Desplegar con Helm desde ArtifactHub:** Usaremos su Helm chart público para instalarlo.
 4.  **Verificar su Funcionamiento:** Realizaremos una prueba de extremo a extremo.
 
 ### Un Vistazo a la Arquitectura de `ms-catalog`
 
-Antes de desplegar, entendamos cómo funciona por dentro.
+Aunque es un nuevo servicio, su ADN arquitectónico es idéntico al de `ms-services`, gracias a nuestro [arquetipo base](/archetypes).
 
 #### Flujo de la API a los Casos de Uso (CQRS)
 
-Este diagrama muestra cómo una petición REST se traduce en una acción dentro del microservicio.
+Este diagrama muestra cómo una petición REST sobre la entidad `TypeDocument` se traduce en una acción interna.
 
-<Image src="/images/blogs/ecosystem/ms-catalogs/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-catalog" width="2550" height="1314" decoding="async" loading="lazy"/>
+<Image src="/images/blogs/ecosystem/ms-catalogs/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
-*   **Lado Izquierdo (REST):** Muestra los endpoints estándar para las operaciones CRUD.
+*   **Lado Izquierdo (REST):** Muestra los endpoints estándar para las operaciones CRUD sobre `TypeDocument`.
 *   **Lado Derecho (Use Cases):** La lógica real, separada por el patrón **CQRS**:
-    *   **Commands (Azul):** Operaciones de escritura (`Create`, `Update`, `Delete`) que modifican el estado y emiten **Eventos de Dominio**.
-    *   **Queries (Amarillo):** Operaciones de solo lectura (`Get`, `GetAll`) optimizadas para la consulta de datos.
+    *   **Commands (Azul):** `CreateTypeDocument`, `UpdateTypeDocument`, `DeleteTypeDocument`. Son operaciones que modifican el estado y emiten Eventos de Dominio.
+    *   **Queries (Amarillo):** `GetTypeDocument`, `GetAllTypeDocuments`. Son operaciones de solo lectura, optimizadas para la consulta.
 
 #### El Corazón del Dominio: El `TypeDocumentAggregate`
 
 Este diagrama de clases nos muestra la estructura del Agregado `TypeDocument`, la pieza central de nuestra lógica de negocio según los principios de **Domain-Driven Design (DDD)**.
 
-<Image src="/images/blogs/ecosystem/ms-catalogs/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de TypeDocument" width="2550" height="1314" decoding="async" loading="lazy"/>
+<Image src="/images/blogs/ecosystem/ms-catalogs/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de TypeDocument"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
-Un **Agregado** es una unidad transaccional que agrupa objetos de dominio y garantiza la consistencia de las reglas de negocio.
+El Agregado encapsula todos los datos y reglas de negocio para asegurar que un `TypeDocument` siempre se mantenga en un estado válido.
 
 ### Despliegue y Configuración Paso a Paso
 
 <Steps>
 
 1.  **Configurando los Secretos en Vault**
-    Antes de que `ms-catalog` pueda arrancar, necesita su configuración. La almacenaremos de forma segura en Vault. En futuros artículos, veremos en detalle cada uno de los secretos, pero por ahora, nos centraremos en el proceso.
+    `ms-catalog` necesita credenciales para conectarse a RabbitMQ, Redis y MongoDB. Almacenamos estos datos confidenciales en Vault bajo una ruta específica para este microservicio.
 
-    /*
-     * Placeholder para la imagen del comando `vault kv put` para ms-catalog.
-     * Ejemplo: vault kv put -mount=inventory-keyvalue ms-catalog ConnectionStrings:DefaultConnection="..."
-     */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Creando los secretos para ms-catalog en Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-catalogs `
+        "RabbitMQ:UserName=default_user_..." `
+        "RabbitMQ:Password=1lweuHLFT..." `
+        "Redis:Instances:Core:ConnectionString=redis-standalone-headless.srv-redis.svc.cluster.local:6379" `
+        "Mongo:ConnectionString=mongodb+srv://..."
+    ```
+    <Image src="/images/blogs/ecosystem/ms-catalogs/vault-put.png" alt="Creando los secretos para ms-catalogs en Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
-    /* Placeholder para la imagen de verificación en la UI de Vault. */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Verificando los secretos de ms-catalog en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    Podemos verificar que los secretos se han guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-catalogs/vault-verify.png" alt="Verificando los secretos de ms-catalogs en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
 2.  **Desplegando con Helm desde ArtifactHub**
-    Cada entrypoint de un microservicio del ecosistema está empaquetado como un **Helm Chart** y publicado en **ArtifactHub**, el registro público de charts. Esto estandariza y simplifica enormemente el despliegue.
-
-    <Aside  title="Un Chart por Entrypoint">
-    El ecosistema CodeDesignPlus sigue una filosofía modular. Si un microservicio tiene múltiples puntos de entrada (ej. REST y un Worker asíncrono), encontrarás un Helm Chart separado para cada uno. En el caso de `ms-catalog`, que solo expone una API REST, usaremos el chart `ms-catalogs-rest`.
-    </Aside>
+    `ms-catalog` solo expone una API REST, por lo que solo necesitamos desplegar un Helm Chart.
 
     <LinkCard title="Ver Chart en ArtifactHub: ms-catalogs-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-catalogs-rest" />
 
-    Para instalarlo, primero añadimos el repositorio de CodeDesignPlus a Helm:
-    ```bash
-    helm repo add codedesignplus https://codedesignplus.github.io/codedesignplus-charts/
-    helm repo update
-    ```
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml` con la configuración de las variables de entorno no sensibles y la conexión a Vault.
 
-    Ahora, ejecutamos el comando de instalación. Usaremos `helm upgrade --install` que instala el chart si no existe, o lo actualiza si ya está presente.
+        ```yaml
+        # values-rest.yaml para ms-catalogs-rest
+        ms-base:
+        env:
+            - name: RESOURCES__ENABLE
+            value: "true"
+            - name: RESOURCES__SERVER
+            value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            - name: SECURITY__VALIDISSUER
+            value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+            - name: SECURITY__CLIENTID
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: SECURITY__VALIDAUDIENCES__0
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: RABBITMQ__HOST
+            value: "rabbitmq-cluster.srv-rabbitmq.svc"
+            - name: LOGGER__OTELENDPOINT
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            - name: OBSERVABILITY__SERVEROTEL
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
 
-    ```bash
-    helm upgrade --install ms-catalogs-rest codedesignplus/ms-catalogs-rest \
-        --namespace srv-catalogs \
-        --set ms-base.vault.token=<vault-token> \
-        --set ms-base.virtualService.http[0].route[0].destination.host=ms-catalogs-rest.srv-catalogs.svc.cluster.local \
-        --create-namespace
-    ```
-    Desglosemos los parámetros clave:
-    *   `--namespace srv-catalogs`: Desplegamos el servicio en su propio namespace.
-    *   `--set ms-base.vault.token`: Aquí pasamos el token que el microservicio usará para autenticarse contra Vault y obtener sus secretos.
-    *   `--set ms-base.virtualService...`: Este parámetro configura dinámicamente el `VirtualService` de Istio para que apunte al `Service` de Kubernetes correcto.
+        vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F
 
-    <Aside type="note">
-    El Helm chart viene con un `values.yaml` preconfigurado con valores por defecto sensatos. Para una personalización más profunda, te recomendamos consultar la documentación del chart directamente en ArtifactHub.
-    </Aside>
+        virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+            - services.codedesignplus.app
+            gateways:
+            - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-catalogs
+            match:
+            - uri:
+                prefix: /ms-catalogs/
+            rewrite:
+                uri: /
+            route:
+            - destination:
+                host: ms-catalogs-rest.inventory.svc.cluster.local
+                port:
+                    number: 5000
+        ```
 
-    /* Placeholder para la imagen del comando `helm upgrade --install`. */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Instalando el Helm chart de ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
-    
-    /* Placeholder para la imagen de verificación de la Release y los Pods en Lens. */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Verificando la release y los pods de ms-catalog en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart. Como el namespace `inventory` ya existe, no necesitamos el flag `--create-namespace`.
 
-3.  **Verificación End-to-End**
-    Con el despliegue completado, el Helm chart ya ha creado el `VirtualService` por nosotros. Es hora de hacer la prueba de fuego usando un cliente de API como Postman o `curl`.
+        ```bash
+        helm upgrade --install ms-catalogs-rest codedesignplus/ms-catalogs-rest -f ./values.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-catalogs/helm-install-rest.png" alt="Instalando el Helm chart de ms-catalogs-rest"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
-    **Crear un nuevo tipo de documento (POST):**
-    ```bash
-    curl -k -X POST https://services.codedesignplus.app/api/TypeDocument/ \
-      -H "Content-Type: application/json" \
-      -d '{"name": "Cédula de Ciudadanía", "code": "CC"}'
-    ```
-    *(Usamos `-k` para ignorar la validación del certificado en un entorno de desarrollo si es necesario)*
+</Steps>
 
-    /* Placeholder para la imagen de la petición POST y la respuesta 201 Created. */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Petición POST exitosa a ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
+### Parte 3: Verificación del Despliegue
 
-    **Obtener todos los tipos de documento (GET):**
-    ```bash
-    curl -k https://services.codedesignplus.app/api/TypeDocument/
-    ```
-    /* Placeholder para la imagen de la petición GET y la respuesta con la lista de documentos. */
-    <Image src="/images/blogs/ecosystem/placeholder.png" alt="Petición GET exitosa a ms-catalog"  width="2550" height="1314" decoding="async" loading="lazy"/>
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-catalogs-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-catalogs/lens-verify-pod.png" alt="Verificando el pod de ms-catalogs en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway. En Lens, bajo "Custom Resources > VirtualService", podemos ver la nueva regla para `ms-catalogs`.
+
+    <Image src="/images/blogs/ecosystem/ms-catalogs/lens-verify-vs.png" alt="Verificando el VirtualService de ms-catalogs en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** La forma más rápida de verificar que el servicio está vivo es acceder a su endpoint de salud. Abre un navegador y ve a:
+        `https://services.codedesignplus.app/ms-catalogs/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-catalogs/health-check.png" alt="Petición exitosa al endpoint de salud de ms-catalogs"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API de forma interactiva, podemos usar la interfaz de Swagger UI, que viene integrada en el microservicio. Navega a:
+        `https://services.codedesignplus.app/ms-catalogs/index.html`
+
+        Aquí puedes ver todos los endpoints disponibles para `TypeDocument` y probarlos directamente.
+
+        <Image src="/images/blogs/ecosystem/ms-catalogs/swagger-ui.png" alt="Visualizando Swagger UI de ms-catalogs-rest"  width="2550" height="1314" decoding="async" loading="lazy"/>
 
 </Steps>
 
 ### Conclusión
 
-¡Felicidades! Has desplegado, configurado y verificado con éxito el primer microservicio de nuestro ecosistema.
+Has desplegado con éxito tu primer servicio de dominio, `ms-catalog`, siguiendo el patrón estandarizado del ecosistema CodeDesignPlus. Este proceso —configurar secretos en Vault, personalizar un `values.yaml` y ejecutar `helm upgrade --install`— es la plantilla que repetiremos para dar vida al resto de los microservicios.
 
-Este proceso que acabamos de seguir será la **plantilla** para desplegar todos los demás componentes de CodeDesignPlus. Hemos visto en la práctica cómo la sólida infraestructura que construimos (Kubernetes, Vault, Istio) y la estandarización a través de **Helm y ArtifactHub** nos permiten añadir nueva funcionalidad de una manera increíblemente rápida, segura y repetible.
-
-En el próximo artículo, continuaremos expandiendo nuestro ecosistema desplegando el siguiente microservicio de la lista.
+Con `ms-services` como registro y `ms-catalog` gestionando nuestros datos maestros, estamos sentando las bases de una aplicación robusta y bien organizada. En el próximo artículo, continuaremos expandiendo las capacidades de nuestra plataforma.
