@@ -1,0 +1,326 @@
+---
+title: "Desplegando ms-emails: El Centro de Notificaciones del Ecosistema"
+date: 2025-07-21
+lastUpdated: 2025-07-21
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Emails", "Microsoft Graph", "Visual"]
+excerpt: "Añadimos la capacidad de comunicación a nuestra plataforma. Aprende a desplegar el multifacético ms-emails y a configurarlo con Microsoft Graph para el envío de correos."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Con nuestros servicios base ya desplegados, es hora de añadir una de las funcionalidades más críticas de cualquier aplicación: la **comunicación por correo electrónico**. Para esta tarea, desplegaremos **`ms-emails`**, un microservicio altamente especializado que actúa como el centro de notificaciones centralizado de todo nuestro ecosistema.
+
+`ms-emails` es un ejemplo perfecto de un microservicio complejo, ya que expone **tres puntos de entrada diferentes** (REST, gRPC y un Worker asíncrono) para manejar diversos escenarios de comunicación.
+
+### Un Vistazo a la Arquitectura y Casos de Uso de `ms-emails`
+
+#### Flujo y Puntos de Entrada
+
+Este diagrama muestra la rica funcionalidad de `ms-emails` y cómo interactúa con el resto del sistema.
+
+<Image src="/images/blogs/ecosystem/ms-emails/flow-diagram.svg" alt="Diagrama de Flujo de ms-emails" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST:** Expone endpoints para la gestión de **Plantillas** (`Template`) y **Plantillas por Defecto** (`DefaultTemplate`).
+*   **gRPC:** Proporciona un método de alto rendimiento para que otros microservicios envíen correos de forma **síncrona**.
+*   **Async Worker:** Escucha eventos de dominio en RabbitMQ (como `UserCreated`) y dispara acciones, como enviar un correo de bienvenida.
+
+#### El Modelo de Dominio
+
+El dominio de `ms-emails` está compuesto por varios Agregados clave.
+
+<Image src="/images/blogs/ecosystem/ms-emails/ddd-aggregate-diagram.svg" alt="Diagrama de Agregados de Dominio de ms-emails" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **`EmailsAggregate`:** Representa un correo electrónico individual.
+*   **`TemplateAggregate`:** Modela una plantilla de correo personalizable.
+*   **`DefaultTemplateAggregate`:** Modela las plantillas de correo que son parte del sistema (ej. bienvenida, reseteo de contraseña).
+
+#### Casos de Uso Principales
+
+<Aside  title="Caso de Uso 1: Envío de un Correo Transaccional (gRPC)">
+Imagina que `ms-payments` procesa un pago exitoso y necesita enviar una factura inmediatamente. En lugar de manejar la lógica de SMTP, simplemente realiza una llamada **gRPC** al endpoint `SendEmail` de `ms-emails`.
+</Aside>
+
+<Aside type="note" title="Caso de Uso 2: Gestión de Plantillas Personalizadas (REST)">
+Un equipo de marketing, usando una app de administración, interactúa con la **API REST** de `ms-emails` para crear y gestionar una nueva `Template` para una campaña.
+</Aside>
+
+<Aside type="caution" title="Caso de Uso 3: Envío de Contraseña a un Usuario Creado por un Admin (Worker)">
+Un administrador crea una nueva cuenta de usuario. El microservicio `ms-users` publica un evento `UserCreatedEvent`. El **Async Worker** de `ms-emails` escucha este evento, busca la plantilla por defecto activa del tipo `PasswordTemp` y envía un correo de bienvenida al nuevo usuario con sus credenciales.
+</Aside>
+
+### Parte 1: Configuración del Proveedor de Correo
+
+El microservicio `ms-emails` está diseñado para ser flexible y soportar múltiples proveedores de envío de correo. Antes de desplegarlo, debemos configurar al menos un proveedor.
+
+<Tabs syncKey="email-providers">
+  <TabItem label="Microsoft Graph" icon="azure">
+    Para nuestro entorno, usaremos **Microsoft Graph** como proveedor. Esto nos permite enviar correos a través de la infraestructura de Microsoft 365. Para que `ms-emails` pueda autenticarse y enviar correos, necesita su propia identidad en Microsoft Entra ID. A continuación, crearemos un "App Registration" con los permisos necesarios.
+
+    <Steps>
+    1. **Navegar a App Registrations**
+        En el [Microsoft Entra admin center](https://entra.microsoft.com/), ve a `Identity > Applications > App registrations` y haz clic en `+ New registration`.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/1-app-send-mail-microsoft-entra-id.png" alt="Navegando a App Registrations" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-emails/2-app-send-mail-microsoft-entra-id.png" alt="Creando un nuevo registro de aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    2. **Registrar la Aplicación `InventorySendMail`**
+        Dale un nombre descriptivo a la aplicación, como `InventorySendMail`, y haz clic en "Register". No necesitamos una Redirect URI ya que esta aplicación no tendrá un inicio de sesión interactivo.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/3-app-send-mail-microsoft-entra-id.png" alt="Formulario de registro para la aplicación de envío de correos" width="2550" height="1314" decoding="async" loading="lazy"/>
+        
+        Una vez creada, anota el **`Application (client) ID`** y el **`Directory (tenant) ID`**. Los necesitaremos para nuestros secretos.
+        
+        <Image src="/images/blogs/ecosystem/ms-emails/12-app-send-mail-microsoft-entra-id.png" alt="Panel de control de la nueva aplicación InventorySendMail" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    3. **Añadir Permisos de API**
+        Ahora, debemos darle permiso a esta aplicación para enviar correos. Ve a la sección `API permissions` y haz clic en `+ Add a permission`. Selecciona `Microsoft Graph`.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/5-app-send-mail-microsoft-entra-id.png" alt="Añadiendo permisos de Microsoft Graph" width="2550" height="1314" decoding="async" loading="lazy"/>
+        
+        Elegimos **`Application permissions`**, ya que nuestro microservicio enviará correos en segundo plano, sin un usuario conectado. Buscamos y seleccionamos el permiso **`Mail.Send`**, y hacemos clic en "Add permissions".
+
+        <Image src="/images/blogs/ecosystem/ms-emails/6-app-send-mail-microsoft-entra-id.png" alt="Seleccionando el permiso de aplicación Mail.Send" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    4. **Otorgar Consentimiento de Administrador**
+        El permiso `Mail.Send` requiere consentimiento del administrador. En el panel de `API permissions`, haz clic en el botón `Grant admin consent for ...` y confirma la acción.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/7-app-send-mail-microsoft-entra-id.png" alt="Permiso Mail.Send añadido pero pendiente de consentimiento" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-emails/8-app-send-mail-microsoft-entra-id.png" alt="Otorgando consentimiento de administrador" width="2550" height="1314" decoding="async" loading="lazy"/>
+        
+        El estado de los permisos cambiará a "Granted". ¡Nuestra aplicación ahora tiene permiso para enviar correos!
+
+        <Image src="/images/blogs/ecosystem/ms-emails/9-app-send-mail-microsoft-entra-id.png" alt="Permisos concedidos exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
+        
+    5. **Crear un Secreto de Cliente**
+        Para autenticarse, la aplicación necesita un secreto. Ve a `Certificates & secrets`, haz clic en `+ New client secret`, dale una descripción y una duración.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/10-app-send-mail-microsoft-entra-id.png" alt="Creando un nuevo secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+        <Aside type="caution" title="¡Copia el Secreto AHORA!">
+        Al crear el secreto, se te mostrará el **`Value`** una única vez. **Cópialo inmediatamente** y guárdalo en un lugar seguro. Este será nuestro `ClientSecret`. Si lo pierdes, tendrás que crear uno nuevo.
+        </Aside>
+
+        <Image src="/images/blogs/ecosystem/ms-emails/11-app-send-mail-microsoft-entra-id.png" alt="Copiando el valor del secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    6. **Obtener el ID del Usuario Remitente**
+        Cuando se usan permisos de aplicación, Microsoft Graph necesita saber "desde qué buzón" se enviarán los correos. Necesitamos el `Object ID` de un usuario con licencia que actuará como remitente.
+        *   Ve a la sección `Users` en Entra ID.
+        *   Selecciona el usuario que actuará como remitente.
+        *   Copia su **`Object ID`**. Este será nuestro secreto `UserIdWithLicense`.
+
+        <Image src="/images/blogs/ecosystem/ms-emails/14-app-send-mail-microsoft-entra-id.png" alt="Obteniendo el Object ID de un usuario" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    </Steps>
+  </TabItem>
+  <TabItem label="SMTP" icon="mail">
+    La configuración para un proveedor SMTP genérico se detallará en un futuro artículo. Implicará almacenar el host, puerto, usuario y contraseña de SMTP en Vault.
+  </TabItem>
+  <TabItem label="SendGrid" icon="sendgrid">
+    La configuración para SendGrid se detallará en un futuro artículo. Implicará generar una clave de API en SendGrid y almacenarla de forma segura en Vault.
+  </TabItem>
+</Tabs>
+
+### Parte 2: Almacenando los Secretos en Vault
+
+Con todas las credenciales de Microsoft Graph recolectadas, ahora las almacenaremos de forma segura en Vault, junto con los secretos de los otros servicios.
+
+<Image src="/images/blogs/ecosystem/ms-emails/1-app-send-mail-microsoft-entra-id.png" alt="Comando para guardar los secretos de `ms-emails` en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El comando `vault kv put` para `ms-emails` incluirá:
+*   Credenciales de `RabbitMQ`, `Redis` y `Mongo`.
+*   **`Email:TenantId`**: El `Directory (tenant) ID` de nuestro tenant de Entra ID.
+*   **`Email:ClientId`**: El `Application (client) ID` de nuestra app `InventorySendMail`.
+*   **`Email:ClientSecret`**: El valor del secreto que generamos y copiamos.
+*   **`Email:UserIdWithLicense`**: El `Object ID` del usuario que actuará como remitente.
+*   **`Vault:Transit:SecretContexts`**: Configuración para el motor de cifrado de Vault.
+
+### Parte 3: Despliegue y Verificación
+
+Con la configuración del proveedor de correo lista en Entra ID y los secretos recolectados, es hora de desplegar los tres entrypoints de `ms-emails`.
+
+<Steps>
+1. **Actualizar los Secretos en Vault**
+
+    Además de las credenciales de los servicios base, `ms-emails` utiliza el Motor de Tránsito de Vault para operaciones de cifrado. Debemos añadir la contraseña para este contexto de cifrado a nuestros secretos.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-emails `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<CONNECTION_STRING_FROM_MONGO_ATLAS>"
+        "Email:TenantId=<TENANT_ID>" `
+        "Email:ClientId=<CLIENT_ID>" `
+        "Email:ClientSecret=<CLIENT_SECRET>" `
+        "Email:UserIdWithLicense=<USER_ID_WITH_LICENSE>" `
+        "Vault:Transit:SecretContexts:vault_transit_password_temp=<VAULT_TRANSIT_PASSWORD>"
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-emails/vault-put.png" alt="Comando para guardar los secretos de ms-emails en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Podemos verificar que los secretos se han guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-emails/vault-verify.png" alt="Verificando los secretos de ms-emails en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    <Aside title="¿Qué es el Secreto de Tránsito?">
+    La clave `Vault:Transit:SecretContexts:vault_transit_password_temp` es una contraseña que el **SDK de CodeDesignPlus** utiliza para proteger datos sensibles "en tránsito" dentro de la aplicación, aprovechando la funcionalidad de "Cifrado como Servicio" del **Motor de Tránsito de Vault**. Esto añade una capa extra de seguridad para la información crítica.
+    </Aside>
+
+2. **Preparar los Archivos values.yaml**
+
+    Cada entrypoint tiene su propio archivo de configuración, que define sus variables de entorno y, en el caso de REST, su exposición a través de Istio.
+
+    <Tabs syncKey="ms-emails-values">
+        <TabItem label="values-rest.yaml">
+        ```yaml
+        ms-base:
+            env:
+                - name: RESOURCES__ENABLE
+                value: "false"
+                - name: SECURITY__VALIDISSUER
+                value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                - name: SECURITY__CLIENTID
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: SECURITY__VALIDAUDIENCES__0
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: RABBITMQ__HOST
+                value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                - name: LOGGER__OTELENDPOINT
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+                - name: OBSERVABILITY__SERVEROTEL
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+
+            vault:
+                server: http://vault.vault.svc.cluster.local:8200
+                solution: inventory
+                token: ANGq0*B2acD1n5%F
+
+            virtualService: 
+                create: true
+                namespace: istio-ingress
+                hosts:
+                - services.codedesignplus.app
+                gateways:
+                - istio-ingress/istio-inventory-gateway
+                http:
+                - name: ms-emails
+                match:
+                - uri:
+                    prefix: /ms-emails/
+                rewrite:
+                    uri: /
+                route:
+                - destination:
+                    host: ms-emails-rest.inventory.svc.cluster.local
+                    port:
+                        number: 5000
+
+        ```
+        </TabItem>
+
+        <TabItem label="values-grpc.yaml">
+        ```yaml
+        ms-base:
+            env:
+                - name: RESOURCES__ENABLE
+                value: "false"
+                - name: SECURITY__VALIDISSUER
+                value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                - name: SECURITY__CLIENTID
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: SECURITY__VALIDAUDIENCES__0
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: RABBITMQ__HOST
+                value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                - name: LOGGER__OTELENDPOINT
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+                - name: OBSERVABILITY__SERVEROTEL
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+                
+            vault:
+                server: http://vault.vault.svc.cluster.local:8200
+                solution: inventory
+                token: ANGq0*B2acD1n5%F
+        ```
+        </TabItem>
+
+        <TabItem label="values-worker.yaml">
+        ```yaml
+        ms-base:
+            env:
+                - name: RESOURCES__ENABLE
+                value: "false"
+                - name: SECURITY__VALIDISSUER
+                value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                - name: SECURITY__CLIENTID
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: SECURITY__VALIDAUDIENCES__0
+                value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                - name: RABBITMQ__HOST
+                value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                - name: LOGGER__OTELENDPOINT
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+                - name: OBSERVABILITY__SERVEROTEL
+                value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+                
+            vault:
+                server: http://vault.vault.svc.cluster.local:8200
+                solution: inventory
+                token: ANGq0*B2acD1n5%F
+        ```
+        </TabItem>
+    </Tabs>
+3. **Desplegar los Entrypoints con Helm**
+    Ejecutamos los comandos de despliegue para cada uno de los entrypoints en el namespace inventory.
+
+    * **Desplegando el Entrypoint REST:**
+    ```bash
+    helm upgrade --install ms-emails-rest codedesignplus/ms-emails-rest -f ./values-rest.yaml --namespace inventory
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-emails/helm-install-rest.png" alt="Instalando el Helm chart de ms-emails-rest"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    * **Desplegando el Entrypoint gRPC:**
+    ```bash
+    helm upgrade --install ms-emails-grpc codedesignplus/ms-emails-grpc -f ./values-grpc.yaml --namespace inventory
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-emails/helm-install-grpc.png" alt="Instalando el Helm chart de ms-emails-grpc"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    * **Desplegando el Entrypoint Async Worker:**
+    ```bash
+    helm upgrade --install ms-emails-worker codedesignplus/ms-emails-worker -f ./values-worker.yaml --namespace inventory
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-emails/helm-install-worker.png" alt="Instalando el Helm chart de ms-emails-worker"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4. **Verificar el Despliegue en Lens**
+    * **Verificar los Pods:** En Lens, si filtramos por el namespace inventory, ahora deberíamos ver los tres nuevos pods para `ms-emails-rest`, `ms-emails-grpc` y `ms-emails-worker`, todos corriendo.
+    /* Placeholder para la imagen de los pods de ms-emails en Lens. */
+
+    * **Verificar el VirtualService:** El Helm chart de `ms-emails-rest` ha creado automáticamente el VirtualService que enruta el tráfico desde nuestro Gateway.
+    /* Placeholder para la imagen del VirtualService de ms-emails en Lens. */
+
+5. **Prueba End-to-End**
+    * **Endpoint de Salud:** La forma más rápida de verificar que el servicio REST está vivo es acceder a su endpoint de salud. Abre un navegador y ve a:
+    https://services.codedesignplus.app/ms-emails/health/ready
+
+    <Image src="/images/blogs/ecosystem/ms-emails/health-check.png" alt="Verificando el endpoint de salud de ms-emails"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    * **Swagger UI:** Para explorar la API de forma interactiva, podemos usar la interfaz de Swagger UI, que viene integrada. Navega a:
+    https://services.codedesignplus.app/ms-emails/index.html
+
+    <Image src="/images/blogs/ecosystem/ms-emails/swagger-ui.png" alt="Accediendo a Swagger UI de ms-emails"  width="2550" height="1314" decoding="async" loading="lazy"/>
+</Steps>
+
+## Conclusión
+
+Has desplegado `ms-emails`, uno de los microservicios más complejos y funcionales de nuestro ecosistema. Este ejercicio demuestra cómo nuestra arquitectura y el uso de Helm Charts modulares nos permiten gestionar servicios con múltiples responsabilidades y puntos de entrada de una manera limpia y organizada.
+Con `ms-emails` en su lugar, nuestra plataforma ahora puede comunicarse proactivamente con los usuarios, reaccionar a eventos de negocio y gestionar complejas plantillas de correo, todo a través de un servicio centralizado y robusto.
