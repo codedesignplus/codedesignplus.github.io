@@ -1,0 +1,193 @@
+---
+title: "Desplegando ms-filestorage: Almacenamiento de Archivos Abstraído y Resiliente"
+date: 2025-07-26
+lastUpdated: 2025-07-26
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "File Storage", "Azure Blob", "DDD"]
+excerpt: "Abstraemos la complejidad del almacenamiento en la nube. Aprende a desplegar ms-filestorage, el microservicio que gestiona la subida y descarga de archivos, con soporte para múltiples proveedores como Azure Blob Storage."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+Continuamos con el despliegue de nuestro ecosistema. Ahora, abordaremos una necesidad universal en las aplicaciones modernas: la **gestión de archivos**. Para esta tarea, desplegaremos **`ms-filestorage`**.
+
+Este microservicio actúa como una capa de abstracción sobre diferentes proveedores de almacenamiento en la nube. En lugar de que cada microservicio tenga que implementar la lógica para conectarse a Azure Blob Storage, Amazon S3, o un sistema de archivos local, simplemente interactúan con la API estandarizada de `ms-filestorage`.
+
+<Aside title="Replicación y Resiliencia">
+Una de las características más potentes de `ms-filestorage` es su capacidad para **replicar un archivo en múltiples proveedores de almacenamiento simultáneamente** si están configurados. Aunque en este tutorial solo configuraremos Azure Blob Storage, esta arquitectura sienta las bases para una estrategia de almacenamiento de archivos altamente resiliente y multi-nube.
+</Aside>
+
+### Prerrequisitos
+
+A diferencia de otros servicios que hemos desplegado, `ms-filestorage` depende de un proveedor de almacenamiento en la nube externo para funcionar. En este tutorial, lo configuraremos para usar **Azure Blob Storage**.
+
+Antes de continuar, necesitarás tener lo siguiente:
+1.  **Una Cuenta de Azure:** Si no tienes una, puedes crear una cuenta gratuita.
+2.  **Una Cuenta de Almacenamiento (Storage Account):** Dentro de tu suscripción de Azure, debes crear una "Storage Account". Este es el recurso de Azure que contendrá tus "blobs" (archivos).
+3.  **Credenciales de Acceso:** Una vez creada la cuenta de almacenamiento, necesitarás obtener dos piezas de información:
+    *   El **Nombre de la Cuenta (Account Name)**.
+    *   Una **Clave de Acceso (Access Key)**.
+
+<Aside type="note" title="Guía Oficial de Microsoft">
+Si no estás familiarizado con la creación de una cuenta de almacenamiento en Azure, Microsoft proporciona una excelente guía paso a paso.
+
+<LinkCard title="Crear una cuenta de almacenamiento - Azure Storage" href="https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal" />
+</Aside>
+
+Con tu cuenta de almacenamiento creada y las credenciales a la mano, estás listo para continuar con el despliegue.
+
+### Un Vistazo a la Arquitectura de `ms-filestorage`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-filestorage/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-filestorage" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **Peticiones REST:** La API expone endpoints clave para `Upload` (subir un archivo), `Download` (descargar un archivo) y la gestión de metadatos.
+*   **Casos de Uso:** La lógica se separa en **Commands** (`CreateFileStorage`, `DeleteFileStorage`) y **Queries** (`GetFileStorage`, `Download`). Los `Commands` exitosos emiten eventos como `FileStorageCreated`.
+
+#### El Modelo de Dominio
+
+<Image src="/images/blogs/ecosystem/ms-filestorage/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-filestorage" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El `FileStorageAggregate` es el corazón del dominio. No almacena el archivo en sí, sino todos los **metadatos** asociados a él, incluyendo la información de cada archivo replicado (`List<File>`) en los diferentes proveedores.
+
+### Parte 1: Configuración del Almacenamiento
+
+`ms-filestorage` utiliza una estrategia de configuración híbrida:
+*   **Datos no sensibles (Variables de Entorno):** Como la URL base para las descargas.
+*   **Datos confidenciales (Vault):** Como las claves de acceso a los proveedores de almacenamiento.
+
+<Aside title="La Librería `CodeDesignPlus.Net.File.Storage`">
+Toda la lógica de conexión y gestión de los diferentes proveedores está encapsulada en la librería **`CodeDesignPlus.Net.File.Storage`**. Esta librería reutilizable es la que lee la configuración y permite al microservicio interactuar de forma transparente con Azure, S3, etc.
+
+<LinkCard title="Explora la Documentación de la Librería" href="/libs/file-storage/" />
+</Aside>
+
+#### Variables de Configuración Clave
+
+*   `FILESTORAGE__URIDOWNLOAD`: (Variable de Entorno) Esta es la URL pública base que el microservicio usará para construir los enlaces de descarga que devuelve a los clientes. Apunta a nuestro Gateway.
+*   `FileStorage:AzureBlob:AccountName`: (Secreto en Vault) El nombre de tu cuenta de Azure Storage.
+*   `FileStorage:AzureBlob:AccountKey`: (Secreto en Vault) La clave de acceso a tu cuenta de Azure Storage.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    Añadimos las credenciales de los servicios base (RabbitMQ, Redis, Mongo) y, muy importante, las credenciales de nuestra cuenta de Azure Blob Storage.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-filestorage `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+        "FileStorage:AzureBlob:AccountName=<ACCOUNT_NAME_FROM_AZURE_BLOB>" `
+        "FileStorage:AzureBlob:AccountKey=<ACCOUNT_KEY_FROM_AZURE_BLOB>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-filestorage/vault-put.png" alt="Creando los secretos para ms-filestorage en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-filestorage/vault-verify.png" alt="Verificando los secretos de ms-filestorage en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    `ms-filestorage` solo expone una API REST, por lo que desplegaremos un único Helm Chart.
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-filestorage-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-filestorage-rest" />
+
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml` con la configuración de las variables de entorno y la conexión a Vault.
+
+        ```yaml
+        # values-rest.yaml para ms-filestorage-rest
+        ms-base:
+          env:
+            - name: RESOURCES__ENABLE
+              value: "true"
+            - name: RESOURCES__SERVER
+              value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            # ... (otras variables de entorno como Security, Logger, etc.)
+            - name: FILESTORAGE__URIDOWNLOAD
+              value: "https://services.codedesignplus.app/ms-filestorage/api/FileStorage/Download"
+        
+          vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            service: ms-filestorage
+            token: <VAULT_ROOT_TOKEN>
+        
+          virtualService:
+            create: true
+            namespace: istio-ingress
+            hosts:
+              - services.codedesignplus.app
+            gateways:
+              - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-filestorage
+              match:
+              - uri:
+                  prefix: /ms-filestorage/
+              rewrite:
+                uri: /
+              route:
+              - destination:
+                  host: ms-filestorage-rest.inventory.svc.cluster.local
+                  port:
+                    number: 5000
+        ```
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en el namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-filestorage-rest codedesignplus/ms-filestorage-rest -f ./values-rest.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-filestorage/helm-install.png" alt="Instalando el Helm chart de ms-filestorage-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-filestorage-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-filestorage/lens-verify-pod.png" alt="Verificando el pod de ms-filestorage en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway.
+
+    <Image src="/images/blogs/ecosystem/ms-filestorage/lens-verify-vs.png" alt="Verificando el VirtualService de ms-filestorage en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-filestorage/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-filestorage/health-check.png" alt="Petición exitosa al endpoint de salud de ms-filestorage" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-filestorage/index.html`
+
+        Aquí puedes ver los endpoints para `Upload`, `Download` y la gestión de los metadatos de los archivos.
+
+        <Image src="/images/blogs/ecosystem/ms-filestorage/swagger-ui.png" alt="Visualizando Swagger UI de ms-filestorage-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-filestorage`, una pieza de infraestructura fundamental que abstrae y centraliza la gestión de archivos. Al separar esta lógica en su propio microservicio, hemos hecho que el resto de nuestros servicios de dominio sean más simples y se enfoquen únicamente en su lógica de negocio.
+
+Con este componente en su lugar, nuestra plataforma está lista para manejar contenido multimedia, documentos y cualquier otro tipo de archivo que nuestra aplicación de inventario pueda necesitar.
