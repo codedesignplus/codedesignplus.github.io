@@ -1,0 +1,167 @@
+---
+title: "Desplegando ms-roles: El Corazón del Control de Acceso"
+date: 2025-07-23
+lastUpdated: 2025-07-23
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Roles", "RBAC", "DDD"]
+excerpt: "Construimos las bases del control de acceso. Aprende a desplegar ms-roles, el microservicio que gestiona los roles del sistema y se integra con Microsoft Entra ID a través de eventos."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Continuando con el despliegue de nuestro ecosistema, llegamos a un componente fundamental para la seguridad y la autorización: **`ms-roles`**. Este microservicio tiene una responsabilidad única y crítica: gestionar la creación, actualización y eliminación de los **Roles** dentro de nuestra aplicación.
+
+Un "Rol" define un conjunto de permisos (ej. "Administrador", "Editor", "Lector"). `ms-roles` actúa como la fuente de verdad para estos roles, asegurando que estén definidos de manera consistente en toda la plataforma.
+
+<Aside title="Integración Asíncrona con Microsoft Entra ID">
+Una de las características más potentes de `ms-roles` es su integración asíncrona. Cuando un administrador crea un nuevo rol en nuestro sistema (ej. "Auditor Financiero"), `ms-roles` emite un evento de dominio (`RoleCreated`). Este evento es escuchado por el microservicio `ms-microsoft-graph`, que se encarga de replicar este rol como un `Group` en Microsoft Entra ID. Esto mantiene nuestros sistemas de permisos sincronizados de forma resiliente y desacoplada.
+</Aside>
+
+### Un Vistazo a la Arquitectura de `ms-roles`
+
+Fiel a nuestro arquetipo, `ms-roles` sigue una arquitectura limpia y predecible.
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+Este diagrama muestra cómo las peticiones REST se traducen en acciones internas.
+
+<Image src="/images/blogs/ecosystem/ms-roles/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-roles" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **Peticiones REST:** La API expone endpoints CRUD estándar para gestionar la entidad `Role`.
+*   **Casos de Uso:** La lógica está separada en **Commands** (operaciones de escritura que emiten eventos como `RoleCreated`) y **Queries** (operaciones de solo lectura).
+
+#### El Modelo de Dominio
+
+La lógica de negocio está encapsulada en el `RoleAggregate`.
+
+<Image src="/images/blogs/ecosystem/ms-roles/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-roles" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El Agregado `RoleAggregate` contiene las propiedades de un rol (como `Name` y `Description`) y los métodos que garantizan la consistencia y validan las reglas de negocio en cada operación.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-roles` necesita las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-roles `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-roles/vault-put.png" alt="Creando los secretos para ms-roles en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-roles/vault-verify.png" alt="Verificando los secretos de ms-roles en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    `ms-roles` solo expone una API REST, por lo que desplegaremos un único Helm Chart.
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-roles-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-roles-rest" />
+
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml` con la configuración de las variables de entorno no sensibles y la conexión a Vault.
+
+        ```yaml
+        # values-rest.yaml para ms-roles-rest
+        ms-base:
+        env:
+            - name: RESOURCES__ENABLE
+            value: "true"
+            - name: RESOURCES__SERVER
+            value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            - name: SECURITY__VALIDISSUER
+            value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+            - name: SECURITY__CLIENTID
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: SECURITY__VALIDAUDIENCES__0
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: RABBITMQ__HOST
+            value: "rabbitmq-cluster.srv-rabbitmq.svc"
+            - name: LOGGER__OTELENDPOINT
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            - name: OBSERVABILITY__SERVEROTEL
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+
+        vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F
+
+        virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+            - services.codedesignplus.app
+            gateways:
+            - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-roles
+            match:
+            - uri:
+                prefix: /ms-roles/
+            rewrite:
+                uri: /
+            route:
+            - destination:
+                host: ms-roles-rest.inventory.svc.cluster.local
+                port:
+                    number: 5000
+        ```
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en el namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-roles-rest codedesignplus/ms-roles-rest -f ./values-rest.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-roles/helm-install-rest.png" alt="Instalando el Helm chart de ms-roles-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-roles-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-roles/lens-verify-pod.png" alt="Verificando el pod de ms-roles en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway. En Lens, bajo "Custom Resources > VirtualService", podemos ver la nueva regla para `ms-roles-rest`.
+
+    <Image src="/images/blogs/ecosystem/ms-roles/lens-verify-vs.png" alt="Verificando el VirtualService de ms-roles en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-roles/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-roles/health-check.png" alt="Petición exitosa al endpoint de salud de ms-roles" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API de forma interactiva, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-roles/index.html`
+
+        Aquí puedes ver todos los endpoints disponibles para gestionar los Roles del sistema.
+
+        <Image src="/images/blogs/ecosystem/ms-roles/swagger-ui.png" alt="Visualizando Swagger UI de ms-roles-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-roles`, sentando una de las bases más importantes para la seguridad y autorización de tu aplicación. Este microservicio no solo gestiona los roles, sino que también demuestra el poder de una arquitectura orientada a eventos al integrarse de forma asíncrona con otros componentes del ecosistema como `ms-microsoft-graph`.
+
+Cada microservicio que añadimos enriquece la funcionalidad global de la plataforma. En el próximo artículo, continuaremos construyendo sobre esta base, desplegando el microservicio que consumirá estos roles para aplicar permisos: `ms-rbac`.
