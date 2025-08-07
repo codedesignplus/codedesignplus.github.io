@@ -65,11 +65,11 @@ El `RbacAggregate` es el corazón del dominio. Gestiona una lista de `RbacPermis
     `ms-rbac` requiere las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
 
     ```powershell
-    vault kv put -mount=inventory-keyvalue ms-rbac `
-        "RabbitMQ:UserName=default_user_..." `
-        "RabbitMQ:Password=lweuHLfTWQ..." `
-        "Redis:Instances:Core:ConnectionString=redis-standalone-headless.srv-redis.svc.cluster.local:6379" `
-        "Mongo:ConnectionString=mongodb+srv://..."
+    vault kv put -mount=inventory-keyvalue ms-roles `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
     ```
     <Image src="/images/blogs/ecosystem/ms-rbac/vault-put.png" alt="Creando los secretos para ms-rbac en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
 
