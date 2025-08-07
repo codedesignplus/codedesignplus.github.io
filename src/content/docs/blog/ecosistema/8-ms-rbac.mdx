@@ -1,0 +1,136 @@
+---
+title: "Desplegando ms-rbac: Autorización Dinámica en Tiempo Real"
+date: 2025-07-24
+lastUpdated: 2025-07-24
+tags: ["Microservices", "CodeDesignPlus", "RBAC", "Authorization", "gRPC", "Helm", "Vault"]
+excerpt: "Llevamos la seguridad al siguiente nivel. Aprende a desplegar ms-rbac y a entender cómo se integra con la biblioteca CodeDesignPlus.Net.Security para proporcionar autorización dinámica y en tiempo real a todo el ecosistema."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Con los roles definidos por `ms-roles`, ahora necesitamos el "guardia de seguridad" que decida qué puede hacer cada rol. Desplegaremos **`ms-rbac`** (Role-Based Access Control), el microservicio responsable de gestionar la asignación de **permisos** a los roles.
+
+`ms-rbac` actúa como la fuente de verdad central para la autorización. Mientras que la **autenticación** (quién eres) es manejada por Entra ID, la **autorización** (qué puedes hacer) es gobernada por `ms-rbac`. Este servicio permite definir políticas granulares, como "el rol 'Editor' puede hacer `POST` en `/api/products` pero no `DELETE`".
+
+### El Mecanismo de Autorización en Tiempo Real
+
+La verdadera magia de `ms-rbac` se revela en cómo interactúa con el resto del ecosistema a través de la biblioteca **`CodeDesignPlus.Net.Security`**, que está integrada en todos nuestros microservicios.
+
+<Image src="/images/blogs/ecosystem/ms-rbac/rbac-flow-diagram.svg" alt="Diagrama de interacción entre la librería de seguridad y ms-rbac" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Este diagrama ilustra un flujo inteligente y optimizado:
+
+1.  **Sincronización en Segundo Plano:** Cada microservicio (ej. `ms-users`) tiene un [`RefreshRbacBackgroundService`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/main/packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security/Services/RefreshRbacBackgroundService.cs) corriendo. Periódicamente, este servicio realiza una llamada **gRPC** a `ms-rbac` para obtener la lista actualizada de permisos que le conciernen.
+2.  **Caché en Memoria:** Los permisos obtenidos se almacenan en la **memoria** del microservicio. Esto es una optimización de rendimiento crucial: evita que se tenga que llamar a `ms-rbac` en cada petición entrante.
+3.  **Petición Entrante:** Cuando una petición llega a un endpoint de `ms-users`, un [**middleware de RBAC**](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/main/packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security/Middlewares/RbacMiddleware.cs) se activa.
+4.  **Validación Local:** El middleware consulta la **caché en memoria** para verificar si los roles del usuario (obtenidos del token JWT) tienen los permisos necesarios para acceder a ese endpoint específico. Si los tienen, la petición continúa; si no, se devuelve un error `403 Forbidden`.
+
+<Aside type="note" title="Controlando el Comportamiento desde la Configuración">
+La biblioteca `CodeDesignPlus.Net.Security` permite a los desarrolladores controlar finamente este mecanismo de RBAC a través de la configuración `appsettings.json`, que puede ser sobrescrita por secretos de Vault o por las variables de entorno. Las dos propiedades más importantes son:
+
+*   **`Security:ValidateRbac`**: Este es el interruptor principal. Cuando se establece en `true`, se activa el `RbacMiddleware`, que interceptará cada petición entrante para realizar la validación de permisos contra la caché en memoria. Si se establece en `false`, el middleware se desactiva, útil para entornos de desarrollo o endpoints públicos.
+
+*   **`Security:RefreshRbacInterval`**: Esta propiedad controla la frecuencia con la que el `RefreshRbacBackgroundService` se conecta a `ms-rbac` para actualizar su caché de permisos. Se define en segundos. Un valor más bajo significa que los cambios de permisos se reflejan más rápido en todo el ecosistema, a costa de un mayor tráfico gRPC. Un valor más alto reduce la carga pero aumenta la latencia en la propagación de cambios.
+
+Puedes explorar estas y otras opciones en el [código fuente de `SecurityOptions.cs`](https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/blob/56a5a3964d1033684d3588f858abb7f834e83ede/packages/CodeDesignPlus.Net.Security/src/CodeDesignPlus.Net.Security.Abstractions/Options/SecurityOptions.cs#L85C17-L85C29).
+</Aside>
+
+### Un Vistazo a la Arquitectura de `ms-rbac`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-rbac/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-rbac" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST y gRPC:** `ms-rbac` expone una API REST para la gestión de permisos y una API gRPC optimizada para que otros servicios consulten las políticas de autorización.
+*   **Casos de Uso:** La lógica se separa en **Commands** (para crear/modificar políticas) y **Queries** (para consultar permisos).
+
+#### El Modelo de Dominio
+
+<Image src="/images/blogs/ecosystem/ms-rbac/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-rbac" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El `RbacAggregate` es el corazón del dominio. Gestiona una lista de `RbacPermissionEntity`, que asocia un `Role` con un `Resource` (un endpoint específico definido por su Módulo, Servicio, Controlador y Método HTTP).
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-rbac` requiere las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-rbac `
+        "RabbitMQ:UserName=default_user_..." `
+        "RabbitMQ:Password=lweuHLfTWQ..." `
+        "Redis:Instances:Core:ConnectionString=redis-standalone-headless.srv-redis.svc.cluster.local:6379" `
+        "Mongo:ConnectionString=mongodb+srv://..."
+    ```
+    <Image src="/images/blogs/ecosystem/ms-rbac/vault-put.png" alt="Creando los secretos para ms-rbac en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-rbac/vault-verify.png" alt="Verificando los secretos de ms-rbac en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando los Entrypoints con Helm**
+    Desplegaremos los dos entrypoints de `ms-rbac`: REST para gestión y gRPC para la comunicación interna.
+
+    *   **Preparar los Archivos `values.yaml`**
+        Necesitamos dos archivos, `values-rest.yaml` y `values-grpc.yaml`, muy similares a los que usamos para `ms-services`. El primero incluirá la configuración del `VirtualService` para la API REST, mientras que el segundo solo contendrá la configuración base.
+
+    *   **Ejecutar el Despliegue con Helm**
+        Instalamos ambos charts en el namespace `inventory`.
+
+        ```bash
+        # Desplegar el entrypoint REST
+        helm upgrade --install ms-rbac-rest codedesignplus/ms-rbac-rest -f ./values-rest.yaml --namespace inventory
+        
+        # Desplegar el entrypoint gRPC
+        helm upgrade --install ms-rbac-grpc codedesignplus/ms-rbac-grpc -f ./values-grpc.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-rbac/helm-install-rest.png" alt="Instalando el Helm chart de ms-rbac-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-rbac/helm-install-grpc.png" alt="Instalando el Helm chart de ms-rbac-grpc" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar los Pods en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos los dos nuevos pods, `ms-rbac-rest` y `ms-rbac-grpc`, corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-rbac/lens-verify-pods.png" alt="Verificando los pods de ms-rbac en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart de `ms-rbac-rest` ha creado automáticamente el `VirtualService`. En Lens, podemos ver la nueva regla que enruta el tráfico para `/ms-rbac/`.
+
+    <Image src="/images/blogs/ecosystem/ms-rbac/lens-verify-vs.png" alt="Verificando el VirtualService de ms-rbac en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-rbac/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-rbac/health-check.png" alt="Petición exitosa al endpoint de salud de ms-rbac" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API de gestión, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-rbac/index.html`
+
+        Aquí puedes ver todos los endpoints disponibles para crear políticas de RBAC, asociando Roles a Permisos específicos.
+
+        <Image src="/images/blogs/ecosystem/ms-rbac/swagger-ui.png" alt="Visualizando Swagger UI de ms-rbac-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado `ms-rbac`, el servicio que completa nuestro ciclo de identidad y acceso. Con `ms-roles` definiendo *quién es quién* y `ms-rbac` definiendo *quién puede hacer qué*, hemos sentado las bases para una seguridad a nivel de aplicación extremadamente granular y flexible.
+
+Más importante aún, hemos visto cómo el SDK de **CodeDesignPlus.Net.Security** abstrae esta complejidad, proporcionando a los desarrolladores un mecanismo de autorización en tiempo real, optimizado y automático. En los próximos artículos, veremos cómo `ms-users` y otros servicios se benefician de esta potente integración.
