@@ -1,0 +1,183 @@
+---
+title: "Desplegando ms-locations: La Base Geográfica del Ecosistema"
+date: 2025-07-25
+lastUpdated: 2025-07-25
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Locations", "DDD", "CQRS"]
+excerpt: "Establecemos nuestra fuente de verdad para los datos geográficos. Aprende a desplegar ms-locations, el microservicio que gestiona un complejo modelo de países, ciudades, zonas horarias y monedas."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Continuamos poblando nuestro clúster con los componentes del ecosistema CodeDesignPlus. En este artículo, desplegaremos un servicio de datos fundamental que será consumido por muchas otras partes de nuestra aplicación: **`ms-locations`**.
+
+La gestión de datos geográficos es una necesidad común en casi cualquier aplicación (perfiles de usuario, direcciones de envío, configuración regional, etc.). `ms-locations` resuelve este problema proporcionando una API centralizada y una fuente de verdad única para un rico modelo de datos que incluye Regiones, Países, Estados, Ciudades, Barrios, Zonas Horarias y Monedas.
+
+### Un Vistazo a la Arquitectura de `ms-locations`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+`ms-locations` expone una API REST muy amplia para gestionar todas las entidades de su dominio. El patrón de arquitectura interna, sin embargo, es consistente y repetible para cada una de ellas.
+
+
+<Tabs>
+  <TabItem label="Country">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-country.svg" alt="Diagrama de Flujo CQRS para la entidad Country" width="2550" height="1314" decoding="async" loading="lazy"/>
+  </TabItem>
+  <TabItem label="State">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-state.svg" alt="Diagrama de Flujo CQRS para la entidad State" width="2550" height="1314" decoding="async" loading="lazy"/>
+  </TabItem>
+  <TabItem label="City">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-city.svg" alt="Diagrama de Flujo CQRS para la entidad City" width="2550" height="1314" decoding="async" loading="lazy"/>    
+  </TabItem>
+  <TabItem label="Locality">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-locality.svg" alt="Diagrama de Flujo CQRS para la entidad Locality" width="2550" height="1314" decoding="async" loading="lazy"/>
+  </TabItem>
+  <TabItem label="Neighborhood">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-neighborhood.svg" alt="Diagrama de Flujo CQRS para la entidad Neighborhood" width="2550" height="1314" decoding="async" loading="lazy"/>
+  </TabItem>
+  <TabItem label="Currency">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-currency.svg" alt="Diagrama de Flujo CQRS para la entidad Currency" width="2550" height="1314" decoding="async" loading="lazy"/>
+  </TabItem>
+  <TabItem label="Timezone">
+    <Image src="/images/blogs/ecosystem/ms-locations/flow-diagram-timezone.svg" alt="Diagrama de Flujo CQRS para la entidad Timezone" width="2550" height="1314" decoding="async" loading="lazy"/>    
+  </TabItem>
+</Tabs>
+
+Este patrón de **Commands** para operaciones de escritura y **Queries** para operaciones de lectura se aplica a todas las demás entidades como `City`, `State`, `Currency`, etc.
+
+#### El Modelo de Dominio: Un Mundo de Datos Interconectados
+
+El verdadero poder de `ms-locations` reside en la riqueza y la interconexión de su modelo de dominio, diseñado siguiendo los principios de **Domain-Driven Design (DDD)**.
+
+<Image src="/images/blogs/ecosystem/ms-locations/ddd-aggregate-diagram.svg" alt="Diagrama de Agregados de Dominio de ms-locations" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Como muestra el diagrama, no se trata de listas aisladas. Es un modelo relacional completo donde cada `Country` está asociado a una `Region`, cada `State` a un `Country`, y así sucesivamente. Esta estructura garantiza la integridad y la consistencia de los datos geográficos en toda la plataforma.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-locations` necesita las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-roles `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-locations/vault-put.png" alt="Creando los secretos para ms-locations en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-locations/vault-verify.png" alt="Verificando los secretos de ms-locations en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    `ms-locations` solo expone una API REST, por lo que desplegaremos un único Helm Chart.
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-locations-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-locations-rest" />
+
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml` con la configuración de las variables de entorno no sensibles y la conexión a Vault. *(Nota: El contenido es muy similar al de los microservicios anteriores, solo cambia el `service` en la sección de vault y el `host` y `name` en la de `virtualService`)*.
+
+        ```yaml
+        # values-rest.yaml para ms-locations-rest
+        ms-base:
+        env:
+            - name: RESOURCES__ENABLE
+            value: "true"
+            - name: RESOURCES__SERVER
+            value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            - name: SECURITY__VALIDISSUER
+            value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+            - name: SECURITY__CLIENTID
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: SECURITY__VALIDAUDIENCES__0
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: RABBITMQ__HOST
+            value: "rabbitmq-cluster.srv-rabbitmq.svc"
+            - name: LOGGER__OTELENDPOINT
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            - name: OBSERVABILITY__SERVEROTEL
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+
+        vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F
+
+        virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+            - services.codedesignplus.app
+            gateways:
+            - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-locations
+            match:
+            - uri:
+                prefix: /ms-locations/
+            rewrite:
+                uri: /
+            route:
+            - destination:
+                host: ms-locations-rest.inventory.svc.cluster.local
+                port:
+                    number: 5000
+        ```
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en el namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-locations-rest codedesignplus/ms-locations-rest -f ./values-rest.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-locations/helm-install.png" alt="Instalando el Helm chart de ms-locations-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-locations-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-locations/lens-verify-pod.png" alt="Verificando el pod de ms-locations en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway. En Lens, podemos ver la nueva regla para `ms-locations-rest`.
+
+    <Image src="/images/blogs/ecosystem/ms-locations/lens-verify-vs.png" alt="Verificando el VirtualService de ms-locations en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-locations/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-locations/health-check.png" alt="Petición exitosa al endpoint de salud de ms-locations" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API completa, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-locations/index.html`
+
+        Aquí puedes ver la gran cantidad de endpoints disponibles para gestionar `City`, `Country`, `Currency` y todas las demás entidades del dominio.
+
+        <Image src="/images/blogs/ecosystem/ms-locations/swagger-ui.png" alt="Visualizando Swagger UI de ms-locations-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-locations`, un microservicio de datos fundamental que servirá como la fuente de verdad para toda la información geográfica en tu aplicación. Este servicio no solo ahorra un tiempo de desarrollo inmenso, sino que también garantiza la consistencia y la integridad de los datos en todo el ecosistema.
+
+Cada microservicio que añadimos enriquece la funcionalidad global de la plataforma, acercándonos cada vez más a tener una base completa sobre la cual construir nuestra aplicación de inventario.
