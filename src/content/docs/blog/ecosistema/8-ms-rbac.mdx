@@ -105,7 +105,7 @@ El `RbacAggregate` es el corazón del dominio. Gestiona una lista de `RbacPermis
 1.  **Verificar los Pods en Lens**
     En Lens, bajo "Workloads > Pods", ahora vemos los dos nuevos pods, `ms-rbac-rest` y `ms-rbac-grpc`, corriendo en el namespace `inventory`.
 
-    <Image src="/images/blogs/ecosystem/ms-rbac/lens-verify-pods.png" alt="Verificando los pods de ms-rbac en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-rbac/lens-verify-pod.png" alt="Verificando los pods de ms-rbac en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
 
 2.  **Verificar el `VirtualService` de Istio**
     El Helm chart de `ms-rbac-rest` ha creado automáticamente el `VirtualService`. En Lens, podemos ver la nueva regla que enruta el tráfico para `/ms-rbac/`.
