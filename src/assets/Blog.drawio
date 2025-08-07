@@ -13516,6 +13516,9 @@
         <mxCell id="kN5AtyI0NBafsHvfV5Y5-2" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;fillColor=#2D9C5E;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;shape=mxgraph.gcp2.check" vertex="1" parent="YNmIXfa6h2rWkty7KjKI-1">
           <mxGeometry x="970" y="845" width="37.5" height="30" as="geometry" />
         </mxCell>
+        <mxCell id="sX76SgRr_rBJ_1CY0ZTU-0" value="" style="sketch=0;html=1;aspect=fixed;strokeColor=none;shadow=0;align=center;fillColor=#2D9C5E;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;shape=mxgraph.gcp2.check" vertex="1" parent="YNmIXfa6h2rWkty7KjKI-1">
+          <mxGeometry x="970" y="1005" width="37.5" height="30" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
