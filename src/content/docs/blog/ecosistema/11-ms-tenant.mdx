@@ -1,0 +1,169 @@
+---
+title: "Desplegando ms-tenants: La Base del Multi-Tenancy"
+date: 2025-07-27
+lastUpdated: 2025-07-27
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Tenants", "Multi-Tenancy", "DDD"]
+excerpt: "Construimos el pilar de nuestra aplicación multi-tenant. Aprende a desplegar ms-tenants, el microservicio que gestiona clientes u organizaciones, conectando dominios como licencias y ubicaciones."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Llegamos a uno de los microservicios más importantes de cualquier aplicación SaaS (Software as a Service): **`ms-tenants`**. Este componente es el corazón de la arquitectura **multi-tenant**, responsable de gestionar las entidades de más alto nivel de nuestra aplicación: los **inquilinos**.
+
+Un "tenant" representa a un cliente o una organización individual que utiliza nuestra plataforma. `ms-tenants` se encarga de mantener toda su información de perfil, su ubicación y, crucialmente, la licencia que tienen asociada.
+
+<Aside  title="¿Cómo se Crean los Tenants?">
+Es importante destacar que, en nuestro ecosistema, la creación de un tenant no es un proceso de auto-registro público. Un nuevo tenant se crea a través de dos flujos principales:
+1.  **Creación Administrativa:** Un superadministrador, desde un panel de gestión, crea un nuevo tenant manualmente.
+2.  **Post-Compra:** Un tenant se crea automáticamente una vez que se ha completado con éxito el proceso de compra de una licencia.
+
+Exploraremos el proceso de ventas y adquisición de licencias en detalle en un artículo futuro.
+</Aside>
+
+### Un Vistazo a la Arquitectura de `ms-tenants`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-tenants/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-tenants" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST y gRPC:** `ms-tenants` expone una API REST para la gestión y una API gRPC para la comunicación interna de alto rendimiento con otros servicios.
+*   **Casos de Uso:** La lógica de negocio se separa en **Commands** (para crear, actualizar o eliminar tenants) y **Queries** (para consultar su información).
+
+#### El Modelo de Dominio: Un Agregado Central
+
+El verdadero poder de `ms-tenants` se revela en su modelo de dominio, que actúa como un nexo de unión entre diferentes contextos del negocio.
+
+<Image src="/images/blogs/ecosystem/ms-tenants/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-tenants" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El `TenantAggregate` es un agregado rico y complejo. No solo contiene la información básica del inquilino, sino que también mantiene referencias a otros dominios importantes:
+*   **`License`**: Cada tenant tiene una licencia asociada.
+*   **`Location`**: Cada tenant está vinculado a una ubicación geográfica (País, Ciudad, etc.), que es gestionada por `ms-locations`.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-tenants` requiere las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-tenants `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-tenants/vault-put.png" alt="Creando los secretos para ms-tenants en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-tenants/vault-verify.png" alt="Verificando los secretos de ms-tenants en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    Para este tutorial, desplegaremos el entrypoint REST de `ms-tenants`.
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-tenants-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-tenants-rest" />
+
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml` con la configuración de las variables de entorno y la conexión a Vault.
+
+        ```yaml
+        # values-rest.yaml para ms-tenants-rest
+        ms-base:
+        env:
+            - name: RESOURCES__ENABLE
+            value: "true"
+            - name: RESOURCES__SERVER
+            value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            - name: SECURITY__VALIDISSUER
+            value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+            - name: SECURITY__CLIENTID
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: SECURITY__VALIDAUDIENCES__0
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: RABBITMQ__HOST
+            value: "rabbitmq-cluster.srv-rabbitmq.svc"
+            - name: LOGGER__OTELENDPOINT
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            - name: OBSERVABILITY__SERVEROTEL
+            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+
+        vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F
+
+        virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+            - services.codedesignplus.app
+            gateways:
+            - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-tenants
+            match:
+            - uri:
+                prefix: /ms-tenants/
+            rewrite:
+                uri: /
+            route:
+            - destination:
+                host: ms-tenants-rest.inventory.svc.cluster.local
+                port:
+                    number: 5000
+        ```
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en el namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-tenants-rest codedesignplus/ms-tenants-rest -f ./values-rest.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-tenants/helm-install.png" alt="Instalando el Helm chart de ms-tenants-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-tenants-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-tenants/lens-verify-pod.png" alt="Verificando el pod de ms-tenants en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway.
+
+    <Image src="/images/blogs/ecosystem/ms-tenants/lens-verify-vs.png" alt="Verificando el VirtualService de ms-tenants en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-tenants/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-tenants/health-check.png" alt="Petición exitosa al endpoint de salud de ms-tenants" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-tenants/index.html`
+
+        Aquí puedes ver todos los endpoints disponibles para gestionar los Tenants de la plataforma.
+
+        <Image src="/images/blogs/ecosystem/ms-tenants/swagger-ui.png" alt="Visualizando Swagger UI de ms-tenants-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-tenants`, el servicio que gestionará las entidades de más alto nivel en tu aplicación. Este microservicio es un excelente ejemplo de cómo el Domain-Driven Design nos ayuda a modelar contextos de negocio complejos y a establecer relaciones claras entre diferentes dominios.
+
+Con los tenants en su lugar, ahora tenemos la entidad principal a la cual podremos asociar usuarios, aplicar licencias y configurar permisos, acercándonos cada vez más a una aplicación completamente funcional.
