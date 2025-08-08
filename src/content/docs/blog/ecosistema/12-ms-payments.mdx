@@ -1,0 +1,136 @@
+---
+title: "Desplegando ms-payments: Orquestando Transacciones en el Ecosistema"
+date: 2025-07-28
+lastUpdated: 2025-07-28
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Payments", "PayU", "DDD", "gRPC"]
+excerpt: "Habilitamos las transacciones en nuestra plataforma. Aprende a desplegar ms-payments, el microservicio que orquesta los pagos con proveedores externos como PayU, y entiende su complejo modelo de dominio."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Hemos llegado a un hito crítico en la construcción de nuestra aplicación: la capacidad de procesar **pagos**. Para esta tarea fundamental, desplegaremos **`ms-payments`**, el microservicio del ecosistema CodeDesignPlus diseñado para actuar como un orquestador de transacciones.
+
+`ms-payments` abstrae la complejidad de integrarse con diferentes pasarelas de pago. En lugar de que cada parte de nuestra aplicación necesite conocer los detalles de la API de un proveedor, simplemente interactúan con `ms-payments`.
+
+<Aside title="El Rol en el Flujo de Negocio">
+El principal consumidor de `ms-payments` es el proceso de **compra de una licencia**. Cuando un `Tenant` decide adquirir una licencia para el sistema, el flujo de compra invoca a `ms-payments` para procesar la transacción de forma segura. Por ahora, el microservicio da soporte a **PayU** (para tarjetas de crédito, débito y PSE), pero está diseñado para ser extensible a múltiples proveedores en el futuro.
+</Aside>
+
+### Un Vistazo a la Arquitectura de `ms-payments`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-payment/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-payments" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST y gRPC:** `ms-payments` expone una API REST para la gestión y consulta de métodos de pago, bancos, etc. Sin embargo, las operaciones críticas como `InitiatePayment` y `UpdateStatus` se exponen a través de **gRPC** para una comunicación interna segura y de alto rendimiento.
+*   **Casos de Uso:** La lógica se separa en **Commands** (para iniciar un pago o actualizar su estado) y **Queries** (para consultar información).
+
+#### El Modelo de Dominio: Orquestando la Transacción
+
+El modelo de dominio de `ms-payments` es uno de los más ricos del ecosistema, reflejando la complejidad de un proceso de pago.
+
+<Image src="/images/blogs/ecosystem/ms-payment/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-payments" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **`PaymentAggregate`**: Es el Agregado central que rastrea el estado completo de una transacción, desde su inicio hasta su finalización, incluyendo el pagador (`Payer`) y el monto (`Amount`).
+*   **`PaymentMethodAggregate`**: Modela los diferentes metodos de pago disponibles, como tarjetas de crédito, débito, nequi, google pay, etc.
+*   **`BankAggregate`**: Representa a las entidades bancarias, utilizadas en métodos de pago como PSE.
+
+
+### Prerrequisitos: Credenciales de PayU
+
+Para que `ms-payments` pueda funcionar, necesita las credenciales de un proveedor de pagos. Para este tutorial, necesitarás una cuenta de sandbox o producción en **PayU**. Deberás obtener los siguientes valores de tu panel de PayU:
+*   `AccountId`
+*   `MerchantId`
+*   `ApiKey`
+*   `ApiLogin`
+*   `SecretKey`
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    Almacenamos en Vault las credenciales base (RabbitMQ, Redis, Mongo) y, crucialmente, todas las claves de nuestra cuenta de PayU.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-payments `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>" `
+        "Payu:AccountId=<ACCOUNT_ID_FROM_PAYU>" `
+        "Payu:MerchantId=<MERCHANT_ID_FROM_PAYU>" `
+        "Payu:ApiKey=<API_KEY_FROM_PAYU>" `
+        "Payu:ApiLogin=<API_LOGIN_FROM_PAYU>" `
+        "Payu:SecretKey=<SECRET_KEY_FROM_PAYU>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-payment/vault-put.png" alt="Creando los secretos para ms-payments en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-payment/vault-verify.png" alt="Verificando los secretos de ms-payments en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando los Entrypoints con Helm**
+    Desplegaremos los dos entrypoints de `ms-payments`: REST para gestión y gRPC para las transacciones.
+
+    *   **Preparar los Archivos `values.yaml`**
+        Necesitaremos dos archivos, `values-rest.yaml` y `values-grpc.yaml`. La estructura es la misma que hemos usado en los microservicios anteriores, definiendo las variables de entorno no sensibles y la conexión a Vault.
+
+    *   **Ejecutar el Despliegue con Helm**
+        Instalamos ambos charts en el namespace `inventory`.
+
+        ```bash
+        # Desplegar el entrypoint REST
+        helm upgrade --install ms-payments-rest codedesignplus/ms-payments-rest -f ./values-rest.yaml --namespace inventory
+        
+        # Desplegar el entrypoint gRPC
+        helm upgrade --install ms-payments-grpc codedesignplus/ms-payments-grpc -f ./values-grpc.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-payment/helm-install-rest.png" alt="Instalando el Helm chart de ms-payments-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-payment/helm-install-grpc.png" alt="Instalando el Helm chart de ms-payments-grpc" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar los Pods en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos los dos nuevos pods, `ms-payments-rest` y `ms-payments-grpc`, corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-payment/lens-verify-pods.png" alt="Verificando los pods de ms-payments en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart de `ms-payments-rest` ha creado automáticamente el `VirtualService` para su API de gestión.
+
+    <Image src="/images/blogs/ecosystem/ms-payment/lens-verify-vs.png" alt="Verificando el VirtualService de ms-payments en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-payments/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-payment/health-check.png" alt="Petición exitosa al endpoint de salud de ms-payments" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API de gestión, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-payments/index.html`
+
+        Aquí puedes ver los endpoints para consultar información de soporte como bancos y métodos de pago. Nota que las operaciones transaccionales principales se manejan vía gRPC.
+
+        <Image src="/images/blogs/ecosystem/ms-payment/swagger-ui.png" alt="Visualizando Swagger UI de ms-payments-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-payments`, un microservicio complejo y de misión crítica que dota a tu plataforma de capacidades transaccionales. Al abstraer la lógica de pago en su propio servicio, has hecho que el resto de tu ecosistema sea más simple, seguro y fácil de mantener.
+
+Con este componente en su lugar, estamos un paso crucial más cerca de poder implementar un flujo de negocio completo, desde la selección de un producto o licencia hasta el pago exitoso.
