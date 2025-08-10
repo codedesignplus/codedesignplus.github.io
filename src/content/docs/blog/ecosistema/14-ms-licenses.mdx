@@ -1,0 +1,177 @@
+---
+title: "Desplegando ms-licenses: Orquestando el Flujo de Compra"
+date: 2025-07-30
+lastUpdated: 2025-07-30
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Licenses", "Orchestration", "DDD"]
+excerpt: "Llegamos al núcleo del negocio. Aprende a desplegar ms-licenses, el microservicio orquestador que gestiona la compra de licencias y coordina a otros servicios como ms-payments y ms-users."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Hemos desplegado varios microservicios de soporte y de dominio, pero ahora llegamos a uno que se encuentra en el corazón del flujo de negocio: **`ms-licenses`**. Este componente tiene una doble responsabilidad crítica:
+1.  **Gestionar las Licencias:** Define los diferentes planes o niveles de servicio que se pueden ofrecer en la plataforma.
+2.  **Orquestar las Órdenes de Compra:** Actúa como el punto de entrada cuando un usuario decide adquirir una licencia, coordinando a múltiples otros microservicios para completar la transacción.
+
+### Un Vistazo a la Arquitectura de `ms-licenses`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-licenses/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-licenses"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **API:** La API REST se divide en dos contextos principales: `License` para la gestión administrativa de las licencias, y `Order` para que los usuarios inicien y consulten sus procesos de compra.
+*   **Casos de Uso:** Los `Commands` como `PayOrder` son los más complejos, ya que inician el flujo de orquestación.
+
+#### El Modelo de Dominio: El Nexo del Negocio
+
+El modelo de dominio de `ms-licenses` es un ejemplo perfecto de cómo un microservicio puede conectar múltiples contextos de negocio.
+
+<Image src="/images/blogs/ecosystem/ms-licenses/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-licenses"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **`LicenseAggregate`**: Modela una licencia con sus planes, precios y módulos asociados.
+*   **`OrderAggregate`**: Es el Agregado central que representa una orden de compra. Fíjate cómo contiene información que proviene de otros dominios: `Tenant`, `Buyer` (que es un usuario), `PaymentMethod`, etc. Esto demuestra su rol como un **agregador de información** durante un flujo de negocio.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-licenses` necesita las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-licenses `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-licenses/vault-put.png" alt="Creando los secretos para ms-licenses en Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-licenses/vault-verify.png" alt="Verificando los secretos de ms-licenses en la UI de Vault"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando con Helm desde ArtifactHub**
+    `ms-licenses` solo expone una API REST, por lo que desplegaremos un único Helm Chart.
+
+    <LinkCard title="Ver Chart en ArtifactHub: ms-licenses-rest" href="https://artifacthub.io/packages/helm/codedesignplus-charts/ms-licenses-rest" />
+
+    *   **Preparar el `values-rest.yaml` Local**
+        Creamos un archivo `values-rest.yaml`. Este archivo es particularmente interesante porque es donde configuramos los **clientes gRPC** que `ms-licenses` usará para orquestar otros servicios.
+
+        ```yaml
+        ms-base:
+        env:
+            - name: RESOURCES__ENABLE
+            value: "true"
+            - name: RESOURCES__SERVER
+            value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+            - name: SECURITY__VALIDISSUER
+            value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+            - name: SECURITY__CLIENTID
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: SECURITY__VALIDAUDIENCES__0
+            value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+            - name: RABBITMQ__HOST
+            value: "rabbitmq-cluster.srv-rabbitmq.svc"
+            - name: LOGGER__OTELENDPOINT
+            value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+            - name: OBSERVABILITY__SERVEROTEL
+            value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+            - name: GRPCCLIENTS__PAYMENT
+            value: "ms-payments-grpc.inventory.svc.cluster.local:5001"
+            - name: GRPCCLIENTS__USER
+            value: "ms-users-grpc.inventory.svc.cluster.local:5001"
+            - name: GRPCCLIENTS__TENANT
+            value: "ms-tenants-grpc.inventory.svc.cluster.local:5001"
+
+        vault:
+            server: http://vault.vault.svc.cluster.local:8200
+            solution: inventory
+            token: ANGq0*B2acD1n5%F
+
+        virtualService: 
+            create: true
+            namespace: istio-ingress
+            hosts:
+            - services.codedesignplus.app
+            gateways:
+            - istio-ingress/istio-inventory-gateway
+            http:
+            - name: ms-licenses
+            match:
+            - uri:
+                prefix: /ms-licenses/
+            rewrite:
+                uri: /
+            route:
+            - destination:
+                host: ms-licenses-rest.inventory.svc.cluster.local
+                port:
+                    number: 5000
+        ```
+
+            <Aside title="Configurando el Orquestador con Clientes gRPC">
+                Las variables de entorno bajo la clave `GRPCCLIENTS` son las que convierten a `ms-licenses` en un orquestador. Le estamos proporcionando las direcciones DNS internas de Kubernetes para los entrypoints gRPC de los otros microservicios:
+                *   **`GRPCCLIENTS__PAYMENT`**: Le dice cómo hablar con `ms-payments` para procesar una transacción.
+                *   **`GRPCCLIENTS__USER`**: Le indica cómo hablar con `ms-users` para, por ejemplo, asignar un rol base al comprador.
+                *   **`GRPCCLIENTS__TENANT`**: Le muestra cómo comunicarse con `ms-tenants` para crear un nuevo inquilino después de una compra exitosa.
+
+                Esta comunicación se simplifica enormemente gracias a la librería **`CodeDesignPlus.Net.gRpc.Clients`**, que es parte de nuestro SDK. Esta librería agrupa todos los clientes gRPC preconfigurados para el ecosistema. Al arrancar, lee estas variables de entorno y registra automáticamente los clientes necesarios en el contenedor de inyección de dependencias, haciendo que la comunicación entre microservicios sea transparente para el desarrollador.
+
+                Puedes explorar el código fuente de esta librería aquí:
+                <LinkCard title="CodeDesignPlus.Net.gRpc.Clients en GitHub" href="https://github.com/codedesignplus/CodeDesignPlus.Net.Sdk/tree/main/packages/CodeDesignPlus.Net.gRpc.Clients" />
+            </Aside>
+
+    *   **Ejecutar el Despliegue con Helm**
+        Usamos `helm upgrade --install` para desplegar el chart en el namespace `inventory`.
+
+        ```bash
+        helm upgrade --install ms-licenses-rest codedesignplus/ms-licenses-rest -f ./values-rest.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-licenses/helm-install.png" alt="Instalando el Helm chart de ms-licenses-rest"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar el Pod en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos nuestro nuevo pod `ms-licenses-rest` corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-licenses/lens-verify-pod.png" alt="Verificando el pod de ms-licenses en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway.
+
+    <Image src="/images/blogs/ecosystem/ms-licenses/lens-verify-vs.png" alt="Verificando el VirtualService de ms-licenses en Lens"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-licenses/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-licenses/health-check.png" alt="Petición exitosa al endpoint de salud de ms-licenses"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-licenses/index.html`
+
+        Aquí puedes ver los dos contextos principales de la API: `License` para la gestión y `Order` para el flujo de compra.
+
+        <Image src="/images/blogs/ecosystem/ms-licenses/swagger-ui.png" alt="Visualizando Swagger UI de ms-licenses-rest"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-licenses`, un microservicio complejo que no solo gestiona su propio dominio, sino que actúa como un director de orquesta para coordinar flujos de negocio críticos a través de múltiples servicios.
+
+Este es un ejemplo perfecto del poder de una arquitectura de microservicios bien diseñada: cada servicio tiene su responsabilidad, y servicios como `ms-licenses` se especializan en orquestar a los demás para lograr un objetivo de negocio complejo, como la venta de una licencia. Con este componente en su lugar, nuestra plataforma está casi completa.

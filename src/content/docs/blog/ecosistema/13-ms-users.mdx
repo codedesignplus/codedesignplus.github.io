@@ -1,0 +1,236 @@
+---
+title: "Desplegando ms-users: El Perfil Central del Ecosistema"
+date: 2025-07-29
+lastUpdated: 2025-07-29
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Users", "Event-Driven", "DDD", "gRPC"]
+excerpt: "Unimos la identidad con el dominio de negocio. Aprende a desplegar ms-users, el microservicio que gestiona los perfiles de usuario y se sincroniza asíncronamente con Microsoft Entra ID."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Hasta ahora, hemos gestionado conceptos abstractos como roles, permisos e inquilinos. Ahora, desplegaremos el microservicio que les da un rostro humano: **`ms-users`**. Este componente es el corazón de la gestión de perfiles de nuestra aplicación.
+
+Mientras que Microsoft Entra ID se encarga de la **identidad** (autenticación), `ms-users` se encarga del **perfil de usuario** dentro de nuestro dominio de negocio. Almacena información rica y específica de la aplicación, como su información de contacto, puesto de trabajo, foto de perfil y, lo más importante, a qué `Tenants` y `Roles` está asociado.
+
+### Un Vistazo a la Arquitectura de `ms-users`
+
+`ms-users` es un servicio multifacético que utiliza los tres tipos de entrypoints para cumplir con sus diversas responsabilidades.
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-users/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-users" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST:** Expone una API de gestión muy completa para operaciones CRUD sobre los usuarios y sus entidades relacionadas (asignar/remover tenants, roles, etc.).
+*   **gRPC:** Ofrece endpoints de alto rendimiento para que otros servicios internos interactúen con los usuarios (ej. `AddGroupToUser`).
+*   **Async Worker:** Su única y crucial tarea es escuchar el evento `UserCreated` proveniente de `ms-microsoft-graph` y replicar el usuario en su propia base de datos.
+
+<Aside  title="Sincronización Asíncrona: `ms-microsoft-graph` y `ms-users`">
+Este flujo es un ejemplo perfecto de nuestra arquitectura orientada a eventos:
+1.  Un nuevo usuario se registra a través de **Microsoft Entra ID**.
+2.  La Custom Authentication Extension llama a **`ms-microsoft-graph`**.
+3.  `ms-microsoft-graph` publica un evento `UserCreated` en **RabbitMQ**.
+4.  El **Async Worker de `ms-users`** consume este evento.
+5.  Se activa el caso de uso `ReplicateUser`, que crea una copia local del usuario en la base de datos de `ms-users` con su propio ID de ecosistema.
+
+Esta arquitectura desacoplada garantiza que el registro de usuarios sea resiliente. Si `ms-users` estuviera temporalmente caído, el evento permanecería en la cola y se procesaría en cuanto el servicio se recuperara, sin afectar el flujo de registro del usuario.
+</Aside>
+
+#### El Modelo de Dominio
+
+El `UserAggregate` es el agregado central que encapsula toda la complejidad de un perfil de usuario.
+
+<Image src="/images/blogs/ecosystem/ms-users/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-users" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+Como podemos ver, el Agregado gestiona no solo los datos básicos del usuario, sino también sus relaciones con `TenantEntity`, `ContactInfo`, `JobInfo`, y `UserPicture`, asegurando la consistencia de todas estas partes como una sola unidad transaccional.
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+
+1.  **Configurando los Secretos en Vault**
+    `ms-users` necesita las credenciales base para conectarse a RabbitMQ, Redis y MongoDB.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-users `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+    ```
+    <Image src="/images/blogs/ecosystem/ms-users/vault-put.png" alt="Creando los secretos para ms-users en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Verificamos que los secretos se hayan guardado correctamente en la interfaz web de Vault.
+
+    <Image src="/images/blogs/ecosystem/ms-users/vault-verify.png" alt="Verificando los secretos de ms-users en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Desplegando los Entrypoints con Helm**
+    Desplegaremos los tres Helm Charts para `ms-users` en el namespace `inventory`.
+
+    *   **Preparar los Archivos `values.yaml`**
+        Necesitaremos tres archivos: `values-rest.yaml`, `values-grpc.yaml` y `values-worker.yaml`. La estructura es la misma que hemos usado en los microservicios anteriores, definiendo las variables de entorno no sensibles y la conexión a Vault.
+
+        <Tabs>
+            <TabItem label="REST">
+                ```yaml
+                # values-rest.yaml
+                ms-base:
+                env:
+                    - name: RESOURCES__ENABLE
+                    value: "true"
+                    - name: RESOURCES__SERVER
+                    value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+                    - name: SECURITY__VALIDISSUER
+                    value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                    - name: SECURITY__CLIENTID
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: SECURITY__VALIDAUDIENCES__0
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: RABBITMQ__HOST
+                    value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                    - name: LOGGER__OTELENDPOINT
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                    - name: OBSERVABILITY__SERVEROTEL
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+
+                vault:
+                    server: http://vault.vault.svc.cluster.local:8200
+                    solution: inventory
+                    token: ANGq0*B2acD1n5%F
+
+                virtualService: 
+                    create: true
+                    namespace: istio-ingress
+                    hosts:
+                    - services.codedesignplus.app
+                    gateways:
+                    - istio-ingress/istio-inventory-gateway
+                    http:
+                    - name: ms-users
+                    match:
+                    - uri:
+                        prefix: /ms-users/
+                    rewrite:
+                        uri: /
+                    route:
+                    - destination:
+                        host: ms-users-rest.inventory.svc.cluster.local
+                        port:
+                            number: 5000
+                ```
+            </TabItem>
+            <TabItem label="gRPC">
+                ```yaml
+                # values-grpc.yaml
+                ms-base:
+                    env:
+                        - name: RESOURCES__ENABLE
+                        value: "false"
+                        - name: SECURITY__VALIDISSUER
+                        value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                        - name: SECURITY__CLIENTID
+                        value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                        - name: SECURITY__VALIDAUDIENCES__0
+                        value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                        - name: RABBITMQ__HOST
+                        value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                        - name: LOGGER__OTELENDPOINT
+                        value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                        - name: OBSERVABILITY__SERVEROTEL
+                        value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                        
+                    vault:
+                        server: http://vault.vault.svc.cluster.local:8200
+                        solution: inventory
+                        token: ANGq0*B2acD1n5%F
+                ```
+            </TabItem>
+            <TabItem label="Worker">
+                ```yaml
+                # values-worker.yaml
+                ms-base:
+                    env:
+                        - name: RESOURCES__ENABLE
+                        value: "false"
+                        - name: SECURITY__VALIDISSUER
+                        value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                        - name: SECURITY__CLIENTID
+                        value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                        - name: SECURITY__VALIDAUDIENCES__0
+                        value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                        - name: RABBITMQ__HOST
+                        value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                        - name: LOGGER__OTELENDPOINT
+                        value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                        - name: OBSERVABILITY__SERVEROTEL
+                        value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                        
+                    vault:
+                        server: http://vault.vault.svc.cluster.local:8200
+                        solution: inventory
+                        token: ANGq0*B2acD1n5%F
+                ```
+            </TabItem>
+        </Tabs>
+
+    *   **Ejecutar el Despliegue con Helm**
+        Instalamos los tres charts.
+
+        ```bash
+        # Desplegar el entrypoint REST
+        helm upgrade --install ms-users-rest codedesignplus/ms-users-rest -f ./values-rest.yaml --namespace inventory
+        
+        # Desplegar el entrypoint gRPC
+        helm upgrade --install ms-users-grpc codedesignplus/ms-users-grpc -f ./values-grpc.yaml --namespace inventory
+
+        # Desplegar el entrypoint Async Worker
+        helm upgrade --install ms-users-worker codedesignplus/ms-users-worker -f ./values-worker.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-users/helm-install-rest.png" alt="Instalando el Helm chart de ms-users-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-users/helm-install-grpc.png" alt="Instalando el Helm chart de ms-users-grpc" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-users/helm-install-worker.png" alt="Instalando el Helm chart de ms-users-worker" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+
+1.  **Verificar los Pods en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos los tres nuevos pods para `ms-users-rest`, `ms-users-grpc` y `ms-users-worker`, todos corriendo en el namespace `inventory`.
+
+    <Image src="/images/blogs/ecosystem/ms-users/lens-verify-pods.png" alt="Verificando los pods de ms-users en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2.  **Verificar el `VirtualService` de Istio**
+    El Helm chart de `ms-users-rest` ha creado automáticamente el `VirtualService` que enruta el tráfico desde nuestro Gateway.
+
+    <Image src="/images/blogs/ecosystem/ms-users/lens-verify-vs.png" alt="Verificando el VirtualService de ms-users en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3.  **Probar el Acceso a la API**
+    *   **Endpoint de Salud:** Verificamos que el servicio está vivo accediendo a su endpoint de salud:
+        `https://services.codedesignplus.app/ms-users/health/ready`
+
+        Deberías ver una respuesta "Healthy".
+
+        <Image src="/images/blogs/ecosystem/ms-users/health-check.png" alt="Petición exitosa al endpoint de salud de ms-users" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    *   **Swagger UI:** Para explorar la API de gestión, usamos la interfaz de Swagger UI:
+        `https://services.codedesignplus.app/ms-users/index.html`
+
+        Aquí puedes ver la extensa API para gestionar usuarios, asignarles roles, tenants, y actualizar toda su información de perfil.
+
+        <Image src="/images/blogs/ecosystem/ms-users/swagger-ui.png" alt="Visualizando Swagger UI de ms-users-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+</Steps>
+
+### Conclusión
+
+Has desplegado con éxito `ms-users`, el microservicio que actúa como el nexo central de la interacción del usuario con la aplicación. Hemos visto cómo su arquitectura de múltiples entrypoints le permite manejar tareas de gestión (REST), comunicación interna de alto rendimiento (gRPC) y procesamiento asíncrono de eventos (Worker).
+
+Con `ms-users` en su lugar, ahora tenemos la capacidad de asociar a los usuarios con los `Tenants` y `Roles` que hemos definido anteriormente, completando el núcleo de nuestro sistema de identidad y acceso.
