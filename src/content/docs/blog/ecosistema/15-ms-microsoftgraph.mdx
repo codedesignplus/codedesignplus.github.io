@@ -1,0 +1,246 @@
+---
+title: "Desplegando ms-microsoftgraph: El Puente Hacia la Identidad"
+date: 2025-07-31
+lastUpdated: 2025-07-31
+tags: ["Microservices", "CodeDesignPlus", "Helm", "Vault", "Microsoft Graph", "Event-Driven", "Identity"]
+excerpt: "Completamos el núcleo del ecosistema. Aprende a desplegar ms-microsoftgraph, el microservicio que actúa como un puente bidireccional entre nuestra aplicación y Microsoft Entra ID."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+Llegamos al despliegue del último microservicio central de nuestro ecosistema: **`ms-microsoftgraph`**. Este componente no gestiona un dominio de negocio tradicional, sino que cumple una función de infraestructura crítica: actúa como un **adaptador** o **puente** entre nuestro mundo interno y el proveedor de identidad externo, **Microsoft Entra ID**.
+
+Su operación es bidireccional y altamente reactiva:
+1.  **Reacciona a eventos externos:** A través de sus endpoints REST, recibe las llamadas de las **Custom Authentication Extensions** de Entra ID durante el registro de un usuario e inicia el proceso de replicación interna.
+2.  **Reacciona a eventos internos:** A través de su **Async Worker**, escucha eventos de dominio (como `RoleCreated` de `ms-roles` o `UserUpdated` de `ms-users`) y sincroniza esos cambios de vuelta a Microsoft Entra ID.
+
+### Un Vistazo a la Arquitectura de `ms-microsoftgraph`
+
+#### Flujo de la API a los Casos de Uso (CQRS)
+
+<Image src="/images/blogs/ecosystem/ms-microsoftgraph/flow-diagram.svg" alt="Diagrama de Flujo CQRS de ms-microsoftgraph" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+*   **REST:** Expone los endpoints que son invocados por las Custom Authentication Extensions de Entra ID (`OnAttributeCollectionSubmit` y `TokenIssuanceStart`).
+*   **Async Workers:** Escucha una amplia gama de eventos de dominio de otros microservicios (`ms-roles`, `ms-users`) para mantener sincronizado Entra ID.
+*   **Casos de Uso:** Los `Commands` como `ReplicateUser` (manejado por `CreateUserCiamCommandHandler`) inician el proceso de creación de un usuario en nuestro sistema después de un registro exitoso en Entra ID.
+
+#### El Modelo de Dominio
+
+<Image src="/images/blogs/ecosystem/ms-microsoftgraph/ddd-aggregate-diagram.svg" alt="Diagrama de Agregado de Dominio de ms-microsoftgraph" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+El dominio de `ms-microsoftgraph` se centra en mantener una representación coherente de las entidades de identidad.
+*   **`UserAggregate` y `RoleAggregate`**: Mantienen una copia o "sombra" de los usuarios y roles para facilitar la sincronización.
+*   **`UserCiamAggregate`**: Actúa como un registro de auditoría de los usuarios que provienen del proveedor de identidad (CIAM), rastreando si ya han sido replicados.
+
+### Parte 1: Prerrequisitos - Creando la Identidad en Microsoft Entra ID
+
+Para que `ms-microsoftgraph` pueda interactuar con la API de Microsoft Graph, necesita su propia identidad (un "App Registration") con los permisos adecuados.
+
+<Steps>
+1. **Navegar a App Registrations**
+    En el [Microsoft Entra admin center](https://entra.microsoft.com/), ve a `Identity > Applications > App registrations` y haz clic en `+ New registration`.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/1-microsoft-entra-external-id.png" alt="Navegando a App Registrations" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/2-microsoft-entra-external-id.png" alt="Creando un nuevo registro de aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2. **Registrar la Aplicación `InventoryAppMicrosoftGraph`**
+    Dale un nombre descriptivo y haz clic en "Register".
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/3-microsoft-entra-external-id.png" alt="Panel de control de la nueva aplicación InventoryAppMicrosoftGraph" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+3. **Crear un Secreto de Cliente**
+    Ve a `Certificates & secrets`, haz clic en `+ New client secret`.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/5-microsoft-entra-external-id.png" alt="Creando un nuevo secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+    
+    <Aside type="caution" title="¡Copia el Secreto AHORA!">
+    Copia el **`Value`** del secreto inmediatamente. Este será nuestro `Graph:ClientSecret`.
+    </Aside>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/6-microsoft-entra-external-id.png" alt="Copiando el valor del secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+4. **Añadir Permisos de API**
+    Ve a `API permissions`, haz clic en `+ Add a permission`, y selecciona `Microsoft Graph`.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/7-microsoft-entra-external-id.png" alt="Añadiendo permisos de Microsoft Graph" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+    Elegimos **`Application permissions`** y añadimos los siguientes permisos:
+
+    - Directory.ReadWrite.All
+    - Group.ReadWrite.All
+    - GroupMember.ReadWrite.All
+    - User.ReadWrite.All
+    - DeviceManagementServiceConfig.ReadWrite.All
+    - DeviceManagementConfiguration.ReadWrite.All
+
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/8-microsoft-entra-external-id.png" alt="Seleccionando permisos de aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/9-microsoft-entra-external-id.png" alt="Añadiendo el permiso Directory.ReadWrite.All" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+5. **Otorgar Consentimiento de Administrador**
+    Una vez añadidos todos los permisos necesarios, haz clic en el botón `Grant admin consent for ...` para activarlos.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/10-microsoft-entra-external-id.png" alt="Lista de permisos pendientes de consentimiento" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/11-microsoft-entra-external-id.png" alt="Otorgando consentimiento de administrador" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/12-microsoft-entra-external-id.png" alt="Permisos concedidos exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
+</Steps>
+
+### Despliegue y Configuración Paso a Paso
+
+<Steps>
+1. **Configurando los Secretos en Vault**
+    Almacenamos en Vault las credenciales base y, muy importante, el **`ClientSecret`** que acabamos de generar para la App Registration de `ms-microsoftgraph`.
+
+    ```powershell
+    vault kv put -mount=inventory-keyvalue ms-microsoftgraph `vault kv put -mount=inventory-keyvalue ms-microsoftgraph `
+        "RabbitMQ:UserName=<USERNAME_FROM_RABBITMQ_SECRET>" `
+        "RabbitMQ:Password=<PASSWORD_FROM_RABBITMQ_SECRET>" `
+        "Redis:Instances:Core:ConnectionString=<CONNECTION_STRING_FROM_REDIS>" `
+        "Mongo:ConnectionString=<VAULT_TRANSIT_PASSWORD>"
+        "Graph:ClientSecret=<CLIENT_SECRET_FROM_GRAPH>" `
+        "Vault:Transit:SecretContexts:vault_transit_password_temp=<VAULT_TRANSIT_PASSWORD>"
+    ```
+
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/vault-put.png" alt="Creando los secretos para ms-microsoftgraph en Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/vault-verify.png" alt="Verificando los secretos de ms-microsoftgraph en la UI de Vault" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2. **Desplegando los Entrypoints con Helm**
+    Desplegaremos los dos entrypoints de `ms-microsoftgraph`: REST para los webhooks de Entra ID y el Worker para los eventos internos.
+
+    *   **Preparar los Archivos `values.yaml`**
+        Necesitaremos dos archivos, `values-rest.yaml` y `values-worker.yaml`, que definirán las variables de entorno no sensibles y la conexión a Vault. Las variables clave son las `GRAPH__*`, que le dicen al microservicio cómo identificarse ante la API de Microsoft Graph.
+
+        <Tabs>
+            <TabItem label="Rest">
+            ```yaml
+            ms-base:                
+                resources:
+                    limits:
+                    cpu: 500m
+                    memory: 256Mi
+                    requests:
+                    cpu: 100m
+                    memory: 128Mi
+
+                env:
+                    - name: RESOURCES__ENABLE
+                    value: "true"
+                    - name: RESOURCES__SERVER
+                    value: "http://ms-services-grpc.inventory.svc.cluster.local:5001"
+                    - name: SECURITY__VALIDISSUER
+                    value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                    - name: SECURITY__CLIENTID
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: SECURITY__VALIDAUDIENCES__0
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: RABBITMQ__HOST
+                    value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                    - name: LOGGER__OTELENDPOINT
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                    - name: OBSERVABILITY__SERVEROTEL
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                    - name: GRAPH__CLIENTID
+                    value: "4e52651c-1c59-4d91-9817-e57ed0256e9c"
+                    - name: GRAPH__TENANTID
+                    value: "dfee7752-2c8a-4171-ad95-62ddc82d6ed8"
+                    - name: GRAPH__ISSUERIDENTITY
+                    value: "devcodedesignplus.ciamlogin.com"
+
+                vault:
+                    server: http://vault.vault.svc.cluster.local:8200
+                    solution: inventory
+                    token: ANGq0*B2acD1n5%F
+
+                virtualService: 
+                    create: true
+                    namespace: istio-ingress
+                    hosts:
+                    - services.codedesignplus.app
+                    gateways:
+                    - istio-ingress/istio-inventory-gateway
+                    http:
+                    - name: ms-microsoftgraph
+                    match:
+                    - uri:
+                        prefix: /ms-microsoftgraph/
+                    rewrite:
+                        uri: /
+                    route:
+                    - destination:
+                        host: ms-microsoftgraph-rest.inventory.svc.cluster.local
+                        port:
+                            number: 5000
+            ```
+            </TabItem>
+            <TabItem label="Worker">
+            ```yaml
+            ms-base:
+                image:
+                    pullPolicy: Always
+                    
+                resources:
+                    limits:
+                    cpu: 500m
+                    memory: 256Mi
+                    requests:
+                    cpu: 100m
+                    memory: 128Mi
+                    
+                env:
+                    - name: RESOURCES__ENABLE
+                    value: "false"
+                    - name: SECURITY__VALIDISSUER
+                    value: "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/"
+                    - name: SECURITY__CLIENTID
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: SECURITY__VALIDAUDIENCES__0
+                    value: "305f759d-d1d2-467b-9eab-4a61389c7329"
+                    - name: RABBITMQ__HOST
+                    value: "rabbitmq-cluster.srv-rabbitmq.svc"
+                    - name: LOGGER__OTELENDPOINT
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                    - name: OBSERVABILITY__SERVEROTEL
+                    value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+                    
+                vault:
+                    server: http://vault.vault.svc.cluster.local:8200
+                    solution: inventory
+                    token: ANGq0*B2acD1n5%F
+            ```
+            </TabItem>
+        </Tabs>
+
+    *   **Ejecutar el Despliegue con Helm**
+        Instalamos ambos charts en el namespace `inventory`.
+        ```bash
+        # Desplegar el entrypoint REST
+        helm upgrade --install ms-microsoftgraph-rest codedesignplus/ms-microsoftgraph-rest -f ./values-rest.yaml --namespace inventory
+        
+        # Desplegar el entrypoint Async Worker
+        helm upgrade --install ms-microsoftgraph-worker codedesignplus/ms-microsoftgraph-worker -f ./values-worker.yaml --namespace inventory
+        ```
+        <Image src="/images/blogs/ecosystem/ms-microsoftgraph/helm-install-rest.png" alt="Instalando el Helm chart de ms-microsoftgraph-rest" width="2550" height="1314" decoding="async" loading="lazy"/>
+        <Image src="/images/blogs/ecosystem/ms-microsoftgraph/helm-install-worker.png" alt="Instalando el Helm chart de ms-microsoftgraph-worker" width="2550" height="1314" decoding="async" loading="lazy"/>
+</Steps>
+
+### Parte 3: Verificación del Despliegue
+
+<Steps>
+1. **Verificar los Pods en Lens**
+    En Lens, bajo "Workloads > Pods", ahora vemos los dos nuevos pods, `ms-microsoftgraph-rest` y `ms-microsoftgraph-worker`, corriendo en el namespace `inventory`.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/lens-verify-pods.png" alt="Verificando los pods de ms-microsoftgraph en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+
+2. **Verificar el `VirtualService` de Istio**
+    El Helm chart de `ms-microsoftgraph-rest` ha creado automáticamente el `VirtualService`. Este es el endpoint al que apuntarán nuestras Custom Authentication Extensions en Entra ID.
+    <Image src="/images/blogs/ecosystem/ms-microsoftgraph/lens-verify-vs.png" alt="Verificando el VirtualService de ms-microsoftgraph en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
+</Steps>
+
+### Conclusión Final de la Fase de Despliegue
+
+¡Lo has logrado! Con el despliegue de `ms-microsoftgraph`, hemos instalado el último microservicio central del ecosistema CodeDesignPlus. Ahora tienes una plataforma completamente funcional, donde la identidad externa y el dominio de negocio interno están perfectamente sincronizados a través de una arquitectura reactiva y orientada a eventos.
+
+Este despliegue no solo añade una pieza más; marca la finalización de la Fase 2 de nuestra serie. Has construido y desplegado con éxito un ecosistema de microservicios de nivel empresarial desde cero. La plataforma está viva y todos los componentes base están en su lugar, comunicándose entre sí.
+
+Para cerrar esta monumental fase de construcción y despliegue con broche de oro, en nuestro próximo y último artículo de esta etapa, haremos una pausa para consolidar todo nuestro trabajo. Recapitularemos la increíble plataforma que hemos levantado y, lo más importante, te proporcionaremos un script de despliegue optimizado para que puedas levantar todo este ecosistema de forma automatizada en el futuro. También repasaremos los puntos más importantes y las lecciones aprendidas en el camino.
+
+Te invitamos a unirte a nosotros para este capítulo final de resumen, que te dejará con una base sólida y una herramienta poderosa para tus propios proyectos.

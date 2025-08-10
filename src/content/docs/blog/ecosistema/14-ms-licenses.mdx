@@ -81,9 +81,9 @@ El modelo de dominio de `ms-licenses` es un ejemplo perfecto de cómo un microse
             - name: RABBITMQ__HOST
             value: "rabbitmq-cluster.srv-rabbitmq.svc"
             - name: LOGGER__OTELENDPOINT
-            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
             - name: OBSERVABILITY__SERVEROTEL
-            value: "http://inventory-opentelemetry-collector.otel-inventory.svc.cluster.local:4317"
+            value: "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
             - name: GRPCCLIENTS__PAYMENT
             value: "ms-payments-grpc.inventory.svc.cluster.local:5001"
             - name: GRPCCLIENTS__USER
