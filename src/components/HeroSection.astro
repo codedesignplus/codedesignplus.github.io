@@ -1,5 +1,6 @@
 ---
 import Container from "./Container.astro";
+import Features from '../components/Features.astro';
 ---
 
 <div class="relative" id="home">
@@ -11,40 +12,31 @@ import Container from "./Container.astro";
         <div class="relative pt-36 ml-auto">
             <div class="lg:w-2/3 text-center mx-auto">
                 <h1 class="text-gray-900 text-balance dark:text-white font-bold text-5xl md:text-6xl xl:text-7xl opacity-0 translate-y-4 hero-title transition duration-500 delay-200">
-                  Transforma tus ideas en código de manera eficiente y profesional con CodeDesignPlus.
+                  Tu atajo a una arquitectura de microservicios .NET de nivel empresarial.
                 </h1>
                 <p class="mt-8 text-gray-700 dark:text-gray-300 opacity-0 hero-text transition duration-500 delay-300">
-                  CodeDesignPlus es un conjunto completo de herramientas y bibliotecas diseñadas para acelerar el desarrollo de soluciones empresariales modernas y escalables en el ecosistema .NET. Permite a los desarrolladores crear aplicaciones robustas, modulares y mantenibles aprovechando las mejores prácticas y patrones de diseño probados.
+                  CodeDesignPlus te <strong>entrega</strong> una plataforma de microservicios de producción lista para usar, con su propia guía de despliegue. Olvídate de la configuración de la infraestructura base y céntrate en la lógica de negocio que hace única a tu aplicación. Te proporcionamos la arquitectura, los servicios transversales y las herramientas para que construyas sobre una base sólida y probada.
                 </p>
                 <div class="mt-16 flex flex-wrap justify-center gap-y-4 gap-x-6 opacity-0 hero-buttons transition duration-500 delay-400">
                     <a
-                      href="/libs/introduction"
+                      href="/quick-start"
                       class="relative flex h-11 w-full items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 sm:w-max"
                     >
                       <span class="relative text-base font-semibold text-white"
-                        >Explora el SDK</span
+                        >Quick Start</span
                       >
                     </a>
                     <a
-                      href="/archetypes"
+                      href="/blog/env-dev/2-hoja-ruta"
                       class="relative flex h-11 w-full items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:border before:border-transparent before:bg-primary/10 before:bg-gradient-to-b before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 dark:before:border-gray-700 dark:before:bg-gray-800 sm:w-max"
                     >
                       <span
                         class="relative text-base font-semibold text-primary dark:text-white"
-                        >Descubre los Arquetipos</span
-                      >
-                    </a>
-                       <a
-                      href="/generators/"
-                      class="relative flex h-11 w-full items-center justify-center px-6 before:absolute before:inset-0 before:rounded-full before:border before:border-transparent before:bg-primary/10 before:bg-gradient-to-b before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 dark:before:border-gray-700 dark:before:bg-gray-800 sm:w-max"
-                    >
-                      <span
-                        class="relative text-base font-semibold text-primary dark:text-white"
-                        >Usa nuestros Generadores</span
+                        >Ver Guía de Despliegue</span
                       >
                     </a>
                 </div>
-               <div class="py-8 mt-16 border-y border-gray-100 dark:border-gray-800 sm:flex justify-around">
+               <!-- <div class="py-8 mt-16 border-y border-gray-100 dark:border-gray-800 sm:flex justify-around">
                     <div class="text-center">
                         <h6 class="text-lg font-semibold text-gray-700 dark:text-white">Arquitectura Limpia y Escalable</h6>
                         <p class="mt-2 text-gray-500">Implementa patrones de diseño como DDD, arquitectura hexagonal y CQRS para garantizar la modularidad y la escalabilidad.</p>
@@ -57,8 +49,11 @@ import Container from "./Container.astro";
                         <h6 class="text-lg font-semibold text-gray-700 dark:text-white">Herramientas de Desarrollo</h6>
                         <p class="mt-2 text-gray-500">Integra herramientas para pruebas, configuraciones y generación de código, agilizando el desarrollo y la validación.</p>
                     </div>
-                </div>
+                </div> -->
             </div>
+            
+		        
+<!--             
             <div class="mt-12 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 items-center justify-center">
                 <div class="p-4 grayscale transition duration-200 hover:grayscale-0 flex justify-center items-center">
                     <img src="./images/tecnologies/microsoft.svg" class="h-12 w-auto mx-auto" loading="lazy" alt="Logo de Microsoft" width="" height="" />
@@ -78,10 +73,11 @@ import Container from "./Container.astro";
                 <div class="p-4 grayscale transition duration-200 hover:grayscale-0 flex justify-center items-center">
                   <img src="./images/tecnologies/mongo.svg" class="h-12 w-auto mx-auto" loading="lazy" alt="Mongo" width="" height="" />
               </div>
-            </div>
+            </div> -->
         </div>
     </Container>
 </div>
+
 
 <style>
     .hero-title {
