@@ -1,6 +1,6 @@
 ---
 import Container from "./Container.astro"
-
+import { Card, CardGrid } from '@astrojs/starlight/components';
 ---
 
 <div class="relative py-16">
@@ -11,62 +11,50 @@ import Container from "./Container.astro"
   <Container>
     <div class="relative">
       <div class="flex items-center justify-center -space-x-2">
-        <img
-          loading="lazy"
-          width="400"
-          height="400"
-          src="./images/avatars/avatar.webp"
-          alt="member photo"
-          class="h-8 w-8 rounded-full object-cover"
-        />
-        <img
-          loading="lazy"
-          width="200"
-          height="200"
-          src="./images/avatars/avatar-2.webp"
-          alt="member photo"
-          class="h-12 w-12 rounded-full object-cover"
-        />
-        <img
-          loading="lazy"
-          width="200"
-          height="200"
-          src="./images/avatars/avatar-3.webp"
-          alt="member photo"
-          class="z-10 h-16 w-16 rounded-full object-cover"
-        />
-        <img
-          loading="lazy"
-          width="200"
-          height="200"
-          src="./images/avatars/avatar-4.webp"
-          alt="member photo"
-          class="relative h-12 w-12 rounded-full object-cover"
-        />
-        <img
-          loading="lazy"
-          width="200"
-          height="200"
-          src="./images/avatars/avatar-1.webp"
-          alt="member photo"
-          class="h-8 w-8 rounded-full object-cover"
-        />
+        <!-- Avatars se mantienen igual -->
+        <img loading="lazy" width="400" height="400" src="./images/avatars/avatar.webp" alt="member photo" class="h-8 w-8 rounded-full object-cover"/>
+        <img loading="lazy" width="200" height="200" src="./images/avatars/avatar-2.webp" alt="member photo" class="h-12 w-12 rounded-full object-cover"/>
+        <img loading="lazy" width="200" height="200" src="./images/avatars/avatar-4.webp" alt="member photo" class="relative h-12 w-12 rounded-full object-cover"/>
+        <img loading="lazy" width="200" height="200" src="./images/avatars/avatar-1.webp" alt="member photo" class="h-8 w-8 rounded-full object-cover"/>
       </div>
-      <div class="mt-6 m-auto space-y-6 md:w-8/12 lg:w-7/12">
-        <h1 class="text-center text-4xl font-bold text-gray-800 dark:text-white md:text-5xl">Empieza tu Viaje con CodeDesignPlus</h1>
+      <div class="mt-6 m-auto space-y-6 md:w-10/12 lg:w-8/12">
+        <h1 class="text-center text-4xl font-bold text-gray-800 dark:text-white md:text-5xl">Elige tu Camino para Empezar</h1>
         <p class="text-center text-xl text-gray-600 dark:text-gray-300">
-          ¡Sigue nuestro Quick Start y comienza a construir soluciones empresariales robustas y escalables hoy mismo!
+          Ya sea que quieras aprender a construir tu primer microservicio o a desplegar un ecosistema completo, tenemos una guía para ti.
         </p>
-        <div class="flex flex-wrap justify-center gap-6">
-          <a
-              href="/quick-start/"
-              class="relative flex h-12 w-full items-center justify-center px-8 before:absolute before:inset-0 before:rounded-full before:bg-primary before:transition before:duration-300 hover:before:scale-105 active:duration-75 active:before:scale-95 sm:w-max"
-            >
-              <span class="relative text-base font-semibold text-white dark:text-dark"
-                >Comienza Ahora</span
-              >
-            </a>
+
+        <!-- === INICIO DE LA SECCIÓN DE CARDS === -->
+        <div class="mt-12 flex flex-col md:flex-row justify-center gap-6 lg:gap-8">
+          
+          <!-- Card 1: Aprende a Construir -->
+          <a href="/quick-start/" class="group block md:w-1/2 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-primary dark:hover:border-primary hover:shadow-2xl hover:shadow-primary/20">
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">
+              🛠️ Aprende a Construir
+            </h3>
+            <p class="mt-2 text-gray-600 dark:text-gray-300">
+              Sigue nuestra guía <strong>Quick Start</strong> para configurar tu entorno y crear tu primer microservicio usando nuestros generadores y arquetipos.
+            </p>
+            <span class="mt-4 inline-block font-semibold text-primary group-hover:underline">
+              Ir al Quick Start →
+            </span>
+          </a>
+          
+          <!-- Card 2: Aprende a Desplegar -->
+          <a href="/blog/env-dev/2-hoja-ruta" class="group block md:w-1/2 p-6 rounded-2xl border border-gray-300 dark:border-gray-700 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-300 hover:border-primary dark:hover:border-primary hover:shadow-2xl hover:shadow-primary/20">
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">
+              🚀 Aprende a Desplegar
+            </h3>
+            <p class="mt-2 text-gray-600 dark:text-gray-300">
+              Sumérgete en nuestra <strong>serie del blog</strong> donde desplegamos un ecosistema completo sobre una infraestructura real de Kubernetes, desde cero.
+            </p>
+            <span class="mt-4 inline-block font-semibold text-primary group-hover:underline">
+              Ver Guía de Despliegue →
+            </span>
+          </a>
+
         </div>
+        <!-- === FIN DE LA SECCIÓN DE CARDS === -->
+
       </div>
     </div>
   </Container>
