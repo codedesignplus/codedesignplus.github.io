@@ -1,0 +1,200 @@
+---
+title: "Automatizando el Despliegue: El Script que lo Hace Todo"
+date: 2025-08-13
+lastUpdated: 2025-08-13
+tags: ["Automation", "Deployment", "Script", "Node.js", "Helm", "Vault", "DevOps"]
+excerpt: "El gran final de nuestra fase de despliegue. Descubre el script de automatización que te permite desplegar todo el ecosistema CodeDesignPlus con un solo comando, transformando horas de trabajo en minutos."
+authors:
+    - wclg
+---
+
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro'
+import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
+import { Image } from 'astro:assets';
+
+<ImageZoom/>
+
+
+Después de un largo pero increíblemente educativo viaje desplegando cada pieza de nuestra **infraestructura base** y luego cada **microservicio del ecosistema** de forma manual, hemos llegado al punto culminante de esta serie. Hemos aprendido los "porqués" y los "cómos" de cada componente. Ahora, es el momento de aplicar una lección clave de DevOps: **automatizar los despliegues de aplicaciones**.
+
+En este artículo, te presentaremos la herramienta que consolida todo nuestro trabajo de la segunda fase: el script de despliegue de [CodeDesignPlus.Resources.DeployBase](https://github.com/codedesignplus/CodeDesignPlus.Resources.DeployBase). Esta utilidad, escrita en Node.js, está diseñada para tomar una única fuente de verdad (un archivo de configuración) y orquestar el despliegue de **toda la capa de microservicios del ecosistema** con un solo comando, asumiendo que la infraestructura base ya está en su lugar.
+
+### Presentando `CodeDesignPlus.Resources.DeployBase`
+
+Esta herramienta es un repositorio de código abierto diseñado para ser el punto de partida para cualquier despliegue del ecosistema.
+
+<LinkCard title="Ver Repositorio en GitHub: CodeDesignPlus.Resources.DeployBase" href="https://github.com/codedesignplus/CodeDesignPlus.Resources.DeployBase" />
+
+Su filosofía es simple: centralizar toda la configuración variable en un único lugar y automatizar la ejecución repetitiva de los comandos `helm` y `vault`.
+
+### Cómo Funciona: De la Configuración a la Orquestación
+
+El proceso es increíblemente sencillo y se resume en tres pasos.
+
+<Steps>
+
+1.  **Clonar el Repositorio y Preparar el Entorno**
+    El primer paso es clonar el repositorio en tu máquina local y ejecutar `npm install` para instalar las dependencias necesarias.
+
+2.  **La Fuente de Verdad: El Archivo `values.json`**
+    Dentro del repositorio, encontrarás un archivo llamado `values.example.json`. Este es tu punto de partida. Debes copiarlo y renombrarlo a `values.json`.
+
+    <FileTree>
+    - deploy-base.mjs
+    - License.md
+    - main.mjs
+    - package.json
+    - Readme.md
+    - util.mjs
+    - values.example.json
+    - values.json
+    - helm/
+        - repositories.lock
+        - repositories.yaml
+    - ms-catalogs/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-emails/
+        - index.mjs
+        - Readme.md
+        - values-grpc.yaml
+        - values-rest.yaml
+        - values-worker.yaml
+    - ms-filestorage/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-licenses/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-locations/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-microsoftgraph/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+        - values-worker.yaml
+    - ms-modules/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-payments/
+        - index.mjs
+        - Readme.md
+        - values-grpc.yaml
+        - values-rest.yaml
+    - ms-rbac/
+        - index.mjs
+        - Readme.md
+        - values-grpc.yaml
+        - values-rest.yaml
+    - ms-roles/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-services/
+        - index.mjs
+        - Readme.md
+        - values-grpc.yaml
+        - values-rest.yaml
+    - ms-tenants/
+        - index.mjs
+        - Readme.md
+        - values-rest.yaml
+    - ms-users/
+        - index.mjs
+        - Readme.md
+        - values-grpc.yaml
+        - values-rest.yaml
+        - values-worker.yaml
+    </FileTree>
+
+    Este archivo `values.json` es el cerebro de la operación. Aquí es donde centralizas **toda** la información que hemos recolectado a lo largo de la serie: las credenciales de Vault, los secretos de Entra ID, las cadenas de conexión de MongoDB, etc.
+
+    ```json
+    {
+        "namespace": "inventory",
+        "vault": {
+            "server": "https://vault.codedesignplus.app",
+            "internalHost": "http://vault.vault.svc.cluster.local:8200",
+            "token": "",
+            "solution": "inventory"
+        },
+        "env": {
+            "security": {
+                "validIssuer": "https://devcodedesignplus.ciamlogin.com/dfee7752-2c8a-4171-ad95-62ddc82d6ed8/v2.0/",
+                "clientId": "305f759d-d1d2-467b-9eab-4a61389c7329",
+                "validAudience": "305f759d-d1d2-467b-9eab-4a61389c7329"
+            },
+            "otelServer": "http://inventory-opentelemetry-collector.otel-collector.svc.cluster.local:4317"
+        },
+        "rabbitMQ": {
+            "host": "rabbitmq-cluster.srv-rabbitmq.svc",
+            "user": "",
+            "password": ""
+        },
+        "mongo": "mongodb+srv://codedesignplus:DduVYjn12SUd0CfL@inventory.sz5fcf7.mongodb.net/?retryWrites=true&w=majority",
+        "redis": "redis-standalone-headless.srv-redis.svc.cluster.local:6379",
+        "virtualService": {
+            "host": "services.codedesignplus.app",
+            "gateway": "istio-ingress/istio-inventory-gateway"
+        },
+        "email": {
+            "Email:TenantId": "d26654e8-c124-4126-babf-a1f18a83b864",
+            "Email:ClientId": "aa6e541f-ceae-4437-b4f4-12389ee85804",
+            "Email:ClientSecret": "",
+            "Email:UserIdWithLicense": "5df3d979-e29b-4b70-8a69-d2efa79ae6d8"
+        },
+        "fileStorage": {
+            "FileStorage:AzureBlob:AccountName": "codedesignplus",
+            "FileStorage:AzureBlob:AccountKey": ""
+        },
+        "microsoftGraph": {
+            "Graph:ClientId": "4e52651c-1c59-4d91-9817-e57ed0256e9c",
+            "Graph:ClientSecret": "",
+            "Graph:IssuerIdentity": "devcodedesignplus.ciamlogin.com",
+            "Graph:TenantId": "dfee7752-2c8a-4171-ad95-62ddc82d6ed8",
+            "Vault:Transit:SecretContexts:vault_transit_password_temp": "vfGz*%bktADW!9MAs84#8ddLaNQWluxAWmnHm9hXZ@EavJceifLjF5lt14M3%9iq"
+        },
+        "payment": {
+            "Payu:AccountId": "512321",
+            "Payu:ApiKey": "",
+            "Payu:ApiLogin": "pRRXKOl8ikMmt9u",
+            "Payu:MerchantId": "508029",
+            "Payu:SecretKey": ""
+        }
+    }
+    ```
+
+3.  **La Magia: Ejecutar `npm start`**
+    Una vez que tu archivo `values.json` está completo, simplemente abre una terminal en la raíz del proyecto y ejecuta:
+    ```bash
+    npm start
+    ```
+    
+    A partir de aquí, el script se encarga de todo:
+    *   **Lee el `values.json`**: Carga toda tu configuración. Si falta algún valor, te lo pedirá de forma interactiva en la consola.
+    *   **Actualiza Dinámicamente**: Itera sobre cada carpeta de microservicio (ej. `ms-users`, `ms-tenants`) y actualiza sus archivos `values-rest.yaml`, `values-grpc.yaml`, etc., con los valores correspondientes de tu `values.json`.
+    *   **Ejecuta los Despliegues**: Para cada microservicio, ejecuta los comandos `helm upgrade --install` necesarios para cada uno de sus entrypoints.
+    *   **Configura los Secretos**: Finalmente, ejecuta los comandos `vault kv put` para almacenar de forma segura los secretos confidenciales de cada microservicio en HashiCorp Vault.
+
+</Steps>
+
+### El Resultado: Un Despliegue Orquestado
+
+Lo que antes nos tomó varios artículos y horas de trabajo manual, ahora se ejecuta en una secuencia automatizada y predecible. La salida de la consola es un testimonio del poder de la automatización: un torrente de despliegues y configuraciones exitosas, una tras otra.
+
+<Image src="/images/blogs/ecosystem/deploy/console-output.png" alt="Salida de la consola mostrando el despliegue automatizado de todo el ecosistema"  width="2550" height="1314" decoding="async" loading="lazy"/>
+
+### Conclusión: El Verdadero Cierre de la Fase de Despliegue
+
+¡Felicidades! Has llegado al final de la fase de construcción y despliegue. No solo has aprendido a levantar una plataforma de nivel empresarial pieza por pieza, sino que ahora posees una herramienta para hacerlo de forma repetible, rápida y sin errores.
+
+Este script no es solo una conveniencia; es la encarnación de las mejores prácticas de DevOps. Te permite destruir y recrear tu entorno de desarrollo en minutos, asegurando que todos en tu equipo trabajen sobre una base idéntica.
+
+Con la infraestructura y el ecosistema desplegados y automatizados, hemos completado el trabajo pesado. Nuestra plataforma está lista. En la **próxima y última fase de esta serie**, nos centraremos por completo en la **lógica de negocio**, utilizando esta increíble base para construir nuestra aplicación de inventario.
