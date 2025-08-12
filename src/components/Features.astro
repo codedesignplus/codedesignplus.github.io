@@ -103,3 +103,21 @@ import Container from "./Container.astro"
     </div>
   </Container>
 </div>
+
+
+<style>
+  #features {
+    animation: fadeInUp 0.7s ease-in-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0px);
+    }
+  }
+</style>
