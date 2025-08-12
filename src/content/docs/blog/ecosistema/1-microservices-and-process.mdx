@@ -8,7 +8,7 @@ authors:
     - wclg
 ---
 
-import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard } from '@astrojs/starlight/components';
+import { Aside, Steps, Tabs, TabItem, FileTree, LinkCard, Card, CardGrid  } from '@astrojs/starlight/components';
 import Default from '@astrojs/starlight/components/MarkdownContent.astro'
 import ImageZoom from 'starlight-image-zoom/components/ImageZoom.astro'
 import { Image } from 'astro:assets';
@@ -32,7 +32,7 @@ La leyenda de colores indica los diferentes puntos de entrada (Entrypoints) que 
 
 ### Bajo el Capó: El Blueprint de un Microservicio
 
-Para entender realmente cómo funciona nuestro ecosistema, es crucial saber que **todos los microservicios comparten el mismo ADN arquitectónico**. No son cajas negras dispares; todos están construidos a partir de un **Arquetipo** base que implementa patrones de diseño de software de primer nivel.
+Para entender realmente cómo funciona nuestro ecosistema, es crucial saber que **todos los microservicios comparten el mismo ADN arquitectónico**. No son cajas negras dispares; todos están construidos a partir de un [**Arquetipo**](/archetypes) base que implementa patrones de diseño de software de primer nivel.
 
 <Image src="/images/archetype/archetype.svg" alt="Diagrama del Arquetipo base de un Microservicio" width="2550" height="1314" decoding="async" loading="lazy"/>
 
@@ -55,21 +55,76 @@ La consistencia y calidad de todos estos microservicios provienen de un único p
 
 ### Conoce a los Microservicios
 
-Aquí tienes una lista de los componentes que desplegaremos, cada uno con su propósito específico:
 
-*   **`ms-catalogs`**: Microservicio para la gestión de catálogos genéricos como tipos de documentos.
-*   **`ms-emails`**: Microservicio para la gestión de envíos de correos electrónicos y la administración de plantillas de correo.
-*   **`ms-filestorage`**: Microservicio para la gestión de almacenamiento de archivos con integración a múltiples proveedores.
-*   **`ms-licenses`**: Microservicio para la gestión de licencias de software, la cual tiene asociada un conjunto de módulos.
-*   **`ms-locations`**: Microservicio para la gestión de ubicaciones geográficas, incluyendo países, estados, ciudades, etc.
-*   **`ms-microsoft-graph`**: Microservicio para la integración con Microsoft Entra ID y la gestión de Custom Authentication Extensions.
-*   **`ms-modules`**: Microservicio para la gestión de módulos disponibles en la plataforma.
-*   **`ms-payments`**: Microservicio para la gestión de pagos, incluyendo la integración con diferentes proveedores.
-*   **`ms-rbac`**: Microservicio para la gestión de los permisos asociados a los roles (Control de Acceso Basado en Roles).
-*   **`ms-roles`**: Microservicio para la gestión de roles del sistema.
-*   **`ms-services`**: Microservicio para la gestión y descubrimiento de servicios disponibles en la plataforma.
-*   **`ms-tenants`**: Microservicio para la gestión de inquilinos (tenants) en la plataforma.
-*   **`ms-users`**: Microservicio para la gestión de usuarios y sus perfiles.
+Aquí tienes una vista en cards de los microservicios que desplegaremos, cada uno con su propósito específico:
+
+<CardGrid stagger>
+    <Card title="ms-services" icon="puzzle">
+        Microservicio para la gestión y descubrimiento de servicios disponibles en la plataforma.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/3-ms-services" />
+    </Card>
+    <Card title="ms-catalogs" icon="list-format">
+        Microservicio para la gestión de catálogos genéricos como tipos de documentos.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/4-ms-catalog" />
+    </Card>
+    <Card title="ms-emails" icon="email">
+        Microservicio para la gestión de envíos de correos electrónicos y la administración de plantillas de correo.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/5-ms-emails" />
+    </Card>
+    <Card title="ms-modules" icon="puzzle">
+        Microservicio para la gestión de módulos disponibles en la plataforma.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/6-ms-modules" />
+    </Card>    
+    <Card title="ms-roles" icon="approve-check-circle">
+        Microservicio para la gestión de roles del sistema.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/7-ms-roles" />
+    </Card>  
+    <Card title="ms-rbac" icon="seti:lock">
+        Microservicio para la gestión de los permisos asociados a los roles (Control de Acceso Basado en Roles).
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/8-ms-rbac" />
+    </Card>      
+    <Card title="ms-locations" icon="telegram">
+        Microservicio para la gestión de ubicaciones geográficas, incluyendo países, estados, ciudades, etc.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/9-ms-locations" />
+    </Card>
+    <Card title="ms-filestorage" icon="seti:folder">
+        Microservicio para la gestión de almacenamiento de archivos con integración a múltiples proveedores.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/10-ms-filestorage" />
+    </Card>    
+    <Card title="ms-tenants" icon="seti:puppet">
+        Microservicio para la gestión de inquilinos (tenants) en la plataforma.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/11-ms-tenant" />
+    </Card>
+    <Card title="ms-payments" icon="seti:shell">
+        Microservicio para la gestión de pagos, incluyendo la integración con diferentes proveedores.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/12-ms-payments" />
+    </Card>
+    <Card title="ms-users" icon="star">
+        Microservicio para la gestión de usuarios y sus perfiles.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/13-ms-users" />
+    </Card>
+    <Card title="ms-licenses" icon="seti:license">
+        Microservicio para la gestión de licencias de software, la cual tiene asociada un conjunto de módulos.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/14-ms-licenses" />
+    </Card>
+    <Card title="ms-microsoftgraph" icon="azureDevOps">
+        Microservicio para la integración con Microsoft Entra ID y la gestión de Custom Authentication Extensions.
+
+        <LinkCard title="Ver Documentación" href="/blog/ecosistema/15-ms-microsoftgraph" />
+    </Card>
+</CardGrid>
 
 ### Un Vistazo a los Procesos Transversales
 
