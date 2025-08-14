@@ -190,11 +190,19 @@ Para más información, puedes consultar la [documentación oficial de OTel](htt
         Con estos ajustes, hemos adaptado exitosamente la plantilla de Grafana para un despliegue robusto y estándar.
     </Aside>
 
-2.  **Desplegar el Collector con Helm**
+2. **Agregar el Repositorio de Helm**
+    Si aún no lo has hecho, añade el repositorio oficial de OpenTelemetry Collector Contrib:
+
+    ```bash
+    helm repo add open-telemetry https://open-telemetry.github.io/opentelemetry-helm-charts
+    helm repo update
+    ```
+
+3.  **Desplegar el Collector con Helm**
     Ahora, instalamos el OTel Collector usando su chart oficial y pasándole nuestro archivo de configuración.
 
     ```bash
-    helm install inventory opentelemetry/opentelemetry-collector `
+    helm install inventory open-telemetry/opentelemetry-collector `
         -f .\values.yaml `
         --namespace otel-collector `
         --create-namespace `
@@ -206,7 +214,7 @@ Para más información, puedes consultar la [documentación oficial de OTel](htt
 
     <Image src="/images/blogs/grafana-otel/5-grafana-otel.png" alt="Desplegando el OTel Collector con Helm" width="2550" height="1314" decoding="async" loading="lazy"/>
 
-3.  **Verificar el Despliegue en Lens**
+4.  **Verificar el Despliegue en Lens**
     *   En "Helm > Releases", vemos nuestra nueva release `inventory` en el namespace `otel-collector`.
         <Image src="/images/blogs/grafana-otel/6-grafana-otel.png" alt="Verificando la release del OTel Collector en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
     *   En "Workloads > Pods", encontramos nuestros dos pods del collector corriendo.

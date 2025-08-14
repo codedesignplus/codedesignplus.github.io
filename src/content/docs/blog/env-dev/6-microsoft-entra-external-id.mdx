@@ -242,46 +242,6 @@ El último paso es asegurarnos de que toda la información que necesitamos (incl
 
 </Steps>
 
-### Fase 7: Configurando Permisos de API para la Extensión
-Finalmente, nuestra extensión (`InventoryApp - CustomAuthenticationExtension`) necesita permisos para leer información de los usuarios desde Microsoft Graph API.
-
-<Steps>
-
-30. **Navegando a los Permisos de API**
-    Vamos a `App registrations`, seleccionamos nuestra app `InventoryApp - CustomAuthenticationExtension` y vamos a la sección `API permissions`.
-    <Image src="/images/blogs/microsoft-entra-external-id/59.png" alt="Navegando a API permissions" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-31. **Añadiendo Permisos de Microsoft Graph**
-    Hacemos clic en `+ Add a permission`, seleccionamos `Microsoft Graph`, y luego `Application permissions`. Buscamos y añadimos los siguientes permisos:
-    *   `DeviceManagementConfiguration.Read.All` y `Write.All`
-    *   `Directory.Read.All` y `Write.All`
-    *   `Group.Read.All` y `Write.All`
-    *   `GroupMember.ReadWrite.All`
-    *   `User.EnableDisable.All`
-    *   `User.Read.All` y `Write.All`
-    <Image src="/images/blogs/microsoft-entra-external-id/60.png" alt="Añadiendo un nuevo permiso" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/61.png" alt="Seleccionando Microsoft Graph" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/62.png" alt="Seleccionando permisos de aplicación" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/63.png" alt="Añadiendo permisos DeviceManagementConfiguration" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/64.png" alt="Añadiendo permisos Directory" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/65.png" alt="Añadiendo permisos Group" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/66.png" alt="Añadiendo permisos GroupMember" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/67.png" alt="Añadiendo permisos User.EnableDisable" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/68.png" alt="Añadiendo permisos User" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-32. **Otorgando Consentimiento de Administrador**
-    La lista de permisos ahora está completa, pero requieren consentimiento. Hacemos clic en `Grant admin consent for CodeDesignPlus-Dev`, confirmamos, y veremos que todos los permisos tienen el estado "Granted".
-    <Image src="/images/blogs/microsoft-entra-external-id/69.png" alt="Lista de permisos pendientes de consentimiento" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/70.png" alt="Otorgando consentimiento de administrador" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/71.png" alt="Permisos concedidos exitosamente" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-33. **Creando un Secreto de Cliente**
-    Para que nuestro microservicio `ms-microsoft-graph` se autentique, necesita un secreto. Vamos a `Certificates & secrets`, creamos un `New client secret`, le damos una descripción y una duración. **¡MUY IMPORTANTE!** Copia el valor del secreto inmediatamente, ya que no volverá a mostrarse.
-    <Image src="/images/blogs/microsoft-entra-external-id/72.png" alt="Creando un nuevo secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/73.png" alt="Configurando la descripción y expiración del secreto" width="2550" height="1314" decoding="async" loading="lazy"/>
-    <Image src="/images/blogs/microsoft-entra-external-id/74.png" alt="Copiando el valor del secreto de cliente" width="2550" height="1314" decoding="async" loading="lazy"/>
-
-</Steps>
 
 ## Conclusión
 
