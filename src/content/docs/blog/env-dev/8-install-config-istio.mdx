@@ -158,7 +158,7 @@ Istio se instala en varios componentes. Usaremos Helm para desplegarlos de forma
     apiVersion: networking.istio.io/v1
     kind: Gateway
     metadata:
-      name: istio-inventory-gateway
+      name: istio-gateway
       namespace: istio-ingress
     spec:
       selector:
@@ -182,7 +182,7 @@ Istio se instala en varios componentes. Usaremos Helm para desplegarlos de forma
     apiVersion: networking.istio.io/v1
     kind: Gateway
     metadata:
-      name: istio-inventory-gateway
+      name: istio-gateway
       namespace: istio-ingress
     spec:
       selector:
@@ -208,7 +208,7 @@ Istio se instala en varios componentes. Usaremos Helm para desplegarlos de forma
     <Image src="/images/blogs/install-config-istio/13.png" alt="Aplicando el manifiesto del Gateway de Istio" width="2550" height="1314" decoding="async" loading="lazy"/>
 
 4.  **Verificar la Creación del Gateway**
-    En Lens, si vamos a la sección de recursos de Istio (`Network > Gateway`), veremos nuestro `istio-inventory-gateway` creado correctamente.
+    En Lens, si vamos a la sección de recursos de Istio (`Network > Gateway`), veremos nuestro `istio-gateway` creado correctamente.
 
     <Image src="/images/blogs/install-config-istio/14.png" alt="Verificando la creación del recurso Gateway en Lens" width="2550" height="1314" decoding="async" loading="lazy"/>
 
@@ -353,7 +353,7 @@ Esta sección asume una comprensión básica de los manifiestos de Kubernetes (`
       hosts:
       - services.codedesignplus.app
       gateways:
-      - istio-ingress/istio-inventory-gateway
+      - istio-ingress/istio-gateway
       http:
       - name: snake
         match:
@@ -374,7 +374,7 @@ Esta sección asume una comprensión básica de los manifiestos de Kubernetes (`
     *   **`Service`**: Crea un punto de acceso interno y estable para nuestros pods de Snake. Le da un nombre DNS dentro del clúster (`snake.snake-test.svc.cluster.local`).
     *   **`VirtualService`**: Este es el "director de tráfico" de Istio. Le damos las siguientes instrucciones:
         *   **`hosts`**: Aplica esta regla cuando el tráfico llegue al host `services.codedesignplus.app`.
-        *   **`gateways`**: Asocia esta regla con el `istio-inventory-gateway` que creamos anteriormente.
+        *   **`gateways`**: Asocia esta regla con el `istio-gateway` que creamos anteriormente.
         *   **`match`**: Si la URL empieza con `/snake/`.
         *   **`rewrite`**: Antes de enviar el tráfico al servicio, reescribe la URL a `/` (ya que la aplicación de Snake no espera `/snake/`).
         *   **`route`**: Envía el tráfico al `Service` de Kubernetes `snake` en el namespace `snake-test`.
