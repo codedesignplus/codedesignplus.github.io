@@ -240,6 +240,10 @@ El último paso es asegurarnos de que toda la información que necesitamos (incl
     Ahora, al volver a la sección de claims de la Enterprise App, vemos que el claim `groups` también aparece, completando nuestra configuración.
     <Image src="/images/blogs/microsoft-entra-external-id/57.png" alt="Vista final de todos los claims configurados" width="2550" height="1314" decoding="async" loading="lazy"/>
 
+30. **Habilitar el Mapeo de los Claims**
+
+    Finalmente, vamos a la opción `Manifest` y buscamos la propiedad `acceptMappedClaims`. La cambiamos a `true` y guardamos. Esto asegura que los claims personalizados que hemos configurado se incluyan en los tokens emitidos y asi evitar el error  `AADSTS50146`.
+
 </Steps>
 
 
